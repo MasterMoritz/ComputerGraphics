@@ -72,18 +72,9 @@ float RotateZ[16];
 float InitialTransform[16];
 
 
-GLfloat vertex_buffer_data[SEGMENTS*3*2]; /* Cylinder vertices */
+GLfloat vertex_buffer_data[SEGMENTS*3*2+6]; /* Cylinder vertices */
 
-GLfloat color_buffer_data[] = { /* RGB color values for 8 vertices */
-    0.0, 0.0, 1.0,
-    1.0, 0.0, 1.0,
-    1.0, 1.0, 1.0,
-    0.0, 1.0, 1.0,
-    0.0, 0.0, 0.0,
-    1.0, 0.0, 0.0,
-    1.0, 1.0, 0.0,
-    0.0, 1.0, 0.0,
-}; 
+GLfloat color_buffer_data[SEGMENTS*3*2+6]; /* RGB color values */
 
 GLushort index_buffer_data[] = { /* Indices of 6*2 triangles (6 sides) */
     0, 1, 2,
@@ -198,11 +189,33 @@ void OnIdle()
 void SetupGeometry() {
     /* Create a cylinder */
     simpleCylinder(1.0, 1.0, SEGMENTS, vertex_buffer_data);
-    FILE *file = fopen("log", "w");
+    vertex_buffer_data[SEGMENTS*6] = 0;
+    vertex_buffer_data[SEGMENTS*6+1] = 0;
+    vertex_buffer_data[SEGMENTS*6+2] = 0;
+    vertex_buffer_data[SEGMENTS*6+3] = 0;
+    vertex_buffer_data[SEGMENTS*6+4] = 1;
+    vertex_buffer_data[SEGMENTS*6+5] = 0;
+
     int i;
-    for(i = 0; i < SEGMENTS*6; i++) {
+    for(i = 0; i < SEGMENTS*6+6; i++) {
+        color_buffer_data[i] = 1.0;   
+    }
+    FILE *file = fopen("log", "w");
+    for(i = 0; i < SEGMENTS*6+6; i++) {
         fprintf(file, "%f ", vertex_buffer_data[i]);
     }
+
+    GLushort index_buffer_data[] = { /* Indices of 6*2 triangles (6 sides) */
+        //triangles on the side of the cylinder
+        for(i = 0, j = 0; i < SEGMENTS*6+6; i++, j++) {
+            index_buffer_data[j] = i;
+            if(i%3 == 2) {
+                i -= 2;        //not fully correct
+                index_buffer_data[++j];
+            }
+        }
+        //TODO: all triangles to the center points
+    };
 }
 
 /******************************************************************
