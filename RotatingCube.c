@@ -335,6 +335,11 @@ void Initialize(void)
     /* Set background (clear) color to dark blue */ 
     glClearColor(0.0, 0.0, 0.4, 0.0);
 
+	/* Setup Vertex array object */
+	GLuint VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);	
+
     /* Enable depth testing */
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);    
@@ -387,12 +392,15 @@ int main(int argc, char** argv)
 {
     /* Initialize GLUT; set double buffered window and RGBA color model */
     glutInit(&argc, argv);
+	glutInitContextVersion(3, 3);
+	glutInitContextProfile(GLUT_CORE_PROFILE);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(600, 600);
     glutInitWindowPosition(400, 400);
     glutCreateWindow("CG Proseminar - Rotating Cube");
 
-    /* Initialize GL extension wrangler */
+	/* Initialize GL extension wrangler */
+	glewExperimental = GL_TRUE;
     GLenum res = glewInit();
     if (res != GLEW_OK) 
     {
