@@ -198,6 +198,11 @@ void OnIdle()
 void SetupGeometry() {
     /* Create a cylinder */
     simpleCylinder(1.0, 1.0, SEGMENTS, vertex_buffer_data);
+    FILE *file = fopen("log", "w");
+    int i;
+    for(i = 0; i < SEGMENTS*6; i++) {
+        fprintf(file, "%f ", vertex_buffer_data[i]);
+    }
 }
 
 /******************************************************************
@@ -360,8 +365,10 @@ void Initialize(void)
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);    
 
+    SetupGeometry();
+
     /* Setup array objects and vertex, color, and index buffer objects */
-    SetupDataBuffers();	
+    //SetupDataBuffers();	
 
     /* Setup shaders and shader program */
     CreateShaderProgram();  
