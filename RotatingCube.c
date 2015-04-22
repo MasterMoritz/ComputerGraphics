@@ -34,6 +34,9 @@
 
 /*----------------------------------------------------------------*/
 
+/* Define handle to a vertex array object */
+GLuint VAO;
+
 /* Define handle to a vertex buffer object */
 GLuint VBO;
 
@@ -121,13 +124,9 @@ void Display()
     /* Clear window; color specified in 'Initialize()' */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glEnableVertexAttribArray(vPosition);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	/* Bind VAO instead of VBOs */
+	glBindVertexArray(VAO);
 
-    glEnableVertexAttribArray(vColor);
-    glBindBuffer(GL_ARRAY_BUFFER, CBO);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);   
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     GLint size; 
@@ -160,10 +159,7 @@ void Display()
 
     /* Issue draw command, using indexed triangle list */
     glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);   
+ 
 
     /* Swap between front and back buffer */ 
     glutSwapBuffers();
@@ -216,6 +212,23 @@ void SetupDataBuffers()
     glGenBuffers(1, &CBO);
     glBindBuffer(GL_ARRAY_BUFFER, CBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
+
+	/* Setup vertex array object */
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	/* Determine vertex format */
+	glEnableVertexAttribArray(vPosition);
+    //glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(vColor);
+    //glBindBuffer(GL_ARRAY_BUFFER, CBO);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);  
+
+	/* Unbind VAO */
+	glBindVertexArray(0); 
+
 }
 
 
@@ -335,17 +348,12 @@ void Initialize(void)
     /* Set background (clear) color to dark blue */ 
     glClearColor(0.0, 0.0, 0.4, 0.0);
 
-	/* Setup Vertex array object */
-	GLuint VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);	
-
     /* Enable depth testing */
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);    
 
-    /* Setup vertex, color, and index buffer objects */
-    SetupDataBuffers();
+    /* Setup array objects and vertex, color, and index buffer objects */
+    SetupDataBuffers();	
 
     /* Setup shaders and shader program */
     CreateShaderProgram();  
