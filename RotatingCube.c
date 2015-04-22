@@ -124,8 +124,8 @@ void Display()
     /* Clear window; color specified in 'Initialize()' */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/* Bind VAO instead of VBOs */
-	glBindVertexArray(VAO);
+    /* Bind VAO instead of VBOs */
+    glBindVertexArray(VAO);
 
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
@@ -213,19 +213,19 @@ void SetupDataBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, CBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
 
-	/* Setup vertex array object */
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
+    /* Setup vertex array object */
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
 
-	/* Determine vertex format */
-	glEnableVertexAttribArray(vPosition);
+    /* Determine vertex format */
+    glEnableVertexAttribArray(vPosition);
     glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glEnableVertexAttribArray(vColor);
     glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);  
 
-	/* Unbind VAO */
-	glBindVertexArray(0); 
+    /* Unbind VAO */
+    glBindVertexArray(0); 
 
 }
 
@@ -398,15 +398,15 @@ int main(int argc, char** argv)
 {
     /* Initialize GLUT; set double buffered window and RGBA color model */
     glutInit(&argc, argv);
-	glutInitContextVersion(3, 3);
-	glutInitContextProfile(GLUT_CORE_PROFILE);
+    glutInitContextVersion(3, 3);
+    glutInitContextProfile(GLUT_CORE_PROFILE);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(600, 600);
     glutInitWindowPosition(400, 400);
     glutCreateWindow("CG Proseminar - Rotating Cube");
 
-	/* Initialize GL extension wrangler */
-	glewExperimental = GL_TRUE;
+    /* Initialize GL extension wrangler */
+    glewExperimental = GL_TRUE;
     GLenum res = glewInit();
     if (res != GLEW_OK) 
     {
