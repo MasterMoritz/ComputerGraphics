@@ -34,9 +34,6 @@
 
 /*----------------------------------------------------------------*/
 
-/* Define handle to a vertex array object */
-GLuint VAO;
-
 /* Define handle to a vertex buffer object */
 GLuint VBO;
 
@@ -58,7 +55,7 @@ GLuint ShaderProgram;
 
 float ProjectionMatrix[16]; /* Perspective projection matrix */
 float ViewMatrix[16]; /* Camera view matrix */ 
-float ModelMatrix[16]; /* Model matrix */ 
+float ModelMatrix[16]; /* Model matrix */
 
 /* Transformation matrices for initial position */
 float TranslateOrigin[16];
@@ -67,16 +64,18 @@ float RotateX[16];
 float RotateZ[16];
 float InitialTransform[16];
 
+/* Transformation matrices for MasterMoritz */
+float T[16];
+float R[16];
 
+/*-------------ROOF------------*/
 GLfloat vertex_buffer_data[] = { /* 8 cube vertices XYZ */
-    -1.0, -1.0,  1.0,
-     1.0, -1.0,  1.0,
-     1.0,  1.0,  1.0,
-    -1.0,  1.0,  1.0,
-    -1.0, -1.0, -1.0,
-     1.0, -1.0, -1.0,
-     1.0,  1.0, -1.0,
-    -1.0,  1.0, -1.0,
+	0.0, 2.0,  0.0,//0
+	2.0, 0.0,  2.0,//1
+	-2.0,  0.0,  2.0,//2
+	2.0, 0.0,  -2.0,//3
+	-2.0,  0.0,  -2.0,//4
+
 };   
 
 GLfloat color_buffer_data[] = { /* RGB color values for 8 vertices */
@@ -84,27 +83,34 @@ GLfloat color_buffer_data[] = { /* RGB color values for 8 vertices */
     1.0, 0.0, 1.0,
     1.0, 1.0, 1.0,
     0.0, 1.0, 1.0,
-    0.0, 0.0, 0.0,
-    1.0, 0.0, 0.0,
-    1.0, 1.0, 0.0,
-    0.0, 1.0, 0.0,
 }; 
 
-GLushort index_buffer_data[] = { /* Indices of 6*2 triangles (6 sides) */
-    0, 1, 2,
-    2, 3, 0,
-    1, 5, 6,
-    6, 2, 1,
-    7, 6, 5,
-    5, 4, 7,
-    4, 0, 3,
-    3, 7, 4,
-    4, 5, 1,
-    1, 0, 4,
-    3, 2, 6,
-    6, 7, 3,
+GLushort index_buffer_data[] = { /* Indices of 4 triangles making up a pyramid */
+    0, 1, 2,//front
+	0, 3, 4,//back
+    0, 1, 3,//right
+    0, 4, 2,//left
 };
 
+/*-------------------FLOOR---------------------------*/
+GLfloat floor_vertices[] = { /* 8 cube vertices XYZ */
+	-2.0, 0.0,  2.0,//0
+	-2.0, 0.0,  -2.0,//1
+	2.0,  0.0,  2.0,//2
+	2.0, 0.0,  -2.0,//3
+};   
+
+GLfloat floor_color[] = { /* RGB color values for 8 vertices */
+    1.0, 0.5, 1.0,
+    1.0, 0.7, 0.8,
+    1.0, 1.0, 1.0,
+    0.0, 1.0, 1.0,
+}; 
+
+GLushort floor_triangles[] = { /* Indices of 2 triangles making up a square */
+    0, 1, 2,
+	1, 2, 3,
+};
 /*----------------------------------------------------------------*/
 
 
@@ -124,9 +130,13 @@ void Display()
     /* Clear window; color specified in 'Initialize()' */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    /* Bind VAO instead of VBOs */
-    glBindVertexArray(VAO);
+    glEnableVertexAttribArray(vPosition);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+    glEnableVertexAttribArray(vColor);
+    glBindBuffer(GL_ARRAY_BUFFER, CBO);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);   
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     GLint size; 
@@ -155,11 +165,14 @@ void Display()
         fprintf(stderr, "Could not bind uniform ModelMatrix\n");
         exit(-1);
     }
-    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix);  
+    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix); 
 
     /* Issue draw command, using indexed triangle list */
     glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
- 
+
+    /* Disable attributes */
+    glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vColor);   
 
     /* Swap between front and back buffer */ 
     glutSwapBuffers();
@@ -180,11 +193,12 @@ void OnIdle()
     float RotationMatrixAnim[16];
 
     /* Time dependent rotation */
-    SetRotationY(angle, RotationMatrixAnim);
+    SetRotationY(angle, R);
 
     /* Apply model rotation; finally move cube down */
-    MultiplyMatrix(RotationMatrixAnim, InitialTransform, ModelMatrix);
-    MultiplyMatrix(TranslateDown, ModelMatrix, ModelMatrix);
+    MultiplyMatrix(R, InitialTransform, ModelMatrix);
+	SetTranslation(0.0, 1.0, 0.0, T);
+    MultiplyMatrix(T, ModelMatrix, ModelMatrix);
 
     /* Request redrawing forof window content */  
     glutPostRedisplay();
@@ -212,21 +226,6 @@ void SetupDataBuffers()
     glGenBuffers(1, &CBO);
     glBindBuffer(GL_ARRAY_BUFFER, CBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
-
-    /* Setup vertex array object */
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    /* Determine vertex format */
-    glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);  
-
-    /* Unbind VAO */
-    glBindVertexArray(0); 
-
 }
 
 
@@ -346,12 +345,17 @@ void Initialize(void)
     /* Set background (clear) color to dark blue */ 
     glClearColor(0.0, 0.0, 0.4, 0.0);
 
+	/* Setup Vertex array object */
+	GLuint VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);	
+
     /* Enable depth testing */
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);    
 
-    /* Setup array objects and vertex, color, and index buffer objects */
-    SetupDataBuffers();	
+    /* Setup vertex, color, and index buffer objects */
+    SetupDataBuffers();
 
     /* Setup shaders and shader program */
     CreateShaderProgram();  
@@ -373,9 +377,9 @@ void Initialize(void)
     SetTranslation(0.0, 0.0, camera_disp, ViewMatrix);
 
     /* Translate and rotate cube onto tip */
-    SetTranslation(1, 1, 1, TranslateOrigin);
-    SetRotationX(-45, RotateX);
-    SetRotationZ(35, RotateZ);	
+    SetTranslation(0, 0, 0, TranslateOrigin);
+    SetRotationX(0, RotateX);
+    SetRotationZ(0, RotateZ);	
 
     /* Translate down */	
     SetTranslation(0, -sqrtf(sqrtf(2.0) * 1.0), 0, TranslateDown);
@@ -398,15 +402,15 @@ int main(int argc, char** argv)
 {
     /* Initialize GLUT; set double buffered window and RGBA color model */
     glutInit(&argc, argv);
-    glutInitContextVersion(3, 3);
-    glutInitContextProfile(GLUT_CORE_PROFILE);
+	glutInitContextVersion(3, 3);
+	glutInitContextProfile(GLUT_CORE_PROFILE);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-    glutInitWindowSize(600, 600);
+    glutInitWindowSize(800, 800);
     glutInitWindowPosition(400, 400);
     glutCreateWindow("CG Proseminar - Rotating Cube");
 
-    /* Initialize GL extension wrangler */
-    glewExperimental = GL_TRUE;
+	/* Initialize GL extension wrangler */
+	glewExperimental = GL_TRUE;
     GLenum res = glewInit();
     if (res != GLEW_OK) 
     {
