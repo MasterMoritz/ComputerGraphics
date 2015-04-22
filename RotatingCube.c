@@ -219,11 +219,9 @@ void SetupDataBuffers()
 
 	/* Determine vertex format */
 	glEnableVertexAttribArray(vPosition);
-    //glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glEnableVertexAttribArray(vColor);
-    //glBindBuffer(GL_ARRAY_BUFFER, CBO);
     glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);  
 
 	/* Unbind VAO */
