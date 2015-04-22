@@ -29,7 +29,11 @@
 
 /* Local includes */
 #include "LoadShader.h"   /* Provides loading function for shader code */
-#include "Matrix.h"  
+#include "Matrix.h"
+#include "Meshes.h" 
+
+/* Cylinder */
+#define SEGMENTS 32
 
 
 /*----------------------------------------------------------------*/
@@ -68,16 +72,7 @@ float RotateZ[16];
 float InitialTransform[16];
 
 
-GLfloat vertex_buffer_data[] = { /* 8 cube vertices XYZ */
-    -1.0, -1.0,  1.0,
-     1.0, -1.0,  1.0,
-     1.0,  1.0,  1.0,
-    -1.0,  1.0,  1.0,
-    -1.0, -1.0, -1.0,
-     1.0, -1.0, -1.0,
-     1.0,  1.0, -1.0,
-    -1.0,  1.0, -1.0,
-};   
+GLfloat vertex_buffer_data[SEGMENTS*3*2]; /* Cylinder vertices */
 
 GLfloat color_buffer_data[] = { /* RGB color values for 8 vertices */
     0.0, 0.0, 1.0,
@@ -128,9 +123,9 @@ void Display()
     glBindVertexArray(VAO);
 
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    /*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     GLint size; 
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);*/
 
     /* Associate program with shader matrices */
     GLint projectionUniform = glGetUniformLocation(ShaderProgram, "ProjectionMatrix");
@@ -158,7 +153,8 @@ void Display()
     glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix);  
 
     /* Issue draw command, using indexed triangle list */
-    glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+    //glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, SEGMENTS*3*2);
  
 
     /* Swap between front and back buffer */ 
@@ -193,6 +189,19 @@ void OnIdle()
 
 /******************************************************************
 *
+* SetupGeometry
+*
+* Create vertex data & make calls to SetupBufferData
+*
+*******************************************************************/
+
+void SetupGeometry() {
+    /* Create a cylinder */
+    simpleCylinder(1.0, 1.0, SEGMENTS, vertex_buffer_data);
+}
+
+/******************************************************************
+*
 * SetupDataBuffers
 *
 * Create buffer objects and load data into buffers
@@ -201,13 +210,10 @@ void OnIdle()
 
 void SetupDataBuffers()
 {
+
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &IBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_STATIC_DRAW);
 
     glGenBuffers(1, &CBO);
     glBindBuffer(GL_ARRAY_BUFFER, CBO);
@@ -226,6 +232,10 @@ void SetupDataBuffers()
 
     /* Unbind VAO */
     glBindVertexArray(0); 
+
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_STATIC_DRAW);
 
 }
 
