@@ -422,6 +422,7 @@ void Initialize(void)
 {   
     /* Set background (clear) color to dark blue */ 
     glClearColor(0.0, 0.2, 0.4, 0.0);
+);	
 
     /* Enable depth testing */
     glEnable(GL_DEPTH_TEST);
