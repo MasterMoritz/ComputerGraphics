@@ -36,25 +36,16 @@
 
 GLuint VAO;
 
-/* Define handle to a vertex buffer object */
-GLuint VBO;
-
-/* Define handle to a color buffer object */
-GLuint CBO; 
-
-/* Define handle to an index buffer object */
-GLuint IBO;
-
 GLuint VAO_2;
 
 /* Define handle to a vertex buffer object */
-GLuint VBO_2;
+GLuint VBO[2];
 
 /* Define handle to a color buffer object */
-GLuint CBO_2; 
+GLuint CBO[2]; 
 
 /* Define handle to an index buffer object */
-GLuint IBO_2;
+GLuint IBO[2];
 
 /* Indices to vertex attributes; in this case positon and color */ 
 enum DataID {vPosition = 0, vColor = 1}; 
@@ -481,14 +472,14 @@ void Display()
 
 	/* Bind VAO instead of VBOs */
 	glEnableVertexAttribArray(vPosition);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glEnableVertexAttribArray(vColor);
-    glBindBuffer(GL_ARRAY_BUFFER, CBO);
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[0]);
     glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[0]);
 
     GLint size; 
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
@@ -530,14 +521,14 @@ void Display()
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     //For debugging: output only the second element
 
 	glEnableVertexAttribArray(vPosition);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_2);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glEnableVertexAttribArray(vColor);
-    glBindBuffer(GL_ARRAY_BUFFER, CBO_2);
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[1]);
     glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO_2);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[1]);
 
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
@@ -595,16 +586,16 @@ void OnIdle()
 
 void SetupDataBuffers()
 {
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glGenBuffers(2, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &IBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glGenBuffers(2, IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[0]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &CBO);
-    glBindBuffer(GL_ARRAY_BUFFER, CBO);
+    glGenBuffers(2, CBO);
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
 
 	glGenVertexArrays(1, &VAO);
@@ -621,16 +612,13 @@ void SetupDataBuffers()
     glDisableVertexAttribArray(vColor);   
 
 	/* Floor */
-	glGenBuffers(1, &VBO_2);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_2);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_2), vertex_buffer_data_2, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &IBO_2);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO_2);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[1]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_2), index_buffer_data_2, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &CBO_2);
-    glBindBuffer(GL_ARRAY_BUFFER, CBO_2);
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_2), color_buffer_data_2, GL_STATIC_DRAW);
 
 	glGenVertexArrays(1, &VAO_2);
