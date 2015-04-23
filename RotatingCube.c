@@ -134,12 +134,14 @@ GLushort index_buffer_data_2[] = { /* Indices of 2 triangles making up a square 
 	1, 2, 3, //bot
 	4, 5, 6, //top
 	5, 6, 7, //top
-	1, 2, 6, //left
-	1, 6, 4, //left
+	1, 0, 5, //left
+	5, 4, 0, //left
+	2, 3, 5, //right
+	5, 7, 3, //right
 	0, 2, 4, //front
 	2, 6, 4, //front
 	1, 3, 7, //back
-	1, 5, 3, //back
+	7, 5, 1, //back
 };
 /*----------------------------------------------------------------*/
 
