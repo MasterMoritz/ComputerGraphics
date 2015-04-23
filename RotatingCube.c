@@ -31,6 +31,13 @@
 #include "LoadShader.h"   /* Provides loading function for shader code */
 #include "Matrix.h"  
 
+#ifndef M_PI
+	#define M_PI 3.14159265358979323846
+#endif
+
+#ifndef NUM_OF_OBJECTS
+	#define NUM_OF_OBJECTS 6
+#endif
 
 /*----------------------------------------------------------------*/
 

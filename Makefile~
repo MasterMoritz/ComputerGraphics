@@ -1,6 +1,6 @@
 CC = gcc
 OBJ = RotatingCube.o LoadShader.o Matrix.o
-CFLAGS = -g -std=c99 -Wall -Wextra
+CFLAGS = -g -Wall -Wextra
 
 LDLIBS=-lm -lglut -lGLEW -lGL
 
