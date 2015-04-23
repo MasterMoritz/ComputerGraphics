@@ -58,8 +58,7 @@ GLuint ShaderProgram;
 
 float ProjectionMatrix[16]; /* Perspective projection matrix */
 float ViewMatrix[16]; /* Camera view matrix */ 
-float ModelMatrix[16]; /* Model matrix */
-float ModelMatrix_2[16];
+float ModelMatrix[2][16]; /* Model matrix */
 
 /* Transformation matrices for initial position */
 float TranslateOrigin[16];
@@ -507,7 +506,7 @@ void Display()
         fprintf(stderr, "Could not bind uniform ModelMatrix\n");
         exit(-1);
     }
-    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix); 
+    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix[0]); 
 
     /* Issue draw command, using indexed triangle list */
     glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
@@ -533,7 +532,7 @@ void Display()
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
 
-    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix_2);       //Fix rotation!
+    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix[1]);       //Fix rotation!
 
 	/* Issue draw command, using indexed triangle list */
     glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
@@ -563,13 +562,13 @@ void OnIdle()
     SetRotationY(angle, R);
 
     /* Apply model rotation; finally move cube down */
-    MultiplyMatrix(R, InitialTransform, ModelMatrix);
-	SetTranslation(0.0, 1.0, 0.0, T);
-    MultiplyMatrix(T, ModelMatrix, ModelMatrix);
+    MultiplyMatrix(R, InitialTransform, ModelMatrix[0]);
+	SetTranslation(0.0, 2.0, 0.0, T);
+    MultiplyMatrix(T, ModelMatrix[0], ModelMatrix[0]);
 
-	MultiplyMatrix(R, InitialTransform, ModelMatrix_2);
+	MultiplyMatrix(R, InitialTransform, ModelMatrix[1]);
 	SetTranslation(0.0, -3.0, 0.0, T);
-    MultiplyMatrix(T, ModelMatrix_2, ModelMatrix_2);
+    MultiplyMatrix(T, ModelMatrix[1], ModelMatrix[1]);
 
     /* Request redrawing forof window content */  
     glutPostRedisplay();
@@ -765,8 +764,8 @@ void Initialize(void)
     /* Initialize matrices */
     SetIdentityMatrix(ProjectionMatrix);
     SetIdentityMatrix(ViewMatrix);
-    SetIdentityMatrix(ModelMatrix);
-	SetIdentityMatrix(ModelMatrix_2);
+    SetIdentityMatrix(ModelMatrix[0]);
+	SetIdentityMatrix(ModelMatrix[0]);
 
     /* Set projection transform */
     float fovy = 60.0;
