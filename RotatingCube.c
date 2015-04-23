@@ -527,7 +527,7 @@ void Display()
     
     /* FLOOR */
     /* Clear window; color specified in 'Initialize()' */
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     //For debugging: output only the second element
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     //For debugging: output only the second element
 
 	glEnableVertexAttribArray(vPosition);
     glBindBuffer(GL_ARRAY_BUFFER, VBO_2);
@@ -542,7 +542,7 @@ void Display()
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
 
-    //glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix_2);       //Fix rotation!
+    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix_2);       //Fix rotation!
 
 	/* Issue draw command, using indexed triangle list */
     glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
@@ -577,7 +577,7 @@ void OnIdle()
     MultiplyMatrix(T, ModelMatrix, ModelMatrix);
 
 	MultiplyMatrix(R, InitialTransform, ModelMatrix_2);
-	SetTranslation(0.0, -2, 0.0, T);
+	SetTranslation(0.0, -3.0, 0.0, T);
     MultiplyMatrix(T, ModelMatrix_2, ModelMatrix_2);
 
     /* Request redrawing forof window content */  
@@ -781,7 +781,7 @@ void Initialize(void)
 	SetIdentityMatrix(ModelMatrix_2);
 
     /* Set projection transform */
-    float fovy = 45.0;
+    float fovy = 60.0;
     float aspect = 1.0; 
     float nearPlane = 1.0; 
     float farPlane = 50.0;
