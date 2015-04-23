@@ -1,11 +1,8 @@
 /******************************************************************
 *
-* RotatingCube.c
+* MerryGoRound.c
 *
-* Description: This example demonstrates a colored, rotating
-* cube in shader-based OpenGL. The use of transformation
-* matrices, perspective projection, and indexed triangle sets 
-* are shown.
+* Assignment 1
 *
 * Computer Graphics Proseminar SS 2015
 * 
@@ -13,6 +10,8 @@
 * Institute of Computer Science
 * University of Innsbruck
 *
+*
+* Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
 
 
@@ -45,6 +44,7 @@
 
 /*----------------------------------------------------------------*/
 
+/* Define handle to a vertex array object */
 GLuint VAO[NUM_OF_OBJECTS];
 
 /* Define handle to a vertex buffer object */
@@ -67,7 +67,7 @@ GLuint ShaderProgram;
 
 float ProjectionMatrix[16]; /* Perspective projection matrix */
 float ViewMatrix[16]; /* Camera view matrix */ 
-float ModelMatrix[NUM_OF_OBJECTS][16]; /* Model matrix */
+float ModelMatrix[NUM_OF_OBJECTS][16]; /* Array of model matrices */
 
 /* Transformation matrices for initial position */
 float TranslateOrigin[16];
@@ -130,7 +130,7 @@ GLushort index_buffer_data[] = {
 	4, 7, 6, //left
 };
 
-/*-------------------FLOOR---------------------------*/
+/*-------------------BASE---------------------------*/
 
 //cuboid vertices
 GLfloat vertex_buffer_data_2[] = {
@@ -1121,7 +1121,7 @@ void Initialize(void)
 {   
     /* Set background (clear) color to soft bluegreen */ 
     glClearColor(0.0, 0.2, 0.4, 0.0);
-
+    
     /* Enable depth testing */
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);    
@@ -1151,7 +1151,7 @@ void Initialize(void)
     float camera_disp = -10.0;
     SetTranslation(0.0, 0.0, camera_disp, ViewMatrix);
 
-    /* Translate and rotate cube onto tip */
+    /* Translate and rotate objects */
     SetTranslation(0, 2, 0, InitialTransform[0]);
 	SetTranslation(0, -3, 0, InitialTransform[1]);
 	SetTranslation(-1.6, -3, -1.6, InitialTransform[2]);
@@ -1182,7 +1182,7 @@ int main(int argc, char** argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(800, 800);
     glutInitWindowPosition(400, 400);
-    glutCreateWindow("CG Proseminar - Rotating Cube");
+    glutCreateWindow("CG Proseminar - Assignment 1");
 
 	/* Initialize GL extension wrangler */
 	glewExperimental = GL_TRUE;
