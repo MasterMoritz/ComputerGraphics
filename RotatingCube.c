@@ -107,15 +107,14 @@ GLushort index_buffer_data[] = { /* Indices of 4 triangles making up a pyramid *
 
 /*-------------------FLOOR---------------------------*/
 GLfloat vertex_buffer_data_2[] = { /* 8 cube vertices XYZ */
-	-2.0, 0.0,  2.0,//0
-	-2.0, 0.0,  -2.0,//1
-	2.0,  0.0,  2.0,//2
-	2.0, 0.0,  -2.0,//3
-
-	-2.0, 1.0,  2.0,//4
-	-2.0, 1.0,  -2.0,//5
-	2.0,  1.0,  2.0,//6
-	2.0, 1.0,  -2.0,//7
+	-2.0, -0.3,  2.0, //0
+     2.0, -0.3,  2.0, //1
+     2.0,  0.3,  2.0, //2
+    -2.0,  0.3,  2.0, //3
+    -2.0, -0.3, -2.0, //4
+     2.0, -0.3, -2.0, //5
+     2.0,  0.3, -2.0, //6
+    -2.0,  0.3, -2.0, //7
 };   
 
 GLfloat color_buffer_data_2[] = { /* RGB color values for 8 vertices */
@@ -258,7 +257,10 @@ void OnIdle()
     MultiplyMatrix(R, InitialTransform, ModelMatrix);
 	SetTranslation(0.0, 1.0, 0.0, T);
     MultiplyMatrix(T, ModelMatrix, ModelMatrix);
-	MultiplyMatrix(R, ModelMatrix_2, ModelMatrix_2);
+
+	MultiplyMatrix(R, InitialTransform, ModelMatrix_2);
+	SetTranslation(0.0, -2, 0.0, T);
+    MultiplyMatrix(T, ModelMatrix_2, ModelMatrix_2);
 
     /* Request redrawing forof window content */  
     glutPostRedisplay();
