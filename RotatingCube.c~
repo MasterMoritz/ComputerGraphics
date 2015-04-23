@@ -540,9 +540,12 @@ void Display()
 * 
 *
 *******************************************************************/
-float modF(double a, double b) {
-	int tmp = (int) (a/b);
-	return (a-(double)(tmp)*b);
+float moves(double angle, double offset) {
+	float tmp = sin((angle + offset) * (M_PI/180));
+	if (tmp < 0) {
+		tmp *= -1;
+	}
+	return tmp;
 }
 
 void OnIdle()
@@ -563,9 +566,11 @@ void OnIdle()
 
 	/* OBJECTS THAT ROTATE AND MOVE UP AND DOWN */
 	//Poles
+	int j = 0;
 	for (int i = 2; i <= 5; i++) {
-		SetTranslation(0.0, move, 0.0, T);
-    	MultiplyMatrix(T, ModelMatrix[2], ModelMatrix[i]);
+		SetTranslation(0.0, moves(angle, 20*j), 0.0, T);
+    	MultiplyMatrix(T, ModelMatrix[i], ModelMatrix[i]);
+		j++;
 	}
 
     /* Request redrawing forof window content */  
