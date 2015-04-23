@@ -36,7 +36,7 @@
 #endif
 
 #ifndef NUM_OF_OBJECTS
-	#define NUM_OF_OBJECTS 6
+	#define NUM_OF_OBJECTS 10
 #endif
 
 #ifndef POLE_HEIGHT
@@ -132,16 +132,16 @@ GLushort index_buffer_data[] = {
 
 /*-------------------FLOOR---------------------------*/
 
-//quader vertices
+//cuboid vertices
 GLfloat vertex_buffer_data_2[] = {
-	-2.0, -POLE_HEIGHT,  2.0, //0
-     2.0, -POLE_HEIGHT,  2.0, //1
-     2.0,  0.3,  2.0, //2
-    -2.0,  0.3,  2.0, //3
-    -2.0, -POLE_HEIGHT, -2.0, //4
-     2.0, -POLE_HEIGHT, -2.0, //5
-     2.0,  0.3, -2.0, //6
-    -2.0,  0.3, -2.0, //7
+	-3.0, -POLE_HEIGHT,  3.0, //0
+     3.0, -POLE_HEIGHT,  3.0, //1
+     3.0,  0.3,          3.0, //2
+    -3.0,  0.3,          3.0, //3
+    -3.0, -POLE_HEIGHT, -3.0, //4
+     3.0, -POLE_HEIGHT, -3.0, //5
+     3.0,  0.3,         -3.0, //6
+    -3.0,  0.3,         -3.0, //7
 };   
 
 //colors of the vertices
@@ -480,6 +480,181 @@ GLushort index_buffer_data_6[] = {
     14, 15, 11,
 };
 
+/*-------------------ROOF POLE 1---------------------------*/
+
+//vertices [XYZ]
+GLfloat vertex_buffer_data_7[] = {
+	//pole
+	-0.1, -2.5,  0.1, //0
+     0.1, -2.5,  0.1, //1
+     0.1,  2.5,  0.1, //2
+    -0.1,  2.5,  0.1, //3
+    -0.1, -2.5, -0.1, //4
+     0.1, -2.5, -0.1, //5
+     0.1,  2.5, -0.1, //6
+    -0.1,  2.5, -0.1, //7
+};     
+
+//RGB color values
+GLfloat color_buffer_data_7[] = {
+    1.0, 1.0, 0.0,
+    1.0, 1.0, 0.0,
+    0.4, 0.0, 1.0,
+    0.4, 0.0, 1.0,
+    1.0, 1.0, 0.0,
+    1.0, 1.0, 0.0,
+    0.4, 0.0, 1.0,
+    0.4, 0.0, 1.0,
+}; 
+
+//Triangles
+GLushort index_buffer_data_7[] = {
+	//pole
+    0, 1, 2,
+    2, 3, 0,
+    1, 5, 6,
+    6, 2, 1,
+    7, 6, 5,
+    5, 4, 7,
+    4, 0, 3,
+    3, 7, 4,
+    4, 5, 1,
+    1, 0, 4,
+    3, 2, 6,
+    6, 7, 3,
+};
+
+/*-------------------ROOF POLE 2---------------------------*/
+
+//vertices [XYZ]
+GLfloat vertex_buffer_data_8[] = {
+	//pole
+	-0.1, -2.5,  0.1, //0
+     0.1, -2.5,  0.1, //1
+     0.1,  2.5,  0.1, //2
+    -0.1,  2.5,  0.1, //3
+    -0.1, -2.5, -0.1, //4
+     0.1, -2.5, -0.1, //5
+     0.1,  2.5, -0.1, //6
+    -0.1,  2.5, -0.1, //7
+};     
+
+//RGB color values
+GLfloat color_buffer_data_8[] = {
+    1.0, 1.0, 0.0,
+    1.0, 1.0, 0.0,
+    0.4, 0.0, 1.0,
+    0.4, 0.0, 1.0,
+    1.0, 1.0, 0.0,
+    1.0, 1.0, 0.0,
+    0.4, 0.0, 1.0,
+    0.4, 0.0, 1.0,
+}; 
+
+//Triangles
+GLushort index_buffer_data_8[] = {
+	//pole
+    0, 1, 2,
+    2, 3, 0,
+    1, 5, 6,
+    6, 2, 1,
+    7, 6, 5,
+    5, 4, 7,
+    4, 0, 3,
+    3, 7, 4,
+    4, 5, 1,
+    1, 0, 4,
+    3, 2, 6,
+    6, 7, 3,
+};
+
+/*-------------------ROOF POLE 3---------------------------*/
+
+//vertices [XYZ]
+GLfloat vertex_buffer_data_9[] = {
+	//pole
+	-0.1, -2.5,  0.1, //0
+     0.1, -2.5,  0.1, //1
+     0.1,  2.5,  0.1, //2
+    -0.1,  2.5,  0.1, //3
+    -0.1, -2.5, -0.1, //4
+     0.1, -2.5, -0.1, //5
+     0.1,  2.5, -0.1, //6
+    -0.1,  2.5, -0.1, //7
+};     
+
+//RGB color values
+GLfloat color_buffer_data_9[] = {
+    1.0, 1.0, 0.0,
+    1.0, 1.0, 0.0,
+    0.4, 0.0, 1.0,
+    0.4, 0.0, 1.0,
+    1.0, 1.0, 0.0,
+    1.0, 1.0, 0.0,
+    0.4, 0.0, 1.0,
+    0.4, 0.0, 1.0,
+}; 
+
+//Triangles
+GLushort index_buffer_data_9[] = {
+	//pole
+    0, 1, 2,
+    2, 3, 0,
+    1, 5, 6,
+    6, 2, 1,
+    7, 6, 5,
+    5, 4, 7,
+    4, 0, 3,
+    3, 7, 4,
+    4, 5, 1,
+    1, 0, 4,
+    3, 2, 6,
+    6, 7, 3,
+};
+
+/*-------------------ROOF POLE 4---------------------------*/
+
+//vertices [XYZ]
+GLfloat vertex_buffer_data_10[] = {
+	//pole
+	-0.1, -2.5,  0.1, //0
+     0.1, -2.5,  0.1, //1
+     0.1,  2.5,  0.1, //2
+    -0.1,  2.5,  0.1, //3
+    -0.1, -2.5, -0.1, //4
+     0.1, -2.5, -0.1, //5
+     0.1,  2.5, -0.1, //6
+    -0.1,  2.5, -0.1, //7
+};     
+
+//RGB color values
+GLfloat color_buffer_data_10[] = {
+    1.0, 1.0, 0.0,
+    1.0, 1.0, 0.0,
+    0.4, 0.0, 1.0,
+    0.4, 0.0, 1.0,
+    1.0, 1.0, 0.0,
+    1.0, 1.0, 0.0,
+    0.4, 0.0, 1.0,
+    0.4, 0.0, 1.0,
+}; 
+
+//Triangles
+GLushort index_buffer_data_10[] = {
+	//pole
+    0, 1, 2,
+    2, 3, 0,
+    1, 5, 6,
+    6, 2, 1,
+    7, 6, 5,
+    5, 4, 7,
+    4, 0, 3,
+    3, 7, 4,
+    4, 5, 1,
+    1, 0, 4,
+    3, 2, 6,
+    6, 7, 3,
+};
 /*----------------------------------------------------------------*/
 
 
@@ -739,6 +914,94 @@ void SetupDataBuffers()
     /* Disable attributes */
     glDisableVertexAttribArray(vPosition);
     glDisableVertexAttribArray(vColor);
+
+	/* ROOF_POLE 1 */
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[6]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_7), vertex_buffer_data_7, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[6]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_7), index_buffer_data_7, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[6]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_7), color_buffer_data_7, GL_STATIC_DRAW);
+
+	glBindVertexArray(VAO[6]);
+
+	glEnableVertexAttribArray(vPosition);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(vColor);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
+
+    /* Disable attributes */
+    glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vColor);
+
+	/* ROOF_POLE 2 */
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[7]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_8), vertex_buffer_data_8, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[7]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_8), index_buffer_data_8, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[7]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_8), color_buffer_data_8, GL_STATIC_DRAW);
+
+	glBindVertexArray(VAO[7]);
+
+	glEnableVertexAttribArray(vPosition);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(vColor);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
+
+    /* Disable attributes */
+    glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vColor);
+
+	/* ROOF_POLE 3 */
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[8]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_9), vertex_buffer_data_9, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[8]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_9), index_buffer_data_9, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[8]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_9), color_buffer_data_9, GL_STATIC_DRAW);
+
+	glBindVertexArray(VAO[8]);
+
+	glEnableVertexAttribArray(vPosition);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(vColor);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
+
+    /* Disable attributes */
+    glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vColor);
+
+	/* ROOF_POLE 4 */
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[9]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_10), vertex_buffer_data_10, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[9]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_10), index_buffer_data_10, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[9]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_10), color_buffer_data_10, GL_STATIC_DRAW);
+
+	glBindVertexArray(VAO[9]);
+
+	glEnableVertexAttribArray(vPosition);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(vColor);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
+
+    /* Disable attributes */
+    glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vColor);
    
 }
 
@@ -856,7 +1119,7 @@ void CreateShaderProgram()
 
 void Initialize(void)
 {   
-    /* Set background (clear) color to dark blue */ 
+    /* Set background (clear) color to soft bluegreen */ 
     glClearColor(0.0, 0.2, 0.4, 0.0);
 
     /* Enable depth testing */
@@ -878,7 +1141,7 @@ void Initialize(void)
 	}
 
     /* Set projection transform */
-    float fovy = 60.0;
+    float fovy = 80.0;
     float aspect = 1.0; 
     float nearPlane = 1.0; 
     float farPlane = 50.0;
@@ -895,6 +1158,10 @@ void Initialize(void)
 	SetTranslation(-1.6, -3,  1.6, InitialTransform[3]);
 	SetTranslation( 1.6, -3,  1.6, InitialTransform[4]);
 	SetTranslation( 1.6, -3, -1.6, InitialTransform[5]);
+	SetTranslation(2.6, -0.5,-2.6, InitialTransform[6]);
+	SetTranslation(-2.6, -0.5, 2.6, InitialTransform[7]);
+	SetTranslation(-2.6, -0.5,-2.6, InitialTransform[8]);
+	SetTranslation(2.6, -0.5, 2.6, InitialTransform[9]);
 }
 
 
