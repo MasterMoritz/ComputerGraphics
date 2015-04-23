@@ -39,6 +39,10 @@
 	#define NUM_OF_OBJECTS 6
 #endif
 
+#ifndef POLE_HEIGHT
+	#define POLE_HEIGHT 1
+#endif
+
 /*----------------------------------------------------------------*/
 
 GLuint VAO[NUM_OF_OBJECTS];
@@ -70,7 +74,7 @@ float TranslateOrigin[16];
 float TranslateDown[16];
 float RotateX[16];
 float RotateZ[16];
-float InitialTransform[16];
+float InitialTransform[NUM_OF_OBJECTS][16];
 
 /* Transformation matrices for MasterMoritz */
 float T[16];
@@ -109,12 +113,12 @@ GLushort index_buffer_data[] = {
 
 //quader vertices
 GLfloat vertex_buffer_data_2[] = {
-	-2.0, -0.3,  2.0, //0
-     2.0, -0.3,  2.0, //1
+	-2.0, -POLE_HEIGHT,  2.0, //0
+     2.0, -POLE_HEIGHT,  2.0, //1
      2.0,  0.3,  2.0, //2
     -2.0,  0.3,  2.0, //3
-    -2.0, -0.3, -2.0, //4
-     2.0, -0.3, -2.0, //5
+    -2.0, -POLE_HEIGHT, -2.0, //4
+     2.0, -POLE_HEIGHT, -2.0, //5
      2.0,  0.3, -2.0, //6
     -2.0,  0.3, -2.0, //7
 };   
@@ -152,24 +156,24 @@ GLushort index_buffer_data_2[] = {
 //vertices [XYZ]
 GLfloat vertex_buffer_data_3[] = {
 	//pole
-	-0.2, -0.5,  0.2, //0
-     0.2, -0.5,  0.2, //1
-     0.2,  0.5,  0.2, //2
-    -0.2,  0.5,  0.2, //3
-    -0.2, -0.5, -0.2, //4
-     0.2, -0.5, -0.2, //5
-     0.2,  0.5, -0.2, //6
-    -0.2,  0.5, -0.2, //7
+	-0.2, -POLE_HEIGHT,  0.2, //0
+     0.2, -POLE_HEIGHT,  0.2, //1
+     0.2,  POLE_HEIGHT,  0.2, //2
+    -0.2,  POLE_HEIGHT,  0.2, //3
+    -0.2, -POLE_HEIGHT, -0.2, //4
+     0.2, -POLE_HEIGHT, -0.2, //5
+     0.2,  POLE_HEIGHT, -0.2, //6
+    -0.2,  POLE_HEIGHT, -0.2, //7
 
 	//cube
-	-0.4,  0.5,  0.4, //8
-     0.4,  0.5,  0.4, //9
-     0.4,  1.3,  0.4, //10
-    -0.4,  1.3,  0.4, //11
-    -0.4,  0.5, -0.4, //12
-     0.4,  0.5, -0.4, //13
-     0.4,  1.3, -0.4, //14
-    -0.4,  1.3, -0.4, //15
+	-0.4,  POLE_HEIGHT,        0.4, //8
+     0.4,  POLE_HEIGHT,        0.4, //9
+     0.4,  POLE_HEIGHT + 0.8,  0.4, //10
+    -0.4,  POLE_HEIGHT + 0.8,  0.4, //11
+    -0.4,  POLE_HEIGHT,       -0.4, //12
+     0.4,  POLE_HEIGHT,       -0.4, //13
+     0.4,  POLE_HEIGHT + 0.8, -0.4, //14
+    -0.4,  POLE_HEIGHT + 0.8, -0.4, //15
 };   
 
 //RGB color values
@@ -229,24 +233,24 @@ GLushort index_buffer_data_3[] = {
 //vertices [XYZ]
 GLfloat vertex_buffer_data_4[] = {
 	//pole
-	-0.2, -0.5,  0.2, //0
-     0.2, -0.5,  0.2, //1
-     0.2,  0.5,  0.2, //2
-    -0.2,  0.5,  0.2, //3
-    -0.2, -0.5, -0.2, //4
-     0.2, -0.5, -0.2, //5
-     0.2,  0.5, -0.2, //6
-    -0.2,  0.5, -0.2, //7
+	-0.2, -POLE_HEIGHT,  0.2, //0
+     0.2, -POLE_HEIGHT,  0.2, //1
+     0.2,  POLE_HEIGHT,  0.2, //2
+    -0.2,  POLE_HEIGHT,  0.2, //3
+    -0.2, -POLE_HEIGHT, -0.2, //4
+     0.2, -POLE_HEIGHT, -0.2, //5
+     0.2,  POLE_HEIGHT, -0.2, //6
+    -0.2,  POLE_HEIGHT, -0.2, //7
 
 	//cube
-	-0.4,  0.5,  0.4, //8
-     0.4,  0.5,  0.4, //9
-     0.4,  1.3,  0.4, //10
-    -0.4,  1.3,  0.4, //11
-    -0.4,  0.5, -0.4, //12
-     0.4,  0.5, -0.4, //13
-     0.4,  1.3, -0.4, //14
-    -0.4,  1.3, -0.4, //15
+	-0.4,  POLE_HEIGHT,        0.4, //8
+     0.4,  POLE_HEIGHT,        0.4, //9
+     0.4,  POLE_HEIGHT + 0.8,  0.4, //10
+    -0.4,  POLE_HEIGHT + 0.8,  0.4, //11
+    -0.4,  POLE_HEIGHT,       -0.4, //12
+     0.4,  POLE_HEIGHT,       -0.4, //13
+     0.4,  POLE_HEIGHT + 0.8, -0.4, //14
+    -0.4,  POLE_HEIGHT + 0.8, -0.4, //15
 };   
 
 //RGB color values
@@ -306,24 +310,24 @@ GLushort index_buffer_data_4[] = {
 //vertices [XYZ]
 GLfloat vertex_buffer_data_5[] = {
 	//pole
-	-0.2, -0.5,  0.2, //0
-     0.2, -0.5,  0.2, //1
-     0.2,  0.5,  0.2, //2
-    -0.2,  0.5,  0.2, //3
-    -0.2, -0.5, -0.2, //4
-     0.2, -0.5, -0.2, //5
-     0.2,  0.5, -0.2, //6
-    -0.2,  0.5, -0.2, //7
+	-0.2, -POLE_HEIGHT,  0.2, //0
+     0.2, -POLE_HEIGHT,  0.2, //1
+     0.2,  POLE_HEIGHT,  0.2, //2
+    -0.2,  POLE_HEIGHT,  0.2, //3
+    -0.2, -POLE_HEIGHT, -0.2, //4
+     0.2, -POLE_HEIGHT, -0.2, //5
+     0.2,  POLE_HEIGHT, -0.2, //6
+    -0.2,  POLE_HEIGHT, -0.2, //7
 
 	//cube
-	-0.4,  0.5,  0.4, //8
-     0.4,  0.5,  0.4, //9
-     0.4,  1.3,  0.4, //10
-    -0.4,  1.3,  0.4, //11
-    -0.4,  0.5, -0.4, //12
-     0.4,  0.5, -0.4, //13
-     0.4,  1.3, -0.4, //14
-    -0.4,  1.3, -0.4, //15
+	-0.4,  POLE_HEIGHT,        0.4, //8
+     0.4,  POLE_HEIGHT,        0.4, //9
+     0.4,  POLE_HEIGHT + 0.8,  0.4, //10
+    -0.4,  POLE_HEIGHT + 0.8,  0.4, //11
+    -0.4,  POLE_HEIGHT,       -0.4, //12
+     0.4,  POLE_HEIGHT,       -0.4, //13
+     0.4,  POLE_HEIGHT + 0.8, -0.4, //14
+    -0.4,  POLE_HEIGHT + 0.8, -0.4, //15
 };   
 
 //RGB color values
@@ -383,25 +387,25 @@ GLushort index_buffer_data_5[] = {
 //vertices [XYZ]
 GLfloat vertex_buffer_data_6[] = {
 	//pole
-	-0.2, -0.5,  0.2, //0
-     0.2, -0.5,  0.2, //1
-     0.2,  0.5,  0.2, //2
-    -0.2,  0.5,  0.2, //3
-    -0.2, -0.5, -0.2, //4
-     0.2, -0.5, -0.2, //5
-     0.2,  0.5, -0.2, //6
-    -0.2,  0.5, -0.2, //7
+	-0.2, -POLE_HEIGHT,  0.2, //0
+     0.2, -POLE_HEIGHT,  0.2, //1
+     0.2,  POLE_HEIGHT,  0.2, //2
+    -0.2,  POLE_HEIGHT,  0.2, //3
+    -0.2, -POLE_HEIGHT, -0.2, //4
+     0.2, -POLE_HEIGHT, -0.2, //5
+     0.2,  POLE_HEIGHT, -0.2, //6
+    -0.2,  POLE_HEIGHT, -0.2, //7
 
 	//cube
-	-0.4,  0.5,  0.4, //8
-     0.4,  0.5,  0.4, //9
-     0.4,  1.3,  0.4, //10
-    -0.4,  1.3,  0.4, //11
-    -0.4,  0.5, -0.4, //12
-     0.4,  0.5, -0.4, //13
-     0.4,  1.3, -0.4, //14
-    -0.4,  1.3, -0.4, //15
-};   
+	-0.4,  POLE_HEIGHT,        0.4, //8
+     0.4,  POLE_HEIGHT,        0.4, //9
+     0.4,  POLE_HEIGHT + 0.8,  0.4, //10
+    -0.4,  POLE_HEIGHT + 0.8,  0.4, //11
+    -0.4,  POLE_HEIGHT,       -0.4, //12
+     0.4,  POLE_HEIGHT,       -0.4, //13
+     0.4,  POLE_HEIGHT + 0.8, -0.4, //14
+    -0.4,  POLE_HEIGHT + 0.8, -0.4, //15
+};     
 
 //RGB color values
 GLfloat color_buffer_data_6[] = {
@@ -536,33 +540,33 @@ void Display()
 * 
 *
 *******************************************************************/
+float modF(double a, double b) {
+	int tmp = (int) (a/b);
+	return (a-(double)(tmp)*b);
+}
 
 void OnIdle()
 {
     float angle = (glutGet(GLUT_ELAPSED_TIME) / 1000.0) * (180.0/M_PI);
-	float move = sin(angle * (M_PI/180)) * (180/M_PI);
+	float move = sin(angle * (M_PI/180));
+	if (move < 0) {
+		move *= -1;
+	}
 
     /* Time dependent rotation */
     SetRotationY(angle, R);
 
 	/* ROTATE ALL OBJECTS */
 	for (int i = 0; i < NUM_OF_OBJECTS; i++) {
-		MultiplyMatrix(R, InitialTransform, ModelMatrix[i]);
+		MultiplyMatrix(R, InitialTransform[i], ModelMatrix[i]);
 	}
 
-    /* OBJECTS THAT ONLY ROTATE */
-	//Roof
-	SetTranslation(0.0, 2.0, 0.0, T);
-    MultiplyMatrix(T, ModelMatrix[0], ModelMatrix[0]);
-
-	//Floor
-	SetTranslation(0.0, -3.0, 0.0, T);
-    MultiplyMatrix(T, ModelMatrix[1], ModelMatrix[1]);
-
 	/* OBJECTS THAT ROTATE AND MOVE UP AND DOWN */
-	//Pole 1
-	SetTranslation(0.0, move, 0.0, T);
-    MultiplyMatrix(T, ModelMatrix[2], ModelMatrix[2]);
+	//Poles
+	for (int i = 2; i <= 5; i++) {
+		SetTranslation(0.0, move, 0.0, T);
+    	MultiplyMatrix(T, ModelMatrix[i], ModelMatrix[i]);
+	}
 
     /* Request redrawing forof window content */  
     glutPostRedisplay();
@@ -626,7 +630,7 @@ void SetupDataBuffers()
     glDisableVertexAttribArray(vPosition);
     glDisableVertexAttribArray(vColor); 
 
-	/* Floor */
+	/* POLE 1 */
     glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_3), vertex_buffer_data_3, GL_STATIC_DRAW);
 
@@ -646,7 +650,74 @@ void SetupDataBuffers()
 
     /* Disable attributes */
     glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);   
+    glDisableVertexAttribArray(vColor);
+
+	/* POLE 2 */
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_4), vertex_buffer_data_4, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[3]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_4), index_buffer_data_4, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[3]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_4), color_buffer_data_4, GL_STATIC_DRAW);
+
+	glBindVertexArray(VAO[3]);
+
+	glEnableVertexAttribArray(vPosition);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(vColor);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
+
+    /* Disable attributes */
+    glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vColor);
+
+	/* POLE 3 */
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[4]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_5), vertex_buffer_data_5, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[4]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_5), index_buffer_data_5, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[4]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_5), color_buffer_data_5, GL_STATIC_DRAW);
+
+	glBindVertexArray(VAO[4]);
+
+	glEnableVertexAttribArray(vPosition);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(vColor);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
+
+    /* Disable attributes */
+    glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vColor);
+
+	/* POLE 4 */
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[5]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_6), vertex_buffer_data_6, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[5]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_6), index_buffer_data_6, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[5]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_6), color_buffer_data_6, GL_STATIC_DRAW);
+
+	glBindVertexArray(VAO[5]);
+
+	glEnableVertexAttribArray(vPosition);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(vColor);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
+
+    /* Disable attributes */
+    glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vColor);
+   
 }
 
 
@@ -796,16 +867,12 @@ void Initialize(void)
     SetTranslation(0.0, 0.0, camera_disp, ViewMatrix);
 
     /* Translate and rotate cube onto tip */
-    SetTranslation(0, 0, 0, TranslateOrigin);
-    SetRotationX(0, RotateX);
-    SetRotationZ(0, RotateZ);	
-
-    /* Translate down */	
-    SetTranslation(0, -sqrtf(sqrtf(2.0) * 1.0), 0, TranslateDown);
-
-    /* Initial transformation matrix */
-    MultiplyMatrix(RotateX, TranslateOrigin, InitialTransform);
-    MultiplyMatrix(RotateZ, InitialTransform, InitialTransform);
+    SetTranslation(0, 2, 0, InitialTransform[0]);
+	SetTranslation(0, -3, 0, InitialTransform[1]);
+	SetTranslation(-1.6, -3, -1.6, InitialTransform[2]);
+	SetTranslation(-1.6, -3,  1.6, InitialTransform[3]);
+	SetTranslation( 1.6, -3, -1.6, InitialTransform[4]);
+	SetTranslation( 1.6, -3,  1.6, InitialTransform[5]);
 }
 
 
