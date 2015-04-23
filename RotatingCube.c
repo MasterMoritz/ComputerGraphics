@@ -34,9 +34,7 @@
 
 /*----------------------------------------------------------------*/
 
-GLuint VAO;
-
-GLuint VAO_2;
+GLuint VAO[2];
 
 /* Define handle to a vertex buffer object */
 GLuint VBO[2];
@@ -597,8 +595,8 @@ void SetupDataBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, CBO[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
 
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
+	glGenVertexArrays(2, VAO);
+	glBindVertexArray(VAO[0]);
 
 	glEnableVertexAttribArray(vPosition);
     glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -620,8 +618,7 @@ void SetupDataBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, CBO[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_2), color_buffer_data_2, GL_STATIC_DRAW);
 
-	glGenVertexArrays(1, &VAO_2);
-	glBindVertexArray(VAO_2);
+	glBindVertexArray(VAO[1]);
 
 	glEnableVertexAttribArray(vPosition);
     glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
