@@ -94,7 +94,7 @@ GLushort index_buffer_data[] = { /* Indices of 4 triangles making up a pyramid *
 };
 
 /*-------------------FLOOR---------------------------*/
-GLfloat floor_vertices[] = { /* 8 cube vertices XYZ */
+GLfloat vertex_buffer_data_2[] = { /* 8 cube vertices XYZ */
 	-2.0, 0.0,  2.0,//0
 	-2.0, 0.0,  -2.0,//1
 	2.0,  0.0,  2.0,//2
@@ -106,7 +106,7 @@ GLfloat floor_vertices[] = { /* 8 cube vertices XYZ */
 	2.0, 1.0,  -2.0,//7
 };   
 
-GLfloat floor_color[] = { /* RGB color values for 8 vertices */
+GLfloat color_buffer_data_2[] = { /* RGB color values for 8 vertices */
     1.0, 0.5, 1.0,
     1.0, 0.7, 0.8,
     1.0, 1.0, 0.0,
@@ -117,7 +117,7 @@ GLfloat floor_color[] = { /* RGB color values for 8 vertices */
     1.0, 1.0, 0.0,
 }; 
 
-GLushort floor_triangles[] = { /* Indices of 2 triangles making up a square */
+GLushort index_buffer_data_2[] = { /* Indices of 2 triangles making up a square */
     0, 1, 2,
 	1, 2, 3,
 	4, 5, 6,
@@ -243,13 +243,13 @@ void SetupDataBuffers()
     glBufferData(GL_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_STATIC_DRAW);
     
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data_2, GL_STATIC_DRAW);
     
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[1]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data_2, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, CBO[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data_2, GL_STATIC_DRAW);
 
     
 }

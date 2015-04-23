@@ -130,11 +130,11 @@ GLfloat color_buffer_data_2[] = { /* RGB color values for 8 vertices */
 }; 
 
 GLushort index_buffer_data_2[] = { /* Indices of 2 triangles making up a square */
-    0, 1, 2,
-	1, 2, 3,
-	4, 5, 6,
-	5, 6, 7,
-	1, 2, 6,
+    0, 1, 2, //bot
+	1, 2, 3, //bot
+	4, 5, 6, //top
+	5, 6, 7, //top
+	1, 2, 6, 
 	1, 6, 4,
 };
 /*----------------------------------------------------------------*/
@@ -157,7 +157,13 @@ void Display()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	/* Bind VAO instead of VBOs */
-	glBindVertexArray(VAO);
+	glEnableVertexAttribArray(vPosition);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(vColor);
+    glBindBuffer(GL_ARRAY_BUFFER, CBO);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
@@ -192,28 +198,25 @@ void Display()
     /* Issue draw command, using indexed triangle list */
     glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 glutSwapBuffers();
-	glBindVertexArray(VAO_2);
+
+glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vColor); 
+
+/* FLOOR */
+	glEnableVertexAttribArray(vPosition);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_2);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(vColor);
+    glBindBuffer(GL_ARRAY_BUFFER, CBO_2);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO_2);
 
-	size; 
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
 /* Associate program with shader matrices */
-    projectionUniform = glGetUniformLocation(ShaderProgram, "ProjectionMatrix");
-    if (projectionUniform == -1) 
-    {
-        fprintf(stderr, "Could not bind uniform ProjectionMatrix\n");
-	exit(-1);
-    }
-    glUniformMatrix4fv(projectionUniform, 1, GL_TRUE, ProjectionMatrix);
-    
-    ViewUniform = glGetUniformLocation(ShaderProgram, "ViewMatrix");
-    if (ViewUniform == -1) 
-    {
-        fprintf(stderr, "Could not bind uniform ViewMatrix\n");
-        exit(-1);
-    }
-    glUniformMatrix4fv(ViewUniform, 1, GL_TRUE, ViewMatrix);
+
 	RotationUniform = glGetUniformLocation(ShaderProgram, "ModelMatrix");
     if (RotationUniform == -1) 
     {
@@ -224,6 +227,9 @@ glutSwapBuffers();
 
 	/* Issue draw command, using indexed triangle list */
     glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+
+glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vColor);
 
     /* Swap between front and back buffer */ 
     glutSwapBuffers();
