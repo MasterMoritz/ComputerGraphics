@@ -1,5 +1,5 @@
 CC = gcc
-OBJ = RotatingCube.o LoadShader.o Matrix.o Meshes.o
+OBJ = RotatingCube.o LoadShader.o Matrix.o
 CFLAGS = -g -Wall -Wextra
 
 LDLIBS=-lm -lglut -lGLEW -lGL
