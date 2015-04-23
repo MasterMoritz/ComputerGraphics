@@ -34,22 +34,23 @@
 #ifndef M_PI
 	#define M_PI 3.14159265358979323846
 #endif
+
 #ifndef NUM_OF_OBJECTS
 	#define NUM_OF_OBJECTS 6
 #endif
 
 /*----------------------------------------------------------------*/
 
-GLuint VAO[2];
+GLuint VAO[NUM_OF_OBJECTS];
 
 /* Define handle to a vertex buffer object */
-GLuint VBO[2];
+GLuint VBO[NUM_OF_OBJECTS];
 
 /* Define handle to a color buffer object */
-GLuint CBO[2]; 
+GLuint CBO[NUM_OF_OBJECTS]; 
 
 /* Define handle to an index buffer object */
-GLuint IBO[2];
+GLuint IBO[NUM_OF_OBJECTS];
 
 /* Indices to vertex attributes; in this case positon and color */ 
 enum DataID {vPosition = 0, vColor = 1}; 
@@ -62,7 +63,7 @@ GLuint ShaderProgram;
 
 float ProjectionMatrix[16]; /* Perspective projection matrix */
 float ViewMatrix[16]; /* Camera view matrix */ 
-float ModelMatrix[2][16]; /* Model matrix */
+float ModelMatrix[NUM_OF_OBJECTS][16]; /* Model matrix */
 
 /* Transformation matrices for initial position */
 float TranslateOrigin[16];
@@ -473,21 +474,7 @@ void Display()
     /* Clear window; color specified in 'Initialize()' */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/* Bind VAO instead of VBOs */
-	glEnableVertexAttribArray(vPosition);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[0]);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[0]);
-
-    GLint size; 
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-
-    /* Associate program with shader matrices */
+	/* Associate program with shader matrices */
     GLint projectionUniform = glGetUniformLocation(ShaderProgram, "ProjectionMatrix");
     if (projectionUniform == -1) 
     {
@@ -510,39 +497,32 @@ void Display()
         fprintf(stderr, "Could not bind uniform ModelMatrix\n");
         exit(-1);
     }
-    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix[0]); 
 
-    /* Issue draw command, using indexed triangle list */
-    glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+	/* Bind Vertex/Color/Index Buffers and draw objects */
 
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor); 
+	for (int i = 0; i < 3; i++) {
+		glEnableVertexAttribArray(vPosition);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
+		glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    
-    /* FLOOR */
-    /* Clear window; color specified in 'Initialize()' */
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     //For debugging: output only the second element
+		glEnableVertexAttribArray(vColor);
+		glBindBuffer(GL_ARRAY_BUFFER, CBO[i]);
+		glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
 
-	glEnableVertexAttribArray(vPosition);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
 
-    glEnableVertexAttribArray(vColor);
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[1]);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
+		GLint size; 
+		glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[1]);
+		
+		glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix[i]); 
 
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+		/* Issue draw command, using indexed triangle list */
+		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 
-
-    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix[1]);       //Fix rotation!
-
-	/* Issue draw command, using indexed triangle list */
-    glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);
+		glDisableVertexAttribArray(vPosition);
+		glDisableVertexAttribArray(vColor);
+	}
 
     /* Swap between front and back buffer */ 
     glutSwapBuffers();
@@ -559,20 +539,30 @@ void Display()
 
 void OnIdle()
 {
-    float angle = (glutGet(GLUT_ELAPSED_TIME) / 1000.0) * (180.0/M_PI); 
-    float RotationMatrixAnim[16];
+    float angle = (glutGet(GLUT_ELAPSED_TIME) / 1000.0) * (180.0/M_PI);
+	float move = sin(angle * (M_PI/180)) * (180/M_PI);
 
     /* Time dependent rotation */
     SetRotationY(angle, R);
 
-    /* Apply model rotation; finally move cube down */
-    MultiplyMatrix(R, InitialTransform, ModelMatrix[0]);
+	/* ROTATE ALL OBJECTS */
+	for (int i = 0; i < NUM_OF_OBJECTS; i++) {
+		MultiplyMatrix(R, InitialTransform, ModelMatrix[i]);
+	}
+
+    /* OBJECTS THAT ONLY ROTATE */
+	//Roof
 	SetTranslation(0.0, 2.0, 0.0, T);
     MultiplyMatrix(T, ModelMatrix[0], ModelMatrix[0]);
 
-	MultiplyMatrix(R, InitialTransform, ModelMatrix[1]);
+	//Floor
 	SetTranslation(0.0, -3.0, 0.0, T);
     MultiplyMatrix(T, ModelMatrix[1], ModelMatrix[1]);
+
+	/* OBJECTS THAT ROTATE AND MOVE UP AND DOWN */
+	//Pole 1
+	SetTranslation(0.0, move, 0.0, T);
+    MultiplyMatrix(T, ModelMatrix[2], ModelMatrix[2]);
 
     /* Request redrawing forof window content */  
     glutPostRedisplay();
@@ -589,19 +579,19 @@ void OnIdle()
 
 void SetupDataBuffers()
 {
-    glGenBuffers(2, VBO);
+    glGenBuffers(NUM_OF_OBJECTS, VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
 
-    glGenBuffers(2, IBO);
+    glGenBuffers(NUM_OF_OBJECTS, IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[0]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_STATIC_DRAW);
 
-    glGenBuffers(2, CBO);
+    glGenBuffers(NUM_OF_OBJECTS, CBO);
     glBindBuffer(GL_ARRAY_BUFFER, CBO[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
 
-	glGenVertexArrays(2, VAO);
+	glGenVertexArrays(NUM_OF_OBJECTS, VAO);
 	glBindVertexArray(VAO[0]);
 
 	glEnableVertexAttribArray(vPosition);
@@ -625,6 +615,28 @@ void SetupDataBuffers()
     glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_2), color_buffer_data_2, GL_STATIC_DRAW);
 
 	glBindVertexArray(VAO[1]);
+
+	glEnableVertexAttribArray(vPosition);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(vColor);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
+
+    /* Disable attributes */
+    glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vColor); 
+
+	/* Floor */
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_3), vertex_buffer_data_3, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[2]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_3), index_buffer_data_3, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[2]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_3), color_buffer_data_3, GL_STATIC_DRAW);
+
+	glBindVertexArray(VAO[2]);
 
 	glEnableVertexAttribArray(vPosition);
     glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -767,8 +779,10 @@ void Initialize(void)
     /* Initialize matrices */
     SetIdentityMatrix(ProjectionMatrix);
     SetIdentityMatrix(ViewMatrix);
-    SetIdentityMatrix(ModelMatrix[0]);
-	SetIdentityMatrix(ModelMatrix[0]);
+
+	for (int i = 0; i < NUM_OF_OBJECTS; i++) {
+    	SetIdentityMatrix(ModelMatrix[i]);
+	}
 
     /* Set projection transform */
     float fovy = 60.0;
