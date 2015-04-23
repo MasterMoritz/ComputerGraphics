@@ -134,8 +134,12 @@ GLushort index_buffer_data_2[] = { /* Indices of 2 triangles making up a square 
 	1, 2, 3, //bot
 	4, 5, 6, //top
 	5, 6, 7, //top
-	1, 2, 6, 
-	1, 6, 4,
+	1, 2, 6, //left
+	1, 6, 4, //left
+	0, 2, 4, //front
+	2, 6, 4, //front
+	1, 3, 7, //back
+	1, 5, 3, //back
 };
 /*----------------------------------------------------------------*/
 
@@ -256,7 +260,10 @@ void OnIdle()
     MultiplyMatrix(R, InitialTransform, ModelMatrix);
 	SetTranslation(0.0, 1.0, 0.0, T);
     MultiplyMatrix(T, ModelMatrix, ModelMatrix);
-	MultiplyMatrix(R, ModelMatrix_2, ModelMatrix_2);
+
+	MultiplyMatrix(R, InitialTransform, ModelMatrix_2);
+	SetTranslation(0.0, -1.0, 0.0, T);
+    MultiplyMatrix(T, ModelMatrix_2, ModelMatrix_2);
 
     /* Request redrawing forof window content */  
     glutPostRedisplay();
