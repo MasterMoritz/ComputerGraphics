@@ -119,7 +119,7 @@ GLfloat vertex_buffer_data_2[] = { /* 8 cube vertices XYZ */
 };   
 
 GLfloat color_buffer_data_2[] = { /* RGB color values for 8 vertices */
-      1.0, 0.5, 1.0,
+    1.0, 0.5, 1.0,
     1.0, 0.7, 0.8,
     1.0, 1.0, 0.0,
     1.0, 1.0, 0.0,
@@ -129,13 +129,19 @@ GLfloat color_buffer_data_2[] = { /* RGB color values for 8 vertices */
     1.0, 1.0, 0.0,
 }; 
 
-GLushort index_buffer_data_2[] = { /* Indices of 2 triangles making up a square */
+GLushort index_buffer_data_2[] = { /* Indices of 12 triangles making up a square */
     0, 1, 2, //bot
 	1, 2, 3, //bot
 	4, 5, 6, //top
 	5, 6, 7, //top
-	1, 2, 6, 
-	1, 6, 4,
+	0, 4, 5, 
+	0, 1, 5,
+    0, 4, 6,
+    0, 2, 6,
+    2, 6, 7,
+    2, 3, 7,
+    3, 5, 7,
+    3, 1, 5,
 };
 /*----------------------------------------------------------------*/
 
@@ -197,12 +203,15 @@ void Display()
 
     /* Issue draw command, using indexed triangle list */
     glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-glutSwapBuffers();
 
-glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vPosition);
     glDisableVertexAttribArray(vColor); 
 
-/* FLOOR */
+    
+    /* FLOOR */
+    /* Clear window; color specified in 'Initialize()' */
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     //For debugging: output only the second element
+
 	glEnableVertexAttribArray(vPosition);
     glBindBuffer(GL_ARRAY_BUFFER, VBO_2);
     glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -215,20 +224,13 @@ glDisableVertexAttribArray(vPosition);
 
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
-/* Associate program with shader matrices */
 
-	RotationUniform = glGetUniformLocation(ShaderProgram, "ModelMatrix");
-    if (RotationUniform == -1) 
-    {
-        fprintf(stderr, "Could not bind uniform ModelMatrix\n");
-        exit(-1);
-    }
-    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix_2);
+    //glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix_2);       //Fix rotation!
 
 	/* Issue draw command, using indexed triangle list */
     glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 
-glDisableVertexAttribArray(vPosition);
+    glDisableVertexAttribArray(vPosition);
     glDisableVertexAttribArray(vColor);
 
     /* Swap between front and back buffer */ 
