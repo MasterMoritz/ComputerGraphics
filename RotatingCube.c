@@ -107,19 +107,18 @@ GLushort index_buffer_data[] = { /* Indices of 4 triangles making up a pyramid *
 
 /*-------------------FLOOR---------------------------*/
 GLfloat vertex_buffer_data_2[] = { /* 8 cube vertices XYZ */
-	-2.0, 0.0,  2.0,//0
-	-2.0, 0.0,  -2.0,//1
-	2.0,  0.0,  2.0,//2
-	2.0, 0.0,  -2.0,//3
-
-	-2.0, 1.0,  2.0,//4
-	-2.0, 1.0,  -2.0,//5
-	2.0,  1.0,  2.0,//6
-	2.0, 1.0,  -2.0,//7
+	-2.0, -0.3,  2.0, //0
+     2.0, -0.3,  2.0, //1
+     2.0,  0.3,  2.0, //2
+    -2.0,  0.3,  2.0, //3
+    -2.0, -0.3, -2.0, //4
+     2.0, -0.3, -2.0, //5
+     2.0,  0.3, -2.0, //6
+    -2.0,  0.3, -2.0, //7
 };   
 
 GLfloat color_buffer_data_2[] = { /* RGB color values for 8 vertices */
-      1.0, 0.5, 1.0,
+    1.0, 0.5, 1.0,
     1.0, 0.7, 0.8,
     1.0, 1.0, 0.0,
     1.0, 1.0, 0.0,
@@ -130,18 +129,18 @@ GLfloat color_buffer_data_2[] = { /* RGB color values for 8 vertices */
 }; 
 
 GLushort index_buffer_data_2[] = { /* Indices of 2 triangles making up a square */
-    0, 1, 2, //bot
-	1, 2, 3, //bot
-	4, 5, 6, //top
-	5, 6, 7, //top
-	1, 0, 5, //left
-	5, 4, 0, //left
-	2, 3, 5, //right
-	5, 7, 3, //right
-	0, 2, 4, //front
-	2, 6, 4, //front
-	1, 3, 7, //back
-	7, 5, 1, //back
+    0, 1, 2,
+    2, 3, 0,
+    1, 5, 6,
+    6, 2, 1,
+    7, 6, 5,
+    5, 4, 7,
+    4, 0, 3,
+    3, 7, 4,
+    4, 5, 1,
+    1, 0, 4,
+    3, 2, 6,
+    6, 7, 3,
 };
 /*----------------------------------------------------------------*/
 
@@ -264,7 +263,7 @@ void OnIdle()
     MultiplyMatrix(T, ModelMatrix, ModelMatrix);
 
 	MultiplyMatrix(R, InitialTransform, ModelMatrix_2);
-	SetTranslation(0.0, -1.0, 0.0, T);
+	SetTranslation(0.0, -2, 0.0, T);
     MultiplyMatrix(T, ModelMatrix_2, ModelMatrix_2);
 
     /* Request redrawing forof window content */  
