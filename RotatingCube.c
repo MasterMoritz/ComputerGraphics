@@ -89,7 +89,11 @@ GLfloat vertex_buffer_data[] = {
    -2.0, 0.0,  2.0,//2
 	2.0, 0.0, -2.0,//3
    -2.0, 0.0, -2.0,//4
-
+	
+	3.0, 0.0,  3.0,//5
+   -3.0, 0.0, -3.0,//6
+   -3.0, 0.0,  3.0,//7
+	3.0, 0.0, -3.0,//8
 };   
 
 //colors of the vertices 
@@ -99,14 +103,31 @@ GLfloat color_buffer_data[] = {
     1.0, 1.0, 1.0,
     0.0, 1.0, 1.0,
 	0.0, 1.0, 1.0,
+
+    0.0, 0.0, 1.0,
+    1.0, 0.0, 1.0,
+    1.0, 1.0, 1.0,
+    0.0, 1.0, 1.0,
+	0.0, 1.0, 1.0,
 }; 
 
-//4 triangles making up the pyramid
+//4 triangles making up the pyramid and another 8 to flatten it with extensions
 GLushort index_buffer_data[] = {
+	//pyramid
     0, 1, 2,//front
 	0, 3, 4,//back
     0, 1, 3,//right
     0, 4, 2,//left
+
+	//flat extensions
+	1, 5, 2, //front
+	2, 7, 5, //front
+	1, 5, 3, //right
+	3, 8, 5, //right
+	3, 8, 4, //back
+	4, 6, 8, //back
+	2, 7, 4, //left
+	4, 7, 6, //left
 };
 
 /*-------------------FLOOR---------------------------*/
