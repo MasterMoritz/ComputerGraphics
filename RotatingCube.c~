@@ -876,8 +876,8 @@ void Initialize(void)
 	SetTranslation(0, -3, 0, InitialTransform[1]);
 	SetTranslation(-1.6, -3, -1.6, InitialTransform[2]);
 	SetTranslation(-1.6, -3,  1.6, InitialTransform[3]);
-	SetTranslation( 1.6, -3, -1.6, InitialTransform[4]);
-	SetTranslation( 1.6, -3,  1.6, InitialTransform[5]);
+	SetTranslation( 1.6, -3,  1.6, InitialTransform[4]);
+	SetTranslation( 1.6, -3, -1.6, InitialTransform[5]);
 }
 
 

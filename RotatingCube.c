@@ -551,10 +551,6 @@ float moves(double angle, double offset) {
 void OnIdle()
 {
     float angle = (glutGet(GLUT_ELAPSED_TIME) / 1000.0) * (180.0/M_PI);
-	float move = sin(angle * (M_PI/180));
-	if (move < 0) {
-		move *= -1;
-	}
 
     /* Time dependent rotation */
     SetRotationY(angle, R);
