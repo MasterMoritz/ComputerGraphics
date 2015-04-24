@@ -76,7 +76,7 @@ float RotateX[16];
 float RotateZ[16];
 float InitialTransform[NUM_OF_OBJECTS][16];
 
-/* Transformation matrices for MasterMoritz */
+/* Additional transformation matrices */
 float T[16];
 float R[16];
 
@@ -780,6 +780,7 @@ void OnIdle()
 
 void SetupDataBuffers()
 {
+    /* Roof */
     glGenBuffers(NUM_OF_OBJECTS, VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
@@ -805,7 +806,7 @@ void SetupDataBuffers()
     glDisableVertexAttribArray(vPosition);
     glDisableVertexAttribArray(vColor);   
 
-	/* Floor */
+	/* Base */
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_2), vertex_buffer_data_2, GL_STATIC_DRAW);
 
