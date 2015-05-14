@@ -80,6 +80,7 @@ float RotationMatrixAnim[16];
 float T[16];
 float R[16];
 float InitialTransform[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM][16];
+float ViewTransform[16];
 
 /* Variables for storing current rotation angles */
 float angleX, angleY, angleZ = 0.0f; 
@@ -331,6 +332,7 @@ void OnIdle()
          * Note order of transformations and rotation of reference axes */
         MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
         MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
+        MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
     }	
     
     /* Issue display refresh */
@@ -611,7 +613,8 @@ void Initialize()
     SetPerspectiveMatrix(fovy, aspect, nearPlane, farPlane, ProjectionMatrix);
 
     /* Set camera transform */
-    SetTranslation(0.0, -4.0, -20.0, ViewMatrix);
+    SetTranslation(0.0, -4.0, -20.0, ViewTransform);
+    MultiplyMatrix(ViewTransform, ViewMatrix, ViewMatrix);
 }
 
 
