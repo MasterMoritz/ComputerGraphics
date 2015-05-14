@@ -83,6 +83,7 @@ float InitialTransform[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM][16];
 
 /* Variables for storing current rotation angles */
 float angleX, angleY, angleZ = 0.0f; 
+float camAngleX, camAngleY, camAngleZ = 0.0f;
 
 /* Indices to active rotation axes */
 enum {Xaxis=0, Yaxis=1, Zaxis=2};
@@ -283,52 +284,53 @@ void OnIdle()
 	int newTime = glutGet(GLUT_ELAPSED_TIME);
 	int delta = newTime - oldTime;
 	oldTime = newTime;
+	
+	if(anim) {
+		/* Increment rotation angles and update matrix */
+		angleY = fmod(angleY + delta/20.0, 360.0); 
+		SetRotationY(-angleY, R);
 
-	/* Increment rotation angles and update matrix */
-	angleY = fmod(angleY + delta/20.0, 360.0); 
-	SetRotationY(-angleY, R);
+		/* rotate all non-static objects */
+		int num_non_static = NUM_BASIC_ANIM + NUM_ADV_ANIM;
 
-	/* rotate all non-static objects */
-	int num_non_static = NUM_BASIC_ANIM + NUM_ADV_ANIM;
+		for (int i = 0; i < num_non_static; i++) {
+			MultiplyMatrix(R, InitialTransform[i + NUM_STATIC], ModelMatrix[i + NUM_STATIC]);
+		}
 
-	for (int i = 0; i < num_non_static; i++) {
-		MultiplyMatrix(R, InitialTransform[i + NUM_STATIC], ModelMatrix[i + NUM_STATIC]);
-	}
+		/* move advanced animation objects up and down with individual delay */
+		int delay = 0;
+		for (int i = 0; i < NUM_ADV_ANIM; i++) {
+			SetTranslation(0.0, -moves(angleY, delay), 0.0, T);
+			MultiplyMatrix(T, ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM], ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM]);
 
-	/* move advanced animation objects up and down with individual delay */
-	int delay = 0;
-	for (int i = 0; i < NUM_ADV_ANIM; i++) {
-		SetTranslation(0.0, -moves(angleY, delay), 0.0, T);
-		MultiplyMatrix(T, ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM], ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM]);
-
-		delay += 20;
+			delay += 20;
+		}
 	}
 
     /* Rotate camera */
+	//anim is used for ANIMATION, make another boolean for cam movement
     if(anim) {
+		//you have to transform the viewport matrix here, i'm not sure what this code should achieve :D
             /* Increment rotation angles and update matrix */
         if(axis == Xaxis)
 	    {
-      	    angleX = fmod(angleX + delta/20.0, 360.0);  
-	        SetRotationX(angleX, RotationMatrixAnimX);
+      	    angleX = fmod(camAngleX + delta/20.0, 360.0);  
+	        SetRotationX(camAngleX, RotationMatrixAnimX);
 	    }
 	    else if(axis == Yaxis)
 	    {
-	        angleY = fmod(angleY + delta/20.0, 360.0); 
-	        SetRotationY(angleY, RotationMatrixAnimY);  
+	        camAngleY = fmod(camAngleY + delta/20.0, 360.0); 
+	        SetRotationY(camAngleY, RotationMatrixAnimY);  
 	    }
 	    else if(axis == Zaxis)
 	    {			
-	        angleZ = fmod(angleZ + delta/20.0, 360.0); 
-	        SetRotationZ(angleZ, RotationMatrixAnimZ);
+	        camAngleZ = fmod(camAngleZ + delta/20.0, 360.0); 
+	        SetRotationZ(camAngleZ, RotationMatrixAnimZ);
 	    }
         /* Update of transformation matrices 
          * Note order of transformations and rotation of reference axes */
         MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
         MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
-        for(int i = 0; i < NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM; i++) {
-            MultiplyMatrix(RotationMatrixAnim, ModelMatrix[i], ModelMatrix[i]);
-        }	    
     }	
     
     /* Issue display refresh */
