@@ -1,14 +1,8 @@
 /******************************************************************
 *
-* Interaction.c  
+* MerryGoRound.c
 *
-* Description: This file demonstrates the loading of external 
-* triangle meshes provided in OBJ format. In addition, user
-* interaction via mouse and keyboard is employed.
-*
-* The loaded triangle mesh is draw in wireframe mode and rotated
-* around a reference axis. The user can control the rotation axis
-* via the mouse and start/stop/reset animation via the keyboard.
+* Assignment 2
 *
 * Computer Graphics Proseminar SS 2015
 * 
@@ -16,6 +10,8 @@
 * Institute of Computer Science
 * University of Innsbruck
 *
+*
+* Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
 
 
