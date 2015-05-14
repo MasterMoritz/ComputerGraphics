@@ -34,19 +34,30 @@
 #include "Matrix.h"        /* Functions for matrix handling */
 #include "OBJParser.h"     /* Loading function for triangle meshes in OBJ format */
 
-
+#ifndef M_PI
+	#define M_PI 3.14159265358979323846
+#endif
+#ifndef NUM_STATIC
+	#define NUM_STATIC 2
+#endif
+#ifndef NUM_BASIC_ANIM
+	#define NUM_BASIC_ANIM 1
+#endif
+#ifndef NUM_ADV_ANIM
+	#define NUM_ADV_ANIM 1
+#endif
 /*----------------------------------------------------------------*/
 
 /* Flag for starting/stopping animation */
 GLboolean anim = GL_TRUE;
 
-/* Define handles to two vertex buffer objects */
-GLuint VBO1, VBO2;
+/* Define handles to ertex buffer objects */
+GLuint VBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
-/* Define handles to two index buffer objects */
-GLuint IBO1, IBO2;
+/* Define handles to index buffer objects */
+GLuint IBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
-GLuint VAO;
+GLuint VAO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Indices to vertex attributes; in this case positon only */ 
 enum DataID {vPosition = 0}; 
@@ -61,13 +72,18 @@ GLuint ShaderProgram;
 /* Matrices for uniform variables in vertex shader */
 float ProjectionMatrix[16]; /* Perspective projection matrix */
 float ViewMatrix[16];       /* Camera view matrix */ 
-float ModelMatrix[16];      /* Model matrix */ 
+float ModelMatrix[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM][16];      /* Model matrices */ 
   
 /* Transformation matrices for model rotation */
 float RotationMatrixAnimX[16];
 float RotationMatrixAnimY[16];
 float RotationMatrixAnimZ[16];
 float RotationMatrixAnim[16];
+
+/* Additional transformation matrices */
+float T[16];
+float R[16];
+float InitialTransform[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM][16];
 
 /* Variables for storing current rotation angles */
 float angleX, angleY, angleZ = 0.0f; 
@@ -76,18 +92,14 @@ float angleX, angleY, angleZ = 0.0f;
 enum {Xaxis=0, Yaxis=1, Zaxis=2};
 int axis = Yaxis;
 
-/* Indices to active triangle mesh */
-enum {Model1=0, Model2=1};
-int model = Model1; 
+/* Arrays for holding vertex data of models */
+GLfloat *vertex_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
-/* Arrays for holding vertex data of the two models */
-GLfloat *vertex_buffer_data1, *vertex_buffer_data2;
-
-/* Arrays for holding indices of the two models */
-GLushort *index_buffer_data1,  *index_buffer_data2;
+/* Arrays for holding indices of models */
+GLushort *index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Structures for loading of OBJ data */
-obj_scene_data data1, data2;
+obj_scene_data data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Reference time for animation */
 int oldTime = 0;
@@ -113,25 +125,7 @@ void Display()
     /* Clear window; color specified in 'Initialize()' */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glEnableVertexAttribArray(vPosition);
-
-    /* Bind buffer with vertex data of currently active object */
-    if(model == Model1)
-        glBindBuffer(GL_ARRAY_BUFFER, VBO1);
-    else if(model == Model2)
-        glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-   /* Bind buffer with index data of currently active object */
-    if(model == Model1)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO1);
-    else if(model == Model2)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO2);
-
-    GLint size; 
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-
-    /* Associate program with uniform shader matrices */
+	/* Associate program with shader matrices */
     GLint projectionUniform = glGetUniformLocation(ShaderProgram, "ProjectionMatrix");
     if (projectionUniform == -1) 
     {
@@ -154,16 +148,30 @@ void Display()
         fprintf(stderr, "Could not bind uniform ModelMatrix\n");
         exit(-1);
     }
-    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix);  
 
-    /* Set state to only draw wireframe (no lighting used, yet) */
+	/* Set state to only draw wireframe (no lighting used, yet) */
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    /* Issue draw command, using indexed triangle list */
-    glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+	/* Bind Vertex/Index Buffers and draw objects */
+	int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
+	for (int i = 0; i < numObjects; i++) {
+		glEnableVertexAttribArray(vPosition);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
+		glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
+
+		GLint size; 
+		glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+
+		glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix[i]); 
+
+		/* Issue draw command, using indexed triangle list */
+
+		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+
+		glDisableVertexAttribArray(vPosition);
+	}
 
     /* Swap between front and back buffer */ 
     glutSwapBuffers();
@@ -219,15 +227,13 @@ void Keyboard(unsigned char key, int x, int y)
 {
     switch( key ) 
     {
-	/* Activate model one or two */
+
 	case '1': 
-		model = Model1;
 		break;
 
-	case '2':
-		model = Model2; 	
+	case '2':	
 		break;
-
+	
 	/* Toggle animation */
 	case '0':
 		if (anim)
@@ -264,6 +270,17 @@ void Keyboard(unsigned char key, int x, int y)
 *
 *******************************************************************/
 
+/* calculates transformation value based off an angle
+*  offset can serve as a delay
+*/
+float moves(double angle, double offset) {
+	float tmp = sin((angle + offset) * (M_PI/180));
+	if (tmp < 0) {
+		tmp *= -1;
+	}
+	return tmp;
+}
+
 void OnIdle()
 {
     /* Determine delta time between two frames to ensure constant animation */
@@ -271,30 +288,27 @@ void OnIdle()
     int delta = newTime - oldTime;
     oldTime = newTime;
 
-    if(anim)
-    {
+    if(anim) {
         /* Increment rotation angles and update matrix */
-        if(axis == Xaxis)
-	{
-  	    angleX = fmod(angleX + delta/20.0, 360.0);  
-	    SetRotationX(angleX, RotationMatrixAnimX);
-	}
-	else if(axis == Yaxis)
-	{
-	    angleY = fmod(angleY + delta/20.0, 360.0); 
-	    SetRotationY(angleY, RotationMatrixAnimY);  
-	}
-	else if(axis == Zaxis)
-	{			
-	    angleZ = fmod(angleZ + delta/20.0, 360.0); 
-	    SetRotationZ(angleZ, RotationMatrixAnimZ);
-	}	    
-    }
+		angleY = fmod(angleY + delta/20.0, 360.0); 
+		SetRotationY(angleY, R);
 
-    /* Update of transformation matrices 
-     * Note order of transformations and rotation of reference axes */
-    MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
-    MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, ModelMatrix);	
+		/* rotate all non-static objects */
+		int num_non_static = NUM_BASIC_ANIM + NUM_ADV_ANIM;
+
+		for (int i = 0; i < num_non_static; i++) {
+			MultiplyMatrix(R, InitialTransform[i + NUM_STATIC], ModelMatrix[i + NUM_STATIC]);
+		}
+
+		/* move advanced animation objects up and down with individual delay */
+		int delay = 0;
+		for (int i = 0; i < NUM_ADV_ANIM; i++) {
+			SetTranslation(0.0, -moves(angleY, delay), 0.0, T);
+    		MultiplyMatrix(T, ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM], ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM]);
+
+			delay += 20;
+		}
+    }	
     
     /* Issue display refresh */
     glutPostRedisplay();
@@ -311,24 +325,19 @@ void OnIdle()
 
 void SetupDataBuffers()
 {
-    glGenBuffers(1, &VBO1);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO1);
-    glBufferData(GL_ARRAY_BUFFER, data1.vertex_count*3*sizeof(GLfloat), vertex_buffer_data1, GL_STATIC_DRAW);
-	
-    glGenBuffers(1, &VBO2);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-    glBufferData(GL_ARRAY_BUFFER, data2.vertex_count*3*sizeof(GLfloat), vertex_buffer_data2, GL_STATIC_DRAW);  
-    
-    glGenBuffers(1, &IBO1);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO1);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data1.face_count*3*sizeof(GLushort), index_buffer_data1, GL_STATIC_DRAW);
-    
-    glGenBuffers(1, &IBO2);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO2);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data2.face_count*3*sizeof(GLushort), index_buffer_data2, GL_STATIC_DRAW);
+	glGenVertexArrays(NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM, VAO);
 
-    glGenVertexArrays(2, &VAO);
-    glBindVertexArray(VAO);
+	for (int i = 0; i < NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM; i++) {
+		glGenBuffers(1, &(VBO[i]));
+		glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
+		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_count*3*sizeof(GLfloat), vertex_buffer_data[i], GL_STATIC_DRAW);
+
+		glGenBuffers(1, &(IBO[i]));
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*3*sizeof(GLushort), index_buffer_data[i], GL_STATIC_DRAW);
+
+		glBindVertexArray(VAO[i]);
+	}
 }
 
 
@@ -447,70 +456,77 @@ void CreateShaderProgram()
 
 void Initialize()
 {   
-    int i;
+    int objIndex = 0;
     int success;
 
-    /* Load first OBJ model */
-    char* filename1 = "models/pillar.obj"; 
-    success = parse_obj_scene(&data1, filename1);
+	/* BEGIN load all models, don't forget to update the macros if you add/remove some */
 
-    if(!success)
-        printf("Could not load file. Exiting.\n");
+	/* Load all static models */
 
-    /* Load second OBJ model */
-    char* filename2 = "models/suzanne.obj";
-    success = parse_obj_scene(&data2, filename2);
-    
-    if(!success)
+    char* filename = "models/floor_static.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	objIndex += 1;
+
+    if(!success) {
         printf("Could not load file. Exiting.\n");
+	}
+
+    filename = "models/pillars.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	objIndex += 1;
+
+    if(!success) {
+        printf("Could not load file. Exiting.\n");
+	}
+
+	/* Load all Basic animation models */
+    filename = "models/floor_rotating.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	objIndex += 1;
+
+    if(!success) {
+        printf("Could not load file. Exiting.\n");
+	}
+
+	/* Load all Advanced animation models */
+    filename = "models/horse_on_pole.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	objIndex += 1;
+
+    if(!success) {
+        printf("Could not load file. Exiting.\n");
+	}
 
     /*  Copy mesh data from structs into appropriate arrays */ 
-    int vert = data1.vertex_count;
-    int indx = data1.face_count;
+	objIndex = 0;
+    int vert = 0;
+    int indx = 0;
 
-    vertex_buffer_data1 = (GLfloat*) calloc (vert*3, sizeof(GLfloat));
-    index_buffer_data1 = (GLushort*) calloc (indx*3, sizeof(GLushort));
+	for (int z = 0; z < NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM; z++) {
+		vert = data[z].vertex_count;
+		indx = data[z].face_count;
+
+    	vertex_buffer_data[z] = (GLfloat*) calloc (vert*3, sizeof(GLfloat));
+    	index_buffer_data[z] = (GLushort*) calloc (indx*3, sizeof(GLushort));
   
-    /* Vertices */
-    for(i=0; i<vert; i++)
-    {
-        vertex_buffer_data1[i*3] = (GLfloat)(*data1.vertex_list[i]).e[0];
-	vertex_buffer_data1[i*3+1] = (GLfloat)(*data1.vertex_list[i]).e[1];
-	vertex_buffer_data1[i*3+2] = (GLfloat)(*data1.vertex_list[i]).e[2];
-    }
+		/* Vertices */
+		for(int i=0; i<vert; i++) {
+		    vertex_buffer_data[z][i*3] = (GLfloat)(*(data[z]).vertex_list[i]).e[0];
+			vertex_buffer_data[z][i*3+1] = (GLfloat)(*(data[z]).vertex_list[i]).e[1];
+			vertex_buffer_data[z][i*3+2] = (GLfloat)(*(data[z]).vertex_list[i]).e[2];
+		}
 
-    /* Indices */
-    for(i=0; i<indx; i++)
-    {
-	index_buffer_data1[i*3] = (GLushort)(*data1.face_list[i]).vertex_index[0];
-	index_buffer_data1[i*3+1] = (GLushort)(*data1.face_list[i]).vertex_index[1];
-	index_buffer_data1[i*3+2] = (GLushort)(*data1.face_list[i]).vertex_index[2];
-    }
+		/* Indices */
+		for(int i=0; i<indx; i++) {
+			index_buffer_data[z][i*3] = (GLushort)(*(data[z]).face_list[i]).vertex_index[0];
+			index_buffer_data[z][i*3+1] = (GLushort)(*(data[z]).face_list[i]).vertex_index[1];
+			index_buffer_data[z][i*3+2] = (GLushort)(*(data[z]).face_list[i]).vertex_index[2];
+		}
+	}
+	/* END load all models */
 
-    vert = data2.vertex_count;
-    indx = data2.face_count;
-
-    vertex_buffer_data2 = (GLfloat*) calloc (vert*3, sizeof(GLfloat));
-    index_buffer_data2 = (GLushort*) calloc (indx*3, sizeof(GLushort));
- 
-    /* Vertices */
-    for(i=0; i<vert; i++)
-    {
-	vertex_buffer_data2[i*3] = (GLfloat)(*data2.vertex_list[i]).e[0];
-	vertex_buffer_data2[i*3+1] = (GLfloat)(*data2.vertex_list[i]).e[1];
-	vertex_buffer_data2[i*3+2] = (GLfloat)(*data2.vertex_list[i]).e[2];
-    }
-
-    /* Indices */
-    for(i=0; i<indx; i++)
-    {
-	index_buffer_data2[i*3] = (GLushort)(*data2.face_list[i]).vertex_index[0];
-	index_buffer_data2[i*3+1] = (GLushort)(*data2.face_list[i]).vertex_index[1];
-	index_buffer_data2[i*3+2] = (GLushort)(*data2.face_list[i]).vertex_index[2];
-    }
-	
-    /* Set background (clear) color to blue */ 
-    glClearColor(0.0, 0.0, 0.4, 0.0);
+	/* Set background (clear) color to soft bluegreen */ 
+    glClearColor(0.0, 0.2, 0.4, 0.0);
 
     /* Enable depth testing */
     glEnable(GL_DEPTH_TEST);
@@ -525,7 +541,12 @@ void Initialize()
     /* Initialize matrices */
     SetIdentityMatrix(ProjectionMatrix);
     SetIdentityMatrix(ViewMatrix);
-    SetIdentityMatrix(ModelMatrix);
+
+	int num_objects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
+    for (int i = 0; i < num_objects; i++) {
+    	SetIdentityMatrix(ModelMatrix[i]);
+		SetTranslation(0, 0, 0, InitialTransform[i]);
+	}
 
     /* Initialize animation matrices */
     SetIdentityMatrix(RotationMatrixAnimX);
@@ -540,9 +561,8 @@ void Initialize()
     float farPlane = 50.0;
     SetPerspectiveMatrix(fovy, aspect, nearPlane, farPlane, ProjectionMatrix);
 
-    /* Set viewing transform */
-    float camera_disp = -25.0;
-    SetTranslation(0.0, -5.0, camera_disp, ViewMatrix);
+    /* Set camera transform */
+    SetTranslation(0.0, -5.0, -25.0, ViewMatrix);
 }
 
 

@@ -1071,8 +1071,8 @@ void CreateShaderProgram()
     }
 
 	/* Load shader code from file */
-    VertexShaderString = LoadShader("shaders/vertexshader.vs");
-    FragmentShaderString = LoadShader("shaders/fragmentshader.fs");
+    VertexShaderString = LoadShader("vertexshader.vs");
+    FragmentShaderString = LoadShader("fragmentshader.fs");
 
     /* Separately add vertex and fragment shader to program */
     AddShader(ShaderProgram, VertexShaderString, GL_VERTEX_SHADER);
