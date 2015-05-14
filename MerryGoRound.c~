@@ -541,8 +541,8 @@ void Initialize()
     SetPerspectiveMatrix(fovy, aspect, nearPlane, farPlane, ProjectionMatrix);
 
     /* Set viewing transform */
-    float camera_disp = -10.0;
-    SetTranslation(0.0, 0.0, camera_disp, ViewMatrix);
+    float camera_disp = -25.0;
+    SetTranslation(0.0, -5.0, camera_disp, ViewMatrix);
 }
 
 
@@ -561,7 +561,7 @@ int main(int argc, char** argv)
     glutInitContextVersion(3,3);
     glutInitContextProfile(GLUT_CORE_PROFILE);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-    glutInitWindowSize(600, 600);
+    glutInitWindowSize(800, 800);
     glutInitWindowPosition(400, 400);
     glutCreateWindow("CG Proseminar - User Interaction");
 

@@ -1,1 +1,1 @@
-remove the tn lines from the .obj files, otherwise it will crash
+remove the "vt" lines from the .obj files, otherwise it will crash
