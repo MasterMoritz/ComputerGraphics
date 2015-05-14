@@ -1,4 +1,0 @@
-remove the "vt" lines from the .obj files, otherwise it will crash
-
-regexpr to find all those lines:
-vt\s+\-?\d+\.\d+\s+\-?\d+\.\d+

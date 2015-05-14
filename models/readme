@@ -5,3 +5,4 @@ reg expressions to find all those lines (work both):
 vt\s+\-?\d+\.\d+\s+\-?\d+\.\d+
 
 vt.+
+
