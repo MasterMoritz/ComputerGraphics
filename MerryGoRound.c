@@ -40,7 +40,7 @@
 	#define NUM_BASIC_ANIM 1
 #endif
 #ifndef NUM_ADV_ANIM
-	#define NUM_ADV_ANIM 1
+	#define NUM_ADV_ANIM 6
 #endif
 /*----------------------------------------------------------------*/
 
@@ -461,16 +461,20 @@ void Initialize()
 
     char* filename = "models/floor_static.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
-	objIndex += 1;
+	SetIdentityMatrix(ModelMatrix[objIndex]);
+	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
 
+	objIndex += 1;
     if(!success) {
         printf("Could not load file. Exiting.\n");
 	}
-
+	
     filename = "models/pillars.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
-	objIndex += 1;
+	SetIdentityMatrix(ModelMatrix[objIndex]);
+	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
 
+	objIndex += 1;
     if(!success) {
         printf("Could not load file. Exiting.\n");
 	}
@@ -478,19 +482,27 @@ void Initialize()
 	/* Load all Basic animation models */
     filename = "models/floor_rotating.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
-	objIndex += 1;
+	SetIdentityMatrix(ModelMatrix[objIndex]);
+	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
 
+	objIndex += 1;
     if(!success) {
         printf("Could not load file. Exiting.\n");
 	}
 
 	/* Load all Advanced animation models */
-    filename = "models/horse_on_pole.obj"; 
-    success = parse_obj_scene(&(data[objIndex]), filename);
-	objIndex += 1;
+	//add 6 horsies at different positions, note that horsies are special to transform because they bugged out in maya :D
+	for (int i = 0; i < 6; i++) {
 
-    if(!success) {
-        printf("Could not load file. Exiting.\n");
+		filename = "models/horse_on_pole.obj"; 
+		success = parse_obj_scene(&(data[objIndex]), filename);
+		SetIdentityMatrix(ModelMatrix[objIndex]);
+		SetRotationY(60*i, InitialTransform[objIndex]);
+
+		objIndex += 1;
+		if(!success) {
+		    printf("Could not load file. Exiting.\n");
+		}
 	}
 
     /*  Copy mesh data from structs into appropriate arrays */ 
@@ -537,12 +549,6 @@ void Initialize()
     /* Initialize matrices */
     SetIdentityMatrix(ProjectionMatrix);
     SetIdentityMatrix(ViewMatrix);
-
-	int num_objects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
-    for (int i = 0; i < num_objects; i++) {
-    	SetIdentityMatrix(ModelMatrix[i]);
-		SetTranslation(0, 0, 0, InitialTransform[i]);
-	}
 
     /* Initialize animation matrices */
     SetIdentityMatrix(RotationMatrixAnimX);
