@@ -1,8 +1,14 @@
 /******************************************************************
 *
-* MerryGoRound.c
+* Interaction.c  
 *
-* Assignment 1
+* Description: This file demonstrates the loading of external 
+* triangle meshes provided in OBJ format. In addition, user
+* interaction via mouse and keyboard is employed.
+*
+* The loaded triangle mesh is draw in wireframe mode and rotated
+* around a reference axis. The user can control the rotation axis
+* via the mouse and start/stop/reset animation via the keyboard.
 *
 * Computer Graphics Proseminar SS 2015
 * 
@@ -10,8 +16,6 @@
 * Institute of Computer Science
 * University of Innsbruck
 *
-*
-* Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
 
 
@@ -25,40 +29,27 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-
 /* Local includes */
-#include "LoadShader.h"   /* Provides loading function for shader code */
-#include "Matrix.h"
+#include "LoadShader.h"    /* Loading function for shader code */
+#include "Matrix.h"        /* Functions for matrix handling */
 #include "OBJParser.h"     /* Loading function for triangle meshes in OBJ format */
 
-#ifndef M_PI
-	#define M_PI 3.14159265358979323846
-#endif
-
-#ifndef NUM_OF_OBJECTS
-	#define NUM_OF_OBJECTS 10
-#endif
-
-#ifndef POLE_HEIGHT
-	#define POLE_HEIGHT 1
-#endif
 
 /*----------------------------------------------------------------*/
 
-/* Define handle to a vertex array object */
-GLuint VAO[NUM_OF_OBJECTS];
+/* Flag for starting/stopping animation */
+GLboolean anim = GL_TRUE;
 
-/* Define handle to a vertex buffer object */
-GLuint VBO[NUM_OF_OBJECTS];
+/* Define handles to two vertex buffer objects */
+GLuint VBO1, VBO2;
 
-/* Define handle to a color buffer object */
-GLuint CBO[NUM_OF_OBJECTS]; 
+/* Define handles to two index buffer objects */
+GLuint IBO1, IBO2;
 
-/* Define handle to an index buffer object */
-GLuint IBO[NUM_OF_OBJECTS];
+GLuint VAO;
 
-/* Indices to vertex attributes; in this case positon and color */ 
-enum DataID {vPosition = 0, vColor = 1}; 
+/* Indices to vertex attributes; in this case positon only */ 
+enum DataID {vPosition = 0}; 
 
 /* Strings for loading and storing shader code */
 static const char* VertexShaderString;
@@ -66,597 +57,44 @@ static const char* FragmentShaderString;
 
 GLuint ShaderProgram;
 
+
+/* Matrices for uniform variables in vertex shader */
 float ProjectionMatrix[16]; /* Perspective projection matrix */
-float ViewMatrix[16]; /* Camera view matrix */ 
-float ModelMatrix[NUM_OF_OBJECTS][16]; /* Array of model matrices */
+float ViewMatrix[16];       /* Camera view matrix */ 
+float ModelMatrix[16];      /* Model matrix */ 
+  
+/* Transformation matrices for model rotation */
+float RotationMatrixAnimX[16];
+float RotationMatrixAnimY[16];
+float RotationMatrixAnimZ[16];
+float RotationMatrixAnim[16];
 
-/* Transformation matrices for initial position */
-float TranslateOrigin[16];
-float TranslateDown[16];
-float RotateX[16];
-float RotateZ[16];
-float InitialTransform[NUM_OF_OBJECTS][16];
+/* Variables for storing current rotation angles */
+float angleX, angleY, angleZ = 0.0f; 
 
-/* Additional transformation matrices */
-float T[16];
-float R[16];
+/* Indices to active rotation axes */
+enum {Xaxis=0, Yaxis=1, Zaxis=2};
+int axis = Yaxis;
 
-/*-------------ROOF------------*/
+/* Indices to active triangle mesh */
+enum {Model1=0, Model2=1};
+int model = Model1; 
 
-//pyramid vertices
-GLfloat vertex_buffer_data[] = {
-	0.0, 2.0,  0.0,//0
-	2.0, 0.0,  2.0,//1
-   -2.0, 0.0,  2.0,//2
-	2.0, 0.0, -2.0,//3
-   -2.0, 0.0, -2.0,//4
-	
-	3.0, 0.0,  3.0,//5
-   -3.0, 0.0, -3.0,//6
-   -3.0, 0.0,  3.0,//7
-	3.0, 0.0, -3.0,//8
-};   
+/* Arrays for holding vertex data of the two models */
+GLfloat *vertex_buffer_data1, *vertex_buffer_data2;
 
-//colors of the vertices 
-GLfloat color_buffer_data[] = {
-    0.0, 0.0, 1.0,
-    1.0, 0.0, 1.0,
-    1.0, 1.0, 1.0,
-    0.0, 1.0, 1.0,
-	0.0, 1.0, 1.0,
+/* Arrays for holding indices of the two models */
+GLushort *index_buffer_data1,  *index_buffer_data2;
 
-    0.0, 0.0, 1.0,
-    1.0, 0.0, 1.0,
-    1.0, 1.0, 1.0,
-    0.0, 1.0, 1.0,
-	0.0, 1.0, 1.0,
-}; 
+/* Structures for loading of OBJ data */
+obj_scene_data data1, data2;
 
-//4 triangles making up the pyramid and another 8 to flatten it with extensions
-GLushort index_buffer_data[] = {
-	//pyramid
-    0, 1, 2,//front
-	0, 3, 4,//back
-    0, 1, 3,//right
-    0, 4, 2,//left
+/* Reference time for animation */
+int oldTime = 0;
 
-	//flat extensions
-	1, 5, 2, //front
-	2, 7, 5, //front
-	1, 5, 3, //right
-	3, 8, 5, //right
-	3, 8, 4, //back
-	4, 6, 8, //back
-	2, 7, 4, //left
-	4, 7, 6, //left
-};
 
-/*-------------------BASE---------------------------*/
-
-//cuboid vertices
-GLfloat vertex_buffer_data_2[] = {
-	-3.0, -POLE_HEIGHT,  3.0, //0
-     3.0, -POLE_HEIGHT,  3.0, //1
-     3.0,  0.3,          3.0, //2
-    -3.0,  0.3,          3.0, //3
-    -3.0, -POLE_HEIGHT, -3.0, //4
-     3.0, -POLE_HEIGHT, -3.0, //5
-     3.0,  0.3,         -3.0, //6
-    -3.0,  0.3,         -3.0, //7
-};   
-
-//colors of the vertices
-GLfloat color_buffer_data_2[] = {
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-}; 
-
-// 12 Triangles making up a flat cube
-GLushort index_buffer_data_2[] = {
-    0, 1, 2,
-    2, 3, 0,
-    1, 5, 6,
-    6, 2, 1,
-    7, 6, 5,
-    5, 4, 7,
-    4, 0, 3,
-    3, 7, 4,
-    4, 5, 1,
-    1, 0, 4,
-    3, 2, 6,
-    6, 7, 3,
-};
-
-/*-------------------POLE1 WITH CUBE ON IT---------------------------*/
-
-//vertices [XYZ]
-GLfloat vertex_buffer_data_3[] = {
-	//pole
-	-0.2, -POLE_HEIGHT,  0.2, //0
-     0.2, -POLE_HEIGHT,  0.2, //1
-     0.2,  POLE_HEIGHT,  0.2, //2
-    -0.2,  POLE_HEIGHT,  0.2, //3
-    -0.2, -POLE_HEIGHT, -0.2, //4
-     0.2, -POLE_HEIGHT, -0.2, //5
-     0.2,  POLE_HEIGHT, -0.2, //6
-    -0.2,  POLE_HEIGHT, -0.2, //7
-
-	//cube
-	-0.4,  POLE_HEIGHT,        0.4, //8
-     0.4,  POLE_HEIGHT,        0.4, //9
-     0.4,  POLE_HEIGHT + 0.8,  0.4, //10
-    -0.4,  POLE_HEIGHT + 0.8,  0.4, //11
-    -0.4,  POLE_HEIGHT,       -0.4, //12
-     0.4,  POLE_HEIGHT,       -0.4, //13
-     0.4,  POLE_HEIGHT + 0.8, -0.4, //14
-    -0.4,  POLE_HEIGHT + 0.8, -0.4, //15
-};   
-
-//RGB color values
-GLfloat color_buffer_data_3[] = {
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-}; 
-
-//Triangles
-GLushort index_buffer_data_3[] = {
-	//pole
-    0, 1, 2,
-    2, 3, 0,
-    1, 5, 6,
-    6, 2, 1,
-    7, 6, 5,
-    5, 4, 7,
-    4, 0, 3,
-    3, 7, 4,
-    4, 5, 1,
-    1, 0, 4,
-    3, 2, 6,
-    6, 7, 3,
-
-	//cube
-    8, 9, 10,
-    10, 11, 8,
-    9, 13, 14,
-    14, 10, 9,
-    15, 14, 13,
-    13, 12, 15,
-    12, 8, 11,
-    11, 15, 12,
-    12, 13, 9,
-    9, 8, 12,
-    11, 10, 14,
-    14, 15, 11,
-};
-
-/*-------------------POLE2 WITH CUBE ON IT---------------------------*/
-
-//vertices [XYZ]
-GLfloat vertex_buffer_data_4[] = {
-	//pole
-	-0.2, -POLE_HEIGHT,  0.2, //0
-     0.2, -POLE_HEIGHT,  0.2, //1
-     0.2,  POLE_HEIGHT,  0.2, //2
-    -0.2,  POLE_HEIGHT,  0.2, //3
-    -0.2, -POLE_HEIGHT, -0.2, //4
-     0.2, -POLE_HEIGHT, -0.2, //5
-     0.2,  POLE_HEIGHT, -0.2, //6
-    -0.2,  POLE_HEIGHT, -0.2, //7
-
-	//cube
-	-0.4,  POLE_HEIGHT,        0.4, //8
-     0.4,  POLE_HEIGHT,        0.4, //9
-     0.4,  POLE_HEIGHT + 0.8,  0.4, //10
-    -0.4,  POLE_HEIGHT + 0.8,  0.4, //11
-    -0.4,  POLE_HEIGHT,       -0.4, //12
-     0.4,  POLE_HEIGHT,       -0.4, //13
-     0.4,  POLE_HEIGHT + 0.8, -0.4, //14
-    -0.4,  POLE_HEIGHT + 0.8, -0.4, //15
-};   
-
-//RGB color values
-GLfloat color_buffer_data_4[] = {
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-}; 
-
-//Triangles
-GLushort index_buffer_data_4[] = {
-	//pole
-    0, 1, 2,
-    2, 3, 0,
-    1, 5, 6,
-    6, 2, 1,
-    7, 6, 5,
-    5, 4, 7,
-    4, 0, 3,
-    3, 7, 4,
-    4, 5, 1,
-    1, 0, 4,
-    3, 2, 6,
-    6, 7, 3,
-
-	//cube
-    8, 9, 10,
-    10, 11, 8,
-    9, 13, 14,
-    14, 10, 9,
-    15, 14, 13,
-    13, 12, 15,
-    12, 8, 11,
-    11, 15, 12,
-    12, 13, 9,
-    9, 8, 12,
-    11, 10, 14,
-    14, 15, 11,
-};
-
-/*-------------------POLE3 WITH CUBE ON IT---------------------------*/
-
-//vertices [XYZ]
-GLfloat vertex_buffer_data_5[] = {
-	//pole
-	-0.2, -POLE_HEIGHT,  0.2, //0
-     0.2, -POLE_HEIGHT,  0.2, //1
-     0.2,  POLE_HEIGHT,  0.2, //2
-    -0.2,  POLE_HEIGHT,  0.2, //3
-    -0.2, -POLE_HEIGHT, -0.2, //4
-     0.2, -POLE_HEIGHT, -0.2, //5
-     0.2,  POLE_HEIGHT, -0.2, //6
-    -0.2,  POLE_HEIGHT, -0.2, //7
-
-	//cube
-	-0.4,  POLE_HEIGHT,        0.4, //8
-     0.4,  POLE_HEIGHT,        0.4, //9
-     0.4,  POLE_HEIGHT + 0.8,  0.4, //10
-    -0.4,  POLE_HEIGHT + 0.8,  0.4, //11
-    -0.4,  POLE_HEIGHT,       -0.4, //12
-     0.4,  POLE_HEIGHT,       -0.4, //13
-     0.4,  POLE_HEIGHT + 0.8, -0.4, //14
-    -0.4,  POLE_HEIGHT + 0.8, -0.4, //15
-};   
-
-//RGB color values
-GLfloat color_buffer_data_5[] = {
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-}; 
-
-//Triangles
-GLushort index_buffer_data_5[] = {
-	//pole
-    0, 1, 2,
-    2, 3, 0,
-    1, 5, 6,
-    6, 2, 1,
-    7, 6, 5,
-    5, 4, 7,
-    4, 0, 3,
-    3, 7, 4,
-    4, 5, 1,
-    1, 0, 4,
-    3, 2, 6,
-    6, 7, 3,
-
-	//cube
-    8, 9, 10,
-    10, 11, 8,
-    9, 13, 14,
-    14, 10, 9,
-    15, 14, 13,
-    13, 12, 15,
-    12, 8, 11,
-    11, 15, 12,
-    12, 13, 9,
-    9, 8, 12,
-    11, 10, 14,
-    14, 15, 11,
-};
-
-/*-------------------POLE4 WITH CUBE ON IT---------------------------*/
-
-//vertices [XYZ]
-GLfloat vertex_buffer_data_6[] = {
-	//pole
-	-0.2, -POLE_HEIGHT,  0.2, //0
-     0.2, -POLE_HEIGHT,  0.2, //1
-     0.2,  POLE_HEIGHT,  0.2, //2
-    -0.2,  POLE_HEIGHT,  0.2, //3
-    -0.2, -POLE_HEIGHT, -0.2, //4
-     0.2, -POLE_HEIGHT, -0.2, //5
-     0.2,  POLE_HEIGHT, -0.2, //6
-    -0.2,  POLE_HEIGHT, -0.2, //7
-
-	//cube
-	-0.4,  POLE_HEIGHT,        0.4, //8
-     0.4,  POLE_HEIGHT,        0.4, //9
-     0.4,  POLE_HEIGHT + 0.8,  0.4, //10
-    -0.4,  POLE_HEIGHT + 0.8,  0.4, //11
-    -0.4,  POLE_HEIGHT,       -0.4, //12
-     0.4,  POLE_HEIGHT,       -0.4, //13
-     0.4,  POLE_HEIGHT + 0.8, -0.4, //14
-    -0.4,  POLE_HEIGHT + 0.8, -0.4, //15
-};     
-
-//RGB color values
-GLfloat color_buffer_data_6[] = {
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    1.0, 0.5, 1.0,
-    1.0, 0.7, 0.8,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-}; 
-
-//Triangles
-GLushort index_buffer_data_6[] = {
-	//pole
-    0, 1, 2,
-    2, 3, 0,
-    1, 5, 6,
-    6, 2, 1,
-    7, 6, 5,
-    5, 4, 7,
-    4, 0, 3,
-    3, 7, 4,
-    4, 5, 1,
-    1, 0, 4,
-    3, 2, 6,
-    6, 7, 3,
-
-	//cube
-    8, 9, 10,
-    10, 11, 8,
-    9, 13, 14,
-    14, 10, 9,
-    15, 14, 13,
-    13, 12, 15,
-    12, 8, 11,
-    11, 15, 12,
-    12, 13, 9,
-    9, 8, 12,
-    11, 10, 14,
-    14, 15, 11,
-};
-
-/*-------------------ROOF POLE 1---------------------------*/
-
-//vertices [XYZ]
-GLfloat vertex_buffer_data_7[] = {
-	//pole
-	-0.1, -2.5,  0.1, //0
-     0.1, -2.5,  0.1, //1
-     0.1,  2.5,  0.1, //2
-    -0.1,  2.5,  0.1, //3
-    -0.1, -2.5, -0.1, //4
-     0.1, -2.5, -0.1, //5
-     0.1,  2.5, -0.1, //6
-    -0.1,  2.5, -0.1, //7
-};     
-
-//RGB color values
-GLfloat color_buffer_data_7[] = {
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    0.4, 0.0, 1.0,
-    0.4, 0.0, 1.0,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    0.4, 0.0, 1.0,
-    0.4, 0.0, 1.0,
-}; 
-
-//Triangles
-GLushort index_buffer_data_7[] = {
-	//pole
-    0, 1, 2,
-    2, 3, 0,
-    1, 5, 6,
-    6, 2, 1,
-    7, 6, 5,
-    5, 4, 7,
-    4, 0, 3,
-    3, 7, 4,
-    4, 5, 1,
-    1, 0, 4,
-    3, 2, 6,
-    6, 7, 3,
-};
-
-/*-------------------ROOF POLE 2---------------------------*/
-
-//vertices [XYZ]
-GLfloat vertex_buffer_data_8[] = {
-	//pole
-	-0.1, -2.5,  0.1, //0
-     0.1, -2.5,  0.1, //1
-     0.1,  2.5,  0.1, //2
-    -0.1,  2.5,  0.1, //3
-    -0.1, -2.5, -0.1, //4
-     0.1, -2.5, -0.1, //5
-     0.1,  2.5, -0.1, //6
-    -0.1,  2.5, -0.1, //7
-};     
-
-//RGB color values
-GLfloat color_buffer_data_8[] = {
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    0.4, 0.0, 1.0,
-    0.4, 0.0, 1.0,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    0.4, 0.0, 1.0,
-    0.4, 0.0, 1.0,
-}; 
-
-//Triangles
-GLushort index_buffer_data_8[] = {
-	//pole
-    0, 1, 2,
-    2, 3, 0,
-    1, 5, 6,
-    6, 2, 1,
-    7, 6, 5,
-    5, 4, 7,
-    4, 0, 3,
-    3, 7, 4,
-    4, 5, 1,
-    1, 0, 4,
-    3, 2, 6,
-    6, 7, 3,
-};
-
-/*-------------------ROOF POLE 3---------------------------*/
-
-//vertices [XYZ]
-GLfloat vertex_buffer_data_9[] = {
-	//pole
-	-0.1, -2.5,  0.1, //0
-     0.1, -2.5,  0.1, //1
-     0.1,  2.5,  0.1, //2
-    -0.1,  2.5,  0.1, //3
-    -0.1, -2.5, -0.1, //4
-     0.1, -2.5, -0.1, //5
-     0.1,  2.5, -0.1, //6
-    -0.1,  2.5, -0.1, //7
-};     
-
-//RGB color values
-GLfloat color_buffer_data_9[] = {
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    0.4, 0.0, 1.0,
-    0.4, 0.0, 1.0,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    0.4, 0.0, 1.0,
-    0.4, 0.0, 1.0,
-}; 
-
-//Triangles
-GLushort index_buffer_data_9[] = {
-	//pole
-    0, 1, 2,
-    2, 3, 0,
-    1, 5, 6,
-    6, 2, 1,
-    7, 6, 5,
-    5, 4, 7,
-    4, 0, 3,
-    3, 7, 4,
-    4, 5, 1,
-    1, 0, 4,
-    3, 2, 6,
-    6, 7, 3,
-};
-
-/*-------------------ROOF POLE 4---------------------------*/
-
-//vertices [XYZ]
-GLfloat vertex_buffer_data_10[] = {
-	//pole
-	-0.1, -2.5,  0.1, //0
-     0.1, -2.5,  0.1, //1
-     0.1,  2.5,  0.1, //2
-    -0.1,  2.5,  0.1, //3
-    -0.1, -2.5, -0.1, //4
-     0.1, -2.5, -0.1, //5
-     0.1,  2.5, -0.1, //6
-    -0.1,  2.5, -0.1, //7
-};     
-
-//RGB color values
-GLfloat color_buffer_data_10[] = {
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    0.4, 0.0, 1.0,
-    0.4, 0.0, 1.0,
-    1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    0.4, 0.0, 1.0,
-    0.4, 0.0, 1.0,
-}; 
-
-//Triangles
-GLushort index_buffer_data_10[] = {
-	//pole
-    0, 1, 2,
-    2, 3, 0,
-    1, 5, 6,
-    6, 2, 1,
-    7, 6, 5,
-    5, 4, 7,
-    4, 0, 3,
-    3, 7, 4,
-    4, 5, 1,
-    1, 0, 4,
-    3, 2, 6,
-    6, 7, 3,
-};
 /*----------------------------------------------------------------*/
+
 
 
 /******************************************************************
@@ -666,7 +104,7 @@ GLushort index_buffer_data_10[] = {
 * This function is called when the content of the window needs to be
 * drawn/redrawn. It has been specified through 'glutDisplayFunc()';
 * Enable vertex attributes, create binding between C program and 
-* attribute name in shader
+* attribute name in shader, provide data for uniform variables
 *
 *******************************************************************/
 
@@ -675,7 +113,25 @@ void Display()
     /* Clear window; color specified in 'Initialize()' */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/* Associate program with shader matrices */
+    glEnableVertexAttribArray(vPosition);
+
+    /* Bind buffer with vertex data of currently active object */
+    if(model == Model1)
+        glBindBuffer(GL_ARRAY_BUFFER, VBO1);
+    else if(model == Model2)
+        glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+   /* Bind buffer with index data of currently active object */
+    if(model == Model1)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO1);
+    else if(model == Model2)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO2);
+
+    GLint size; 
+    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+
+    /* Associate program with uniform shader matrices */
     GLint projectionUniform = glGetUniformLocation(ShaderProgram, "ProjectionMatrix");
     if (projectionUniform == -1) 
     {
@@ -698,32 +154,16 @@ void Display()
         fprintf(stderr, "Could not bind uniform ModelMatrix\n");
         exit(-1);
     }
+    glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix);  
 
-	/* Bind Vertex/Color/Index Buffers and draw objects */
+    /* Set state to only draw wireframe (no lighting used, yet) */
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	for (int i = 0; i < NUM_OF_OBJECTS; i++) {
-		glEnableVertexAttribArray(vPosition);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
-		glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    /* Issue draw command, using indexed triangle list */
+    glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 
-		glEnableVertexAttribArray(vColor);
-		glBindBuffer(GL_ARRAY_BUFFER, CBO[i]);
-		glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
-
-		GLint size; 
-		glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-
-		
-		glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix[i]); 
-
-		/* Issue draw command, using indexed triangle list */
-		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-
-		glDisableVertexAttribArray(vPosition);
-		glDisableVertexAttribArray(vColor);
-	}
+    /* Disable attributes */
+    glDisableVertexAttribArray(vPosition);
 
     /* Swap between front and back buffer */ 
     glutSwapBuffers();
@@ -732,41 +172,131 @@ void Display()
 
 /******************************************************************
 *
-* OnIdle
+* Mouse
 *
-* 
+* Function is called on mouse button press; has been seta
+* with glutMouseFunc(), x and y specify mouse coordinates,
+* but are not used here.
 *
 *******************************************************************/
-float moves(double angle, double offset) {
-	float tmp = sin((angle + offset) * (M_PI/180));
-	if (tmp < 0) {
-		tmp *= -1;
+
+void Mouse(int button, int state, int x, int y) 
+{
+    if(state == GLUT_DOWN) 
+    {
+      /* Depending on button pressed, set rotation axis,
+       * turn on animation */
+        switch(button) 
+	{
+	    case GLUT_LEFT_BUTTON:    
+	        axis = Xaxis;
+		break;
+
+	    case GLUT_MIDDLE_BUTTON:  
+  	        axis = Yaxis;
+	        break;
+		
+	    case GLUT_RIGHT_BUTTON: 
+	        axis = Zaxis;
+		break;
 	}
-	return tmp;
+	anim = GL_TRUE;
+    }
 }
+
+
+/******************************************************************
+*
+* Keyboard
+*
+* Function to be called on key press in window; set by
+* glutKeyboardFunc(); x and y specify mouse position on keypress;
+* not used in this example 
+*
+*******************************************************************/
+
+void Keyboard(unsigned char key, int x, int y)   
+{
+    switch( key ) 
+    {
+	/* Activate model one or two */
+	case '1': 
+		model = Model1;
+		break;
+
+	case '2':
+		model = Model2; 	
+		break;
+
+	/* Toggle animation */
+	case '0':
+		if (anim)
+			anim = GL_FALSE;		
+		else
+			anim = GL_TRUE;
+		break;
+
+	/* Reset initial rotation of object */
+	case 'o':
+	    SetIdentityMatrix(RotationMatrixAnimX);
+	    SetIdentityMatrix(RotationMatrixAnimY);
+	    SetIdentityMatrix(RotationMatrixAnimZ);
+	    angleX = 0.0;
+	    angleY = 0.0;
+	    angleZ = 0.0;
+	    break;
+	    
+	case 'q': case 'Q':  
+	    exit(0);    
+		break;
+    }
+
+    glutPostRedisplay();
+}
+
+
+/******************************************************************
+*
+* OnIdle
+*
+* Function executed when no other events are processed; set by
+* call to glutIdleFunc(); holds code for animation  
+*
+*******************************************************************/
 
 void OnIdle()
 {
-    float angle = (glutGet(GLUT_ELAPSED_TIME) / 1000.0) * (180.0/M_PI);
+    /* Determine delta time between two frames to ensure constant animation */
+    int newTime = glutGet(GLUT_ELAPSED_TIME);
+    int delta = newTime - oldTime;
+    oldTime = newTime;
 
-    /* Time dependent rotation */
-    SetRotationY(angle, R);
-
-	/* ROTATE ALL OBJECTS */
-	for (int i = 0; i < NUM_OF_OBJECTS; i++) {
-		MultiplyMatrix(R, InitialTransform[i], ModelMatrix[i]);
+    if(anim)
+    {
+        /* Increment rotation angles and update matrix */
+        if(axis == Xaxis)
+	{
+  	    angleX = fmod(angleX + delta/20.0, 360.0);  
+	    SetRotationX(angleX, RotationMatrixAnimX);
 	}
-
-	/* OBJECTS THAT ROTATE AND MOVE UP AND DOWN */
-	//Poles
-	int j = 0;
-	for (int i = 2; i <= 5; i++) {
-		SetTranslation(0.0, moves(angle, 20*j), 0.0, T);
-    	MultiplyMatrix(T, ModelMatrix[i], ModelMatrix[i]);
-		j++;
+	else if(axis == Yaxis)
+	{
+	    angleY = fmod(angleY + delta/20.0, 360.0); 
+	    SetRotationY(angleY, RotationMatrixAnimY);  
 	}
+	else if(axis == Zaxis)
+	{			
+	    angleZ = fmod(angleZ + delta/20.0, 360.0); 
+	    SetRotationZ(angleZ, RotationMatrixAnimZ);
+	}	    
+    }
 
-    /* Request redrawing forof window content */  
+    /* Update of transformation matrices 
+     * Note order of transformations and rotation of reference axes */
+    MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
+    MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, ModelMatrix);	
+    
+    /* Issue display refresh */
     glutPostRedisplay();
 }
 
@@ -781,230 +311,24 @@ void OnIdle()
 
 void SetupDataBuffers()
 {
-    /* Roof */
-    glGenBuffers(NUM_OF_OBJECTS, VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
-
-    glGenBuffers(NUM_OF_OBJECTS, IBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[0]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_STATIC_DRAW);
-
-    glGenBuffers(NUM_OF_OBJECTS, CBO);
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
-
-	glGenVertexArrays(NUM_OF_OBJECTS, VAO);
-	glBindVertexArray(VAO[0]);
-
-	glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0); 
-
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);   
-
-	/* Base */
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_2), vertex_buffer_data_2, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[1]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_2), index_buffer_data_2, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_2), color_buffer_data_2, GL_STATIC_DRAW);
-
-	glBindVertexArray(VAO[1]);
-
-	glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
-
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor); 
-
-	/* POLE 1 */
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_3), vertex_buffer_data_3, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[2]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_3), index_buffer_data_3, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[2]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_3), color_buffer_data_3, GL_STATIC_DRAW);
-
-	glBindVertexArray(VAO[2]);
-
-	glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
-
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);
-
-	/* POLE 2 */
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_4), vertex_buffer_data_4, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[3]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_4), index_buffer_data_4, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[3]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_4), color_buffer_data_4, GL_STATIC_DRAW);
-
-	glBindVertexArray(VAO[3]);
-
-	glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
-
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);
-
-	/* POLE 3 */
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[4]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_5), vertex_buffer_data_5, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[4]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_5), index_buffer_data_5, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[4]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_5), color_buffer_data_5, GL_STATIC_DRAW);
-
-	glBindVertexArray(VAO[4]);
-
-	glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
-
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);
-
-	/* POLE 4 */
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[5]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_6), vertex_buffer_data_6, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[5]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_6), index_buffer_data_6, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[5]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_6), color_buffer_data_6, GL_STATIC_DRAW);
-
-	glBindVertexArray(VAO[5]);
-
-	glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
-
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);
-
-	/* ROOF_POLE 1 */
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[6]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_7), vertex_buffer_data_7, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[6]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_7), index_buffer_data_7, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[6]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_7), color_buffer_data_7, GL_STATIC_DRAW);
-
-	glBindVertexArray(VAO[6]);
-
-	glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
-
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);
-
-	/* ROOF_POLE 2 */
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[7]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_8), vertex_buffer_data_8, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[7]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_8), index_buffer_data_8, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[7]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_8), color_buffer_data_8, GL_STATIC_DRAW);
-
-	glBindVertexArray(VAO[7]);
-
-	glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
-
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);
-
-	/* ROOF_POLE 3 */
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[8]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_9), vertex_buffer_data_9, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[8]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_9), index_buffer_data_9, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[8]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_9), color_buffer_data_9, GL_STATIC_DRAW);
-
-	glBindVertexArray(VAO[8]);
-
-	glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
-
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);
-
-	/* ROOF_POLE 4 */
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[9]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data_10), vertex_buffer_data_10, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[9]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data_10), index_buffer_data_10, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[9]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data_10), color_buffer_data_10, GL_STATIC_DRAW);
-
-	glBindVertexArray(VAO[9]);
-
-	glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(vColor);
-    glVertexAttribPointer(vColor, 3, GL_FLOAT,GL_FALSE, 0, 0);
-
-    /* Disable attributes */
-    glDisableVertexAttribArray(vPosition);
-    glDisableVertexAttribArray(vColor);
-   
+    glGenBuffers(1, &VBO1);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO1);
+    glBufferData(GL_ARRAY_BUFFER, data1.vertex_count*3*sizeof(GLfloat), vertex_buffer_data1, GL_STATIC_DRAW);
+	
+    glGenBuffers(1, &VBO2);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+    glBufferData(GL_ARRAY_BUFFER, data2.vertex_count*3*sizeof(GLfloat), vertex_buffer_data2, GL_STATIC_DRAW);  
+    
+    glGenBuffers(1, &IBO1);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO1);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data1.face_count*3*sizeof(GLushort), index_buffer_data1, GL_STATIC_DRAW);
+    
+    glGenBuffers(1, &IBO2);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO2);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data2.face_count*3*sizeof(GLushort), index_buffer_data2, GL_STATIC_DRAW);
+
+    glGenVertexArrays(2, &VAO);
+    glBindVertexArray(VAO);
 }
 
 
@@ -1070,7 +394,7 @@ void CreateShaderProgram()
         exit(1);
     }
 
-	/* Load shader code from file */
+    /* Load shader code from file */
     VertexShaderString = LoadShader("shaders/vertexshader.vs");
     FragmentShaderString = LoadShader("shaders/fragmentshader.fs");
 
@@ -1115,15 +439,79 @@ void CreateShaderProgram()
 * Initialize
 *
 * This function is called to initialize rendering elements, setup
-* vertex buffer objects, and to setup the vertex and fragment shader
+* vertex buffer objects, and to setup the vertex and fragment shader;
+* meshes are loaded from files in OBJ format; data is copied from
+* structures into vertex and index arrays
 *
 *******************************************************************/
 
-void Initialize(void)
+void Initialize()
 {   
-    /* Set background (clear) color to soft bluegreen */ 
-    glClearColor(0.0, 0.2, 0.4, 0.0);
+    int i;
+    int success;
+
+    /* Load first OBJ model */
+    char* filename1 = "models/teapot.obj"; 
+    success = parse_obj_scene(&data1, filename1);
+
+    if(!success)
+        printf("Could not load file. Exiting.\n");
+
+    /* Load second OBJ model */
+    char* filename2 = "models/suzanne.obj";
+    success = parse_obj_scene(&data2, filename2);
     
+    if(!success)
+        printf("Could not load file. Exiting.\n");
+
+    /*  Copy mesh data from structs into appropriate arrays */ 
+    int vert = data1.vertex_count;
+    int indx = data1.face_count;
+
+    vertex_buffer_data1 = (GLfloat*) calloc (vert*3, sizeof(GLfloat));
+    index_buffer_data1 = (GLushort*) calloc (indx*3, sizeof(GLushort));
+  
+    /* Vertices */
+    for(i=0; i<vert; i++)
+    {
+        vertex_buffer_data1[i*3] = (GLfloat)(*data1.vertex_list[i]).e[0];
+	vertex_buffer_data1[i*3+1] = (GLfloat)(*data1.vertex_list[i]).e[1];
+	vertex_buffer_data1[i*3+2] = (GLfloat)(*data1.vertex_list[i]).e[2];
+    }
+
+    /* Indices */
+    for(i=0; i<indx; i++)
+    {
+	index_buffer_data1[i*3] = (GLushort)(*data1.face_list[i]).vertex_index[0];
+	index_buffer_data1[i*3+1] = (GLushort)(*data1.face_list[i]).vertex_index[1];
+	index_buffer_data1[i*3+2] = (GLushort)(*data1.face_list[i]).vertex_index[2];
+    }
+
+    vert = data2.vertex_count;
+    indx = data2.face_count;
+
+    vertex_buffer_data2 = (GLfloat*) calloc (vert*3, sizeof(GLfloat));
+    index_buffer_data2 = (GLushort*) calloc (indx*3, sizeof(GLushort));
+ 
+    /* Vertices */
+    for(i=0; i<vert; i++)
+    {
+	vertex_buffer_data2[i*3] = (GLfloat)(*data2.vertex_list[i]).e[0];
+	vertex_buffer_data2[i*3+1] = (GLfloat)(*data2.vertex_list[i]).e[1];
+	vertex_buffer_data2[i*3+2] = (GLfloat)(*data2.vertex_list[i]).e[2];
+    }
+
+    /* Indices */
+    for(i=0; i<indx; i++)
+    {
+	index_buffer_data2[i*3] = (GLushort)(*data2.face_list[i]).vertex_index[0];
+	index_buffer_data2[i*3+1] = (GLushort)(*data2.face_list[i]).vertex_index[1];
+	index_buffer_data2[i*3+2] = (GLushort)(*data2.face_list[i]).vertex_index[2];
+    }
+	
+    /* Set background (clear) color to blue */ 
+    glClearColor(0.0, 0.0, 0.4, 0.0);
+
     /* Enable depth testing */
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);    
@@ -1137,13 +525,16 @@ void Initialize(void)
     /* Initialize matrices */
     SetIdentityMatrix(ProjectionMatrix);
     SetIdentityMatrix(ViewMatrix);
+    SetIdentityMatrix(ModelMatrix);
 
-	for (int i = 0; i < NUM_OF_OBJECTS; i++) {
-    	SetIdentityMatrix(ModelMatrix[i]);
-	}
-
+    /* Initialize animation matrices */
+    SetIdentityMatrix(RotationMatrixAnimX);
+    SetIdentityMatrix(RotationMatrixAnimY);
+    SetIdentityMatrix(RotationMatrixAnimZ);
+    SetIdentityMatrix(RotationMatrixAnim);
+    
     /* Set projection transform */
-    float fovy = 80.0;
+    float fovy = 45.0;
     float aspect = 1.0; 
     float nearPlane = 1.0; 
     float farPlane = 50.0;
@@ -1152,18 +543,6 @@ void Initialize(void)
     /* Set viewing transform */
     float camera_disp = -10.0;
     SetTranslation(0.0, 0.0, camera_disp, ViewMatrix);
-
-    /* Translate and rotate objects */
-    SetTranslation(0, 2, 0, InitialTransform[0]);
-	SetTranslation(0, -3, 0, InitialTransform[1]);
-	SetTranslation(-1.6, -3, -1.6, InitialTransform[2]);
-	SetTranslation(-1.6, -3,  1.6, InitialTransform[3]);
-	SetTranslation( 1.6, -3,  1.6, InitialTransform[4]);
-	SetTranslation( 1.6, -3, -1.6, InitialTransform[5]);
-	SetTranslation(2.6, -0.5,-2.6, InitialTransform[6]);
-	SetTranslation(-2.6, -0.5, 2.6, InitialTransform[7]);
-	SetTranslation(-2.6, -0.5,-2.6, InitialTransform[8]);
-	SetTranslation(2.6, -0.5, 2.6, InitialTransform[9]);
 }
 
 
@@ -1179,15 +558,15 @@ int main(int argc, char** argv)
 {
     /* Initialize GLUT; set double buffered window and RGBA color model */
     glutInit(&argc, argv);
-	glutInitContextVersion(3, 3);
-	glutInitContextProfile(GLUT_CORE_PROFILE);
+    glutInitContextVersion(3,3);
+    glutInitContextProfile(GLUT_CORE_PROFILE);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-    glutInitWindowSize(800, 800);
+    glutInitWindowSize(600, 600);
     glutInitWindowPosition(400, 400);
-    glutCreateWindow("CG Proseminar - Assignment 1");
+    glutCreateWindow("CG Proseminar - User Interaction");
 
-	/* Initialize GL extension wrangler */
-	glewExperimental = GL_TRUE;
+    /* Initialize GL extension wrangler */
+    glewExperimental = GL_TRUE;
     GLenum res = glewInit();
     if (res != GLEW_OK) 
     {
@@ -1198,11 +577,13 @@ int main(int argc, char** argv)
     /* Setup scene and rendering parameters */
     Initialize();
 
-
     /* Specify callback functions;enter GLUT event processing loop, 
      * handing control over to GLUT */
     glutIdleFunc(OnIdle);
     glutDisplayFunc(Display);
+    glutKeyboardFunc(Keyboard); 
+    glutMouseFunc(Mouse);  
+
     glutMainLoop();
 
     /* ISO C requires main to return int */
