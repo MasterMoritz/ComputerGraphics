@@ -34,7 +34,7 @@
 	#define M_PI 3.14159265358979323846
 #endif
 #ifndef NUM_STATIC
-	#define NUM_STATIC 3
+	#define NUM_STATIC 4
 #endif
 #ifndef NUM_BASIC_ANIM
 	#define NUM_BASIC_ANIM 1
@@ -279,12 +279,12 @@ float moves(double angle, double offset) {
 
 void OnIdle()
 {
-    /* Determine delta time between two frames to ensure constant animation */
-    int newTime = glutGet(GLUT_ELAPSED_TIME);
-    int delta = newTime - oldTime;
-    oldTime = newTime;
+	/* Determine delta time between two frames to ensure constant animation */
+	int newTime = glutGet(GLUT_ELAPSED_TIME);
+	int delta = newTime - oldTime;
+	oldTime = newTime;
 
-    /* Increment rotation angles and update matrix */
+	/* Increment rotation angles and update matrix */
 	angleY = fmod(angleY + delta/20.0, 360.0); 
 	SetRotationY(-angleY, R);
 
@@ -505,6 +505,16 @@ void Initialize()
 	}
 
     filename = "models/roof.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	SetIdentityMatrix(ModelMatrix[objIndex]);
+	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
+
+	objIndex += 1;
+    if(!success) {
+        printf("Could not load file. Exiting.\n");
+	}
+
+    filename = "models/dragonHead.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
 	SetIdentityMatrix(ModelMatrix[objIndex]);
 	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
