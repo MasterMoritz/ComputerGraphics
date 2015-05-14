@@ -34,7 +34,7 @@
 	#define M_PI 3.14159265358979323846
 #endif
 #ifndef NUM_STATIC
-	#define NUM_STATIC 2
+	#define NUM_STATIC 3
 #endif
 #ifndef NUM_BASIC_ANIM
 	#define NUM_BASIC_ANIM 1
@@ -459,7 +459,7 @@ void Initialize()
 
 	/* Load all static models */
 
-    char* filename = "models/floor_static.obj"; 
+    char* filename = "models/pillars.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
 	SetIdentityMatrix(ModelMatrix[objIndex]);
 	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
@@ -469,7 +469,17 @@ void Initialize()
         printf("Could not load file. Exiting.\n");
 	}
 	
-    filename = "models/pillars.obj"; 
+    filename = "models/floor_static.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	SetIdentityMatrix(ModelMatrix[objIndex]);
+	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
+
+	objIndex += 1;
+    if(!success) {
+        printf("Could not load file. Exiting.\n");
+	}
+
+    filename = "models/roof.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
 	SetIdentityMatrix(ModelMatrix[objIndex]);
 	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
@@ -564,7 +574,7 @@ void Initialize()
     SetPerspectiveMatrix(fovy, aspect, nearPlane, farPlane, ProjectionMatrix);
 
     /* Set camera transform */
-    SetTranslation(0.0, -5.0, -25.0, ViewMatrix);
+    SetTranslation(0.0, -4.0, -20.0, ViewMatrix);
 }
 
 
