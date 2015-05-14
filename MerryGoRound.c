@@ -284,26 +284,51 @@ void OnIdle()
     int delta = newTime - oldTime;
     oldTime = newTime;
 
+    /* Increment rotation angles and update matrix */
+	angleY = fmod(angleY + delta/20.0, 360.0); 
+	SetRotationY(-angleY, R);
+
+	/* rotate all non-static objects */
+	int num_non_static = NUM_BASIC_ANIM + NUM_ADV_ANIM;
+
+	for (int i = 0; i < num_non_static; i++) {
+		MultiplyMatrix(R, InitialTransform[i + NUM_STATIC], ModelMatrix[i + NUM_STATIC]);
+	}
+
+	/* move advanced animation objects up and down with individual delay */
+	int delay = 0;
+	for (int i = 0; i < NUM_ADV_ANIM; i++) {
+		SetTranslation(0.0, -moves(angleY, delay), 0.0, T);
+		MultiplyMatrix(T, ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM], ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM]);
+
+		delay += 20;
+	}
+
+    /* Rotate camera */
     if(anim) {
-        /* Increment rotation angles and update matrix */
-		angleY = fmod(angleY + delta/20.0, 360.0); 
-		SetRotationY(-angleY, R);
-
-		/* rotate all non-static objects */
-		int num_non_static = NUM_BASIC_ANIM + NUM_ADV_ANIM;
-
-		for (int i = 0; i < num_non_static; i++) {
-			MultiplyMatrix(R, InitialTransform[i + NUM_STATIC], ModelMatrix[i + NUM_STATIC]);
-		}
-
-		/* move advanced animation objects up and down with individual delay */
-		int delay = 0;
-		for (int i = 0; i < NUM_ADV_ANIM; i++) {
-			SetTranslation(0.0, -moves(angleY, delay), 0.0, T);
-    		MultiplyMatrix(T, ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM], ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM]);
-
-			delay += 20;
-		}
+            /* Increment rotation angles and update matrix */
+        if(axis == Xaxis)
+	    {
+      	    angleX = fmod(angleX + delta/20.0, 360.0);  
+	        SetRotationX(angleX, RotationMatrixAnimX);
+	    }
+	    else if(axis == Yaxis)
+	    {
+	        angleY = fmod(angleY + delta/20.0, 360.0); 
+	        SetRotationY(angleY, RotationMatrixAnimY);  
+	    }
+	    else if(axis == Zaxis)
+	    {			
+	        angleZ = fmod(angleZ + delta/20.0, 360.0); 
+	        SetRotationZ(angleZ, RotationMatrixAnimZ);
+	    }
+        /* Update of transformation matrices 
+         * Note order of transformations and rotation of reference axes */
+        MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
+        MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
+        for(int i = 0; i < NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM; i++) {
+            MultiplyMatrix(RotationMatrixAnim, ModelMatrix[i], ModelMatrix[i]);
+        }	    
     }	
     
     /* Issue display refresh */
