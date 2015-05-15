@@ -116,8 +116,9 @@ const float curves[][4][3] = {
 {{},{},{}},
 {{0, -3, -12}, {0, -3, -22}, {0, -8, -22}, {0, -8, -6}},
 {{0, -8, -6}, {0, -8, -6}, {0, -8, -6}, {0, -8, -6}},
-{{0, -8, -6}, {0, -8, -22}, {0, -3, -22}, {0, -3, -12}},
-{{0, -3, -12}, {0, -6, -14}, {0, -6, -18}, {0, -4, -20}}
+{{0, -8, -6}, {0, -8.5, -6.5}, {0, -9.5, -5.5}, {0, -10, -6}},
+{{0, -10, -6}, {0, -9.5, -5.5}, {0, -8.5, -6.5}, {0, -8, -6}},
+{{0, -8, -6}, {0, -6, -22}, {0, -6, -22}, {0, -4, -20}}
 };
 
 /* Bezier curve parameter [0;1] */
@@ -450,11 +451,16 @@ void OnIdle()
             ViewTransform[7] = p[1];
             ViewTransform[11] = p[2];
         }
-        else {
+        if(curve == 1) {
             camAngleY = t*360;
         }
-        MultiplyMatrix(ViewTransform, ViewMatrix, ViewMatrix);		
-	    /* Update camera rotation */
+        if(curve == 4) {
+            camAngleY = 360-t*180;
+        }
+        if(curve == 5) {
+            camAngleY = 180-t*180;
+        }		
+	    /* Update camera view */
         SetRotationX(camAngleX, RotationMatrixAnimX);
         SetRotationY(camAngleY, RotationMatrixAnimY);
         SetRotationZ(camAngleZ, RotationMatrixAnimZ);
@@ -464,7 +470,6 @@ void OnIdle()
     }
 	//manual camera
     else {
-        /* Update camera translation */
         SetIdentityMatrix(ViewMatrix);
 
         /* Update camera view */
