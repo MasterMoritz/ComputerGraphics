@@ -112,14 +112,23 @@ int oldTime = 0;
 
 /* The array of bezier curves to use for the automatic camera path */
 const float curves[][4][3] = {
-{{0, -4, -20}, {0, -8, -18}, {0, -8, -14}, {0, -4, -10}} 
+{{0, -4, -20}, {0, 0, -18}, {0, 0, -14}, {0, -3, -12}},
+{{},{},{}},
+{{0, -3, -12}, {0, -3, -22}, {0, -8, -22}, {0, -8, -6}},
+{{0, -8, -6}, {0, -8, -6}, {0, -8, -6}, {0, -8, -6}},
+{{0, -8, -6}, {0, -8, -22}, {0, -3, -22}, {0, -3, -12}},
+{{0, -3, -12}, {0, -6, -14}, {0, -6, -18}, {0, -4, -20}}
 };
 
 /* Bezier curve parameter [0;1] */
 float t; 
 
+/* The currently active curve */
+int curve = 0;
+
 /* The camera animation speed */
 float camSpeed = 1;
+
 
 
 /*----------------------------------------------------------------*/
@@ -431,12 +440,27 @@ void OnIdle()
     if(automatic) {
          /* Update camera translation */
         SetIdentityMatrix(ViewMatrix);
-        t = fmod(t + delta/2000.0*camSpeed, 1);
-        float p[3];
-        ComputeBezierPoint(curves[0], t, p);
-        ViewTransform[3] = p[0];
-        ViewTransform[7] = p[1];
-        ViewTransform[11] = p[2];
+        t += delta/2000.0*camSpeed;
+        if(t >= 1) {
+             if(curve == 1) {
+                camSpeed *= 2;
+            }
+            t = 0;
+            curve = fmod(curve+1, sizeof(curves)/sizeof(curves[0]));
+            if(curve == 1) {
+                camSpeed /= 2;
+            }
+        }
+        if(curve != 1) {
+            float p[3];
+            ComputeBezierPoint(curves[curve], t, p);
+            ViewTransform[3] = p[0];
+            ViewTransform[7] = p[1];
+            ViewTransform[11] = p[2];
+        }
+        else {
+            camAngleY = t*360;
+        }
         MultiplyMatrix(ViewTransform, ViewMatrix, ViewMatrix);		
 	    /* Update camera rotation */
         SetRotationX(camAngleX, RotationMatrixAnimX);
@@ -450,7 +474,7 @@ void OnIdle()
     else {
         /* Update camera translation */
         SetIdentityMatrix(ViewMatrix);
- 
+
         /* Update camera view */
         SetRotationX(camAngleX, RotationMatrixAnimX);
         SetRotationY(camAngleY, RotationMatrixAnimY);
