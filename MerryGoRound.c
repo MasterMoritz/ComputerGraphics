@@ -89,6 +89,9 @@ float ViewTransform[16];
 float angleX, angleY, angleZ = 0.0f; 
 float camAngleX, camAngleY, camAngleZ = 0.0f;
 
+/* the speed in manual camera mode */
+float manualSpeed = 0.2f;
+
 /* Indices to active rotation axes */
 enum {Xaxis=0, Yaxis=1, Zaxis=2};
 int axis = Yaxis;
@@ -225,14 +228,17 @@ void Mouse(int button, int state, int x, int y) {
 	            axis = Zaxis;
 		    break;
 	    }
-        if(button == scroll_down) {
-            //zoom in
-            ViewTransform[11] *= .95;
-        }
-        else if(button == scroll_up) {
-            //zoom out
-            ViewTransform[11] *= 1.05;
-        }
+
+		if (automatic == GL_FALSE) {
+		    if(button == scroll_down) {
+		        //increase manual speed
+		        manualSpeed *= 1.12f;
+		    }
+		    else if(button == scroll_up) {
+		        //decrease manual speed
+		        manualSpeed /= 1.12f;
+		    }
+		}
     }
 }
 
@@ -269,6 +275,42 @@ void Keyboard(unsigned char key, int x, int y)
 {
     switch( key ) 
     {
+	/* Keyboard Car Navigation */
+	case 'w':
+		//forward
+		ViewTransform[3] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
+		ViewTransform[7] += sin(camAngleX * (M_PI/180)) * manualSpeed;
+		ViewTransform[11]+= cos(camAngleY * (M_PI/180)) * manualSpeed;
+		break;
+
+	case 's':
+		//backward
+		ViewTransform[3] += sin(camAngleY * (M_PI/180)) * manualSpeed;
+		ViewTransform[7] -= sin(camAngleX * (M_PI/180)) * manualSpeed; 
+		ViewTransform[11]-= cos(camAngleY * (M_PI/180)) * manualSpeed;
+		break;
+
+	case 23: //ctrl+w
+		//up
+		ViewTransform[7]-=manualSpeed;
+		break;
+
+	case 19: //ctrl+s
+		//down
+		ViewTransform[7]+=manualSpeed;
+		break;
+
+	case 'a':
+		//left
+		ViewTransform[3] += cos(camAngleY * (M_PI/180)) * manualSpeed;
+		ViewTransform[11] += sin(camAngleY * (M_PI/180)) * manualSpeed; 
+		break;
+
+	case 'd':
+		//right
+		ViewTransform[3] -= cos(camAngleY * (M_PI/180)) * manualSpeed;
+		ViewTransform[11] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
+		break;
 
     /* Set speed of automatic camera */
 	case '1': 
@@ -295,7 +337,7 @@ void Keyboard(unsigned char key, int x, int y)
        break;
 	
 	/* Toggle animation */
-	case 's':
+	case 'j':
 		if (anim)
 			anim = GL_FALSE;		
 		else
@@ -376,6 +418,7 @@ void OnIdle()
 	}
 
     /* Rotate camera */
+	//automatic camera
     if(automatic) {
          /* Update camera translation */
         SetIdentityMatrix(ViewMatrix);
@@ -394,17 +437,19 @@ void OnIdle()
         MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
         MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
     }
+	//manual camera
     else {
         /* Update camera translation */
         SetIdentityMatrix(ViewMatrix);
-        MultiplyMatrix(ViewTransform, ViewMatrix, ViewMatrix);
-        /* Update camera rotation */
+ 
+        /* Update camera view */
         SetRotationX(camAngleX, RotationMatrixAnimX);
         SetRotationY(camAngleY, RotationMatrixAnimY);
         SetRotationZ(camAngleZ, RotationMatrixAnimZ);
         MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
         MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
-        MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
+
+        MultiplyMatrix(RotationMatrixAnim, ViewTransform, ViewMatrix);
     }	
     
     /* Issue display refresh */
