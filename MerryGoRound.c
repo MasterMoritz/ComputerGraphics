@@ -316,62 +316,73 @@ void RotateCamera(int x, int y) {
 
 void Keyboard(unsigned char key, int x, int y)   
 {
-    switch( key ) 
-    {
-	/* Keyboard rpg Navigation */
-	case 'w':
-		//forward
-		ViewTransform[3] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
-		ViewTransform[7] += sin(camAngleX * (M_PI/180)) * manualSpeed;
-		ViewTransform[11]+= cos(camAngleY * (M_PI/180)) * manualSpeed;
-		break;
+    switch( key ) {
 
-	case 's':
-		//backward
-		ViewTransform[3] += sin(camAngleY * (M_PI/180)) * manualSpeed;
-		ViewTransform[7] -= sin(camAngleX * (M_PI/180)) * manualSpeed; 
-		ViewTransform[11]-= cos(camAngleY * (M_PI/180)) * manualSpeed;
-		break;
+		/* Keyboard rpg bindings */
+		if (camMode == 1) {
+			
+			case 'w':
+				//forward
+				ViewTransform[3] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
+				ViewTransform[7] += sin(camAngleX * (M_PI/180)) * manualSpeed;
+				ViewTransform[11]+= cos(camAngleY * (M_PI/180)) * manualSpeed;
+				break;
 
-	case 23: //ctrl+w
-		//up
-		ViewTransform[7]-=manualSpeed;
-		break;
+			case 's':
+				//backward
+				ViewTransform[3] += sin(camAngleY * (M_PI/180)) * manualSpeed;
+				ViewTransform[7] -= sin(camAngleX * (M_PI/180)) * manualSpeed; 
+				ViewTransform[11]-= cos(camAngleY * (M_PI/180)) * manualSpeed;
+				break;
 
-	case 19: //ctrl+s
-		//down
-		ViewTransform[7]+=manualSpeed;
-		break;
+			case 23: //ctrl+w
+				//up
+				ViewTransform[7]-=manualSpeed;
+				break;
 
-	case 'a':
-		//left
-		ViewTransform[3] += cos(camAngleY * (M_PI/180)) * manualSpeed;
-		ViewTransform[11] += sin(camAngleY * (M_PI/180)) * manualSpeed; 
-		break;
+			case 19: //ctrl+s
+				//down
+				ViewTransform[7]+=manualSpeed;
+				break;
 
-	case 'd':
-		//right
-		ViewTransform[3] -= cos(camAngleY * (M_PI/180)) * manualSpeed;
-		ViewTransform[11] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
-		break;
+			case 'a':
+				//left
+				ViewTransform[3] += cos(camAngleY * (M_PI/180)) * manualSpeed;
+				ViewTransform[11] += sin(camAngleY * (M_PI/180)) * manualSpeed; 
+				break;
 
-    /* Set speed of automatic camera */
-	case '1': 
-        camSpeed = .5;
-		break;
+			case 'd':
+				//right
+				ViewTransform[3] -= cos(camAngleY * (M_PI/180)) * manualSpeed;
+				ViewTransform[11] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
+				break;
+		}
+		/* Automatic Camera bindings */
+		if (camMode == 0) {
+			// Set speed of automatic camera
+			case '1': 
+				camSpeed = .5;
+				break;
 
-	case '2':	
-        camSpeed = 1;
-		break;
+			case '2':	
+				camSpeed = 1;
+				break;
 
-    case '3':
-        camSpeed = 2;
-        break;
+			case '3':
+				camSpeed = 2;
+				break;
+			// Pause automatic camera
+			case 'p':
+				if(camSpeed == 0)
+				    camSpeed = 1;
+				else
+				    camSpeed = 0;
+				break;
+		}
 
     /* Switch camera mode */
     case '0':      
         if(camMode == 1 || camMode == 2) {
-			curve = 0;
 			SetTranslation(0.0, -4.0, -20.0, ViewTransform);
 		    camAngleX = 0;
 		    camAngleY = 0;
@@ -388,13 +399,7 @@ void Keyboard(unsigned char key, int x, int y)
 			anim = GL_TRUE;
 		break;
 
-    /* Pause automatic camera */
-    case 'p':
-        if(camSpeed == 0)
-            camSpeed = 1;
-        else
-            camSpeed = 0;
-        break;
+
 
 	/* Reset initial rotation of object */
 	case 'o':
@@ -405,7 +410,18 @@ void Keyboard(unsigned char key, int x, int y)
 	    angleY = 0.0;
 	    angleZ = 0.0;
 	    break;
-	    
+
+	/* Reset camera */
+	case 'r':
+		camSpeed = 1;
+		manualSpeed = 0.2f;
+		SetTranslation(0.0, -4.0, -20.0, ViewTransform);
+		camAngleX = 0;
+		camAngleY = 0;
+		camAngleZ = 0;
+		break;
+
+	/* quit program */
 	case 'q': case 'Q':  
 	    exit(0);    
 		break;
