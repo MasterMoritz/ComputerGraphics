@@ -115,6 +115,9 @@ const float curves[][4][3] = {
 /* Bezier curve parameter [0;1] */
 float t; 
 
+/* The camera animation speed */
+float camSpeed = 1;
+
 
 /*----------------------------------------------------------------*/
 
@@ -272,12 +275,15 @@ void Keyboard(unsigned char key, int x, int y)
 
     /* Set speed of automatic camera */
 	case '1': 
+        camSpeed = .5;
 		break;
 
 	case '2':	
+        camSpeed = 1;
 		break;
 
     case '3':
+        camSpeed = 2;
         break;
 
     /* Switch camera mode */
@@ -304,7 +310,10 @@ void Keyboard(unsigned char key, int x, int y)
 
     /* Pause automatic camera */
     case 'p':
-        //TODO
+        if(camSpeed == 0)
+            camSpeed = 1;
+        else
+            camSpeed = 0;
         break;
 
 	/* Reset initial rotation of object */
@@ -379,7 +388,7 @@ void OnIdle()
     if(automatic) {
          /* Update camera translation */
         SetIdentityMatrix(ViewMatrix);
-        t = fmod(t + delta/2000.0, 1);
+        t = fmod(t + delta/2000.0*camSpeed, 1);
         float p[3];
         ComputeBezierPoint(curves[0], t, p);
         ViewTransform[3] = p[0];
