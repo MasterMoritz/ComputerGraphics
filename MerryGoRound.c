@@ -92,6 +92,8 @@ float camAngleX, camAngleY, camAngleZ = 0.0f;
 enum {Xaxis=0, Yaxis=1, Zaxis=2};
 int axis = Yaxis;
 
+int xold, yold = 0;
+
 /* Arrays for holding vertex data of models */
 GLfloat *vertex_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
@@ -184,7 +186,6 @@ void Display()
 *
 * Function is called on mouse button press; has been seta
 * with glutMouseFunc(), x and y specify mouse coordinates,
-* but are not used here.
 *
 *******************************************************************/
 
@@ -192,6 +193,9 @@ void Mouse(int button, int state, int x, int y)
 {
     if(state == GLUT_DOWN) 
     {
+		xold = x;
+		yold = y;
+
       /* Depending on button pressed, set rotation axis,
        * turn on animation */
         switch(button) 
@@ -224,8 +228,11 @@ void Mouse(int button, int state, int x, int y)
 *******************************************************************/
 
 void RotateCamera(int x, int y) {
-   camAngleX = fmod(camAngleX + (y - glutGet(GLUT_WINDOW_WIDTH) / 2)*.005, 360.0);
-   camAngleY = fmod(camAngleY + (x - glutGet(GLUT_WINDOW_HEIGHT) / 2)*.005, 360.0);
+   camAngleX = fmod(camAngleX + (y - yold), 360.0);
+   camAngleY = fmod(camAngleY + (x - xold), 360.0);
+	xold = x;
+	yold = y;
+	//printf("x, y : %i, %i | camANgle x, y: %f, %f\n", x, y, camAngleX, camAngleY);
 }
 
 /******************************************************************
