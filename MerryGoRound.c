@@ -369,14 +369,15 @@ void Keyboard(unsigned char key, int x, int y)
         break;
 
     /* Switch camera mode */
-    case '0':
-        camMode = (camMode+1)%3;
-        if(camMode == 0 || camMode == 2) {
+    case '0':      
+        if(camMode == 1 || camMode == 2) {
+			curve = 0;
 			SetTranslation(0.0, -4.0, -20.0, ViewTransform);
 		    camAngleX = 0;
 		    camAngleY = 0;
 		    camAngleZ = 0;
         }
+		camMode = (camMode+1)%3;
         break;
 	
 	/* Toggle animation */
@@ -510,9 +511,12 @@ void OnIdle()
         MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
         MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
         
+		//standard manual mode, free movement
         if(camMode == 1) {
             MultiplyMatrix(RotationMatrixAnim, ViewTransform, ViewMatrix);
         }
+
+		// alternative manual mode, only rotate around MerryGoRound object
         else if(camMode == 2) {
             MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
         }
