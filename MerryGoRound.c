@@ -34,7 +34,7 @@
 	#define M_PI 3.14159265358979323846
 #endif
 #ifndef NUM_STATIC
-	#define NUM_STATIC 4
+	#define NUM_STATIC 5
 #endif
 #ifndef NUM_BASIC_ANIM
 	#define NUM_BASIC_ANIM 1
@@ -636,7 +636,7 @@ void Initialize()
     int success;
 
 	/* BEGIN load all models, don't forget to update the macros if you add/remove some */
-
+	
 	/* Load all static models */
 
     char* filename = "models/pillars.obj"; 
@@ -649,6 +649,16 @@ void Initialize()
         printf("Could not load file. Exiting.\n");
 	}
 	
+	filename = "models/skybox.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	SetIdentityMatrix(ModelMatrix[objIndex]);
+	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
+
+	objIndex += 1;
+    if(!success) {
+        printf("Could not load file. Exiting.\n");
+	}
+
     filename = "models/floor_static.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
 	SetIdentityMatrix(ModelMatrix[objIndex]);
