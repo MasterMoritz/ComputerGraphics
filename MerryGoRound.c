@@ -16,19 +16,23 @@
 /******************************************************************
 *																  *
 *********************** DESCRIPTION *************************
-* This program comes with 2 camera modes (automatic, manual).
+* This program comes with 3 camera modes (automatic, manual free movement, manual examine).
 *
-* Automatic mode travels around the MerryGoRound in an engaging fashion,
-* Manual mode allows the user to manually navigate with keyboard and mouse inputs in an rpg-like flying mode way
+* Automatic mode travels around the MerryGoRound in an engaging fashion.
+*
+* Manual free mode allows the user to manually navigate with keyboard and mouse inputs in an rpg-like flying mode way
 * ( note that for moving up and down the corresponding elevate-keybindings[~] should be used, 
 *   although 'w' and 's' while looking up/down works too (but not as accurate at certain degrees)
 * )
 *
-* Switching from Automatic to Manual leaves the camera position intact while
+* Manual examine mode allows the user to rotate the object and zoom in/out
+*
+* Switching from Automatic to Manual free leaves the camera position mostly intact (may have to rotate around the y-axis afterwards to look at Models again)
 * switching from Manual to Automatic resets the position to its initial value.
 *
 *********************** KEY-BINDINGS ************************
-* c -> switch between automatic and manual camera mode
+*** General:
+* c -> cycle between the 3 camera modes
 * r -> reset camera
 * o -> reset object animations
 * enter (or ctrl+m) -> stop object animations
@@ -39,7 +43,7 @@
 * 2 -> set camera speed to normal
 * 3 -> set camera speed to fast
 *
-*** Manual Mode only:
+*** Manual Free Movement Mode only:
 * mouse click + drag mouse -> rotate camera  in dragging direction
 * scroll wheel up/down -> increase/decrease movement speed
 *
@@ -52,6 +56,9 @@
 * ctrl + w  -> elevate up 
 * ctrl + s  -> elevate down
 *
+*** Manual Examine Mode only:
+* mouse click + drag mouse -> rotate object around
+* scroll wheel up/down -> zoom in/zoom out
 *
 ****************************************************************/
 /************************ PROGRAM *******************************/
@@ -89,7 +96,7 @@
 GLboolean anim = GL_TRUE;
 
 /* To switch between automatic and the two manual camera modes */
-int camMode = 1;
+int camMode = 0;
 
 /* Define handles to ertex buffer objects */
 GLuint VBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
@@ -133,10 +140,7 @@ float camAngleX, camAngleY, camAngleZ = 0.0f;
 /* the speed in manual camera mode */
 float manualSpeed = 0.2f;
 
-/* Indices to active rotation axes */
-enum {Xaxis=0, Yaxis=1, Zaxis=2};
-int axis = Yaxis;
-
+// last measured mouse coordinates
 int xold, yold = 0;
 
 /* Arrays for holding vertex data of models */
@@ -165,10 +169,10 @@ const float curves[][4][3] = {
 /* Bezier curve parameter [0;1] */
 float t; 
 
-/* The currently active curve */
+/* The currently active curve  for automatic mode */
 int curve = 0;
 
-/* The camera animation speed */
+/* The camera animation speed for automatic mode */
 float camSpeed = 1;
 
 /* Flag for path inversion */
@@ -223,7 +227,7 @@ void Display()
 	/* Set state to only draw wireframe (no lighting used, yet) */
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	/* Bind Vertex/Index Buffers and draw objects */
+	/* Bind Vertex/Index Buffers of all Models and draw them */
 	int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
 	for (int i = 0; i < numObjects; i++) {
 		glEnableVertexAttribArray(vPosition);
@@ -327,10 +331,9 @@ void RotateCamera(int x, int y) {
 
 void Keyboard(unsigned char key, int x, int y)   
 {
-    switch( key ) {
-
-		/* Keyboard rpg bindings */
-		if (camMode == 1) {
+	/* Camera free Movement (rpg-like flying mode) bindings */
+	if (camMode == 1) {
+		switch( key ) {
 			
 			case 'w':
 				//forward
@@ -338,7 +341,7 @@ void Keyboard(unsigned char key, int x, int y)
 				ViewTransform[7] += sin(camAngleX * (M_PI/180)) * manualSpeed;
 				ViewTransform[11]+= cos(camAngleY * (M_PI/180)) * manualSpeed;
 				break;
-
+	
 			case 's':
 				//backward
 				ViewTransform[3] += sin(camAngleY * (M_PI/180)) * manualSpeed;
@@ -368,8 +371,11 @@ void Keyboard(unsigned char key, int x, int y)
 				ViewTransform[11] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
 				break;
 		}
-		/* Automatic Camera bindings */
-		if (camMode == 0) {
+	}
+
+	/* Automatic Camera bindings */
+	else if (camMode == 0) {
+		switch( key ) {	
 			// Set speed of automatic camera
 			case '1': 
 				camSpeed = .5;
@@ -395,54 +401,58 @@ void Keyboard(unsigned char key, int x, int y)
                 //t = 1-t;
                 break;
 		}
+	}
 
-    /* Switch camera mode */
-    case 'c':      
-        if(camMode == 1 || camMode == 2) {
-			SetTranslation(0.0, -4.0, -20.0, ViewTransform);
-		    camAngleX = 0;
-		    camAngleY = 0;
-		    camAngleZ = 0;
-        }
-		camMode = (camMode+1)%3;
-        break;
+	/* General Bindings */
+	switch(key) {
+		/* Switch camera mode */
+		case 'c':      
+		    if(camMode == 1 || camMode == 2) {
+				curve = 0;
+				camSpeed = 1;
+				SetTranslation(0.0, -4.0, -20.0, ViewTransform);
+				camAngleX = 0;
+				camAngleY = 0;
+				camAngleZ = 0;
+		    }
+			camMode = (camMode+1)%3;
+		    break;
 	
-	/* Toggle animation */
-	case 13: //enter or ctrl+m
-		if (anim)
-			anim = GL_FALSE;		
-		else
-			anim = GL_TRUE;
-		break;
+		/* Toggle animation */
+		case 13: //enter or ctrl+m
+			if (anim)
+				anim = GL_FALSE;		
+			else
+				anim = GL_TRUE;
+			break;
 
 
 
-	/* Reset initial rotation of object */
-	case 'o':
-	    SetIdentityMatrix(RotationMatrixAnimX);
-	    SetIdentityMatrix(RotationMatrixAnimY);
-	    SetIdentityMatrix(RotationMatrixAnimZ);
-	    angleX = 0.0;
-	    angleY = 0.0;
-	    angleZ = 0.0;
-	    break;
+		/* Reset initial rotation of object */
+		case 'o':
+			SetIdentityMatrix(RotationMatrixAnimX);
+			SetIdentityMatrix(RotationMatrixAnimY);
+			SetIdentityMatrix(RotationMatrixAnimZ);
+			angleX = 0.0;
+			angleY = 0.0;
+			angleZ = 0.0;
+			break;
 
-	/* Reset camera */
-	case 'r':
-		camSpeed = 1;
-		manualSpeed = 0.2f;
-		SetTranslation(0.0, -4.0, -20.0, ViewTransform);
-		camAngleX = 0;
-		camAngleY = 0;
-		camAngleZ = 0;
-		break;
+		/* Reset camera */
+		case 'r':
+			camSpeed = 1;
+			manualSpeed = 0.2f;
+			SetTranslation(0.0, -4.0, -20.0, ViewTransform);
+			camAngleX = 0;
+			camAngleY = 0;
+			camAngleZ = 0;
+			break;
 
-	/* quit program */
-	case 'q': case 'Q':  
-	    exit(0);    
-		break;
-    }
-
+		/* quit program */
+		case 'q': case 'Q':  
+			exit(0);    
+			break;
+	}
     glutPostRedisplay();
 }
 
@@ -497,7 +507,8 @@ void OnIdle()
 	}
 
     /* Rotate camera */
-	//automatic camera
+
+	//automatic camera mode
     if(camMode == 0) {
          /* Update camera translation */
         SetIdentityMatrix(ViewMatrix);
@@ -554,7 +565,8 @@ void OnIdle()
         MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
         MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
     }
-	//manual camera
+
+	//manual camera mode
     else {
         SetIdentityMatrix(ViewMatrix);
 
@@ -565,12 +577,12 @@ void OnIdle()
         MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
         MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
         
-		//standard manual mode, free movement
+		// free movement mode
         if(camMode == 1) {
             MultiplyMatrix(RotationMatrixAnim, ViewTransform, ViewMatrix);
         }
 
-		// alternative manual mode, only rotate around MerryGoRound object
+		// examine mode
         else if(camMode == 2) {
             MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
         }
