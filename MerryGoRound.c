@@ -60,7 +60,12 @@
 * mouse click + drag mouse -> rotation similar to the way it is in Blender
 * scroll wheel up/down -> zoom in/zoom out
 *
-******************/
+*/
+/*
+******************** ADDITIONAL NOTES **********************
+*
+* The (seemingly) random Lines are actually from the walls and the floor and 100% intended
+*/
 
 /************************ PROGRAM *******************************/
 /* Standard includes */
