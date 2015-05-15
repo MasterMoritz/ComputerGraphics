@@ -13,8 +13,8 @@
 *
 * Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
-/*
-*********************** DESCRIPTION *************************
+
+/************************ DESCRIPTION *****************************
 * This program comes with 3 camera modes (automatic, manual free movement, manual examine).
 *
 * Automatic mode travels around the MerryGoRound in an engaging fashion.
@@ -404,7 +404,6 @@ void Keyboard(unsigned char key, int x, int y)
             // Invert camera path
             case 'i':
                 invertCam = !invertCam;
-                //t = 1-t;
                 break;
 		}
 	}
