@@ -3,6 +3,7 @@
 *.lo
 *.o
 *~
+MerryGoRound
 
 # Precompiled Headers
 *.gch
