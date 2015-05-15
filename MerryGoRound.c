@@ -278,7 +278,7 @@ void Keyboard(unsigned char key, int x, int y)
 {
     switch( key ) 
     {
-	/* Keyboard Car Navigation */
+	/* Keyboard rpg Navigation */
 	case 'w':
 		//forward
 		ViewTransform[3] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
@@ -335,15 +335,16 @@ void Keyboard(unsigned char key, int x, int y)
        }
        else {
             automatic = GL_TRUE;
+			SetTranslation(0.0, -4.0, -20.0, ViewTransform);
+		   camAngleX = 0;
+		   camAngleY = 0;
+		   camAngleZ = 0;
        }
-       SetTranslation(0.0, -4.0, -20.0, ViewTransform);
-       camAngleX = 0;
-       camAngleY = 0;
-       camAngleZ = 0;
+
        break;
 	
 	/* Toggle animation */
-	case 'j':
+	case 13: //spacebar
 		if (anim)
 			anim = GL_FALSE;		
 		else
