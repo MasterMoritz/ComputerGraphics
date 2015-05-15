@@ -13,8 +13,7 @@
 *
 * Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
-/******************************************************************
-*																  *
+/*
 *********************** DESCRIPTION *************************
 * This program comes with 3 camera modes (automatic, manual free movement, manual examine).
 *
@@ -60,7 +59,8 @@
 * mouse click + drag mouse -> rotate object around
 * scroll wheel up/down -> zoom in/zoom out
 *
-****************************************************************/
+******************/
+
 /************************ PROGRAM *******************************/
 /* Standard includes */
 #include <stdio.h>
