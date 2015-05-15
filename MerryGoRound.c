@@ -14,7 +14,6 @@
 * Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
 
-
 /* Standard includes */
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,6 +45,9 @@
 
 /* Flag for starting/stopping animation */
 GLboolean anim = GL_TRUE;
+
+/* Flag for switching between automatic and manual camera mode */
+GLboolean automatic = GL_FALSE;
 
 /* Define handles to ertex buffer objects */
 GLuint VBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
@@ -213,6 +215,21 @@ void Mouse(int button, int state, int x, int y)
 
 /******************************************************************
 *
+* RotateCamera
+*
+* Function is called when mouse pointer moves while one or 
+* more buttons are pressed. Only used in manual camera mode.
+* Note that in glut the window relative coordinates are "swapped".
+*
+*******************************************************************/
+
+void RotateCamera(int x, int y) {
+   camAngleX = fmod(camAngleX + (y - glutGet(GLUT_WINDOW_WIDTH) / 2)*.005, 360.0);
+   camAngleY = fmod(camAngleY + (x - glutGet(GLUT_WINDOW_HEIGHT) / 2)*.005, 360.0);
+}
+
+/******************************************************************
+*
 * Keyboard
 *
 * Function to be called on key press in window; set by
@@ -231,9 +248,17 @@ void Keyboard(unsigned char key, int x, int y)
 
 	case '2':	
 		break;
+
+    /* Switch camera mode */
+    case '0':
+       if(automatic)
+            automatic = GL_FALSE;
+       else
+            automatic = GL_TRUE;
+       break;
 	
 	/* Toggle animation */
-	case '0':
+	case 'p':
 		if (anim)
 			anim = GL_FALSE;		
 		else
@@ -310,12 +335,12 @@ void OnIdle()
 
     /* Rotate camera */
 	//anim is used for ANIMATION, make another boolean for cam movement
-    if(anim) {
+    if(automatic) {
 		//you have to transform the viewport matrix here, i'm not sure what this code should achieve :D
             /* Increment rotation angles and update matrix */
         if(axis == Xaxis)
 	    {
-      	    angleX = fmod(camAngleX + delta/20.0, 360.0);  
+      	    camAngleX = fmod(camAngleX + delta/20.0, 360.0);  
 	        SetRotationX(camAngleX, RotationMatrixAnimX);
 	    }
 	    else if(axis == Yaxis)
@@ -330,6 +355,14 @@ void OnIdle()
 	    }
         /* Update of transformation matrices 
          * Note order of transformations and rotation of reference axes */
+        MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
+        MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
+        MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
+    }
+    else {
+        SetRotationX(camAngleX, RotationMatrixAnimX);
+        SetRotationY(camAngleY, RotationMatrixAnimY);
+        SetRotationZ(camAngleZ, RotationMatrixAnimZ);
         MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
         MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
         MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
@@ -654,7 +687,8 @@ int main(int argc, char** argv)
     glutIdleFunc(OnIdle);
     glutDisplayFunc(Display);
     glutKeyboardFunc(Keyboard); 
-    glutMouseFunc(Mouse);  
+    glutMouseFunc(Mouse);
+    glutMotionFunc(RotateCamera);  
 
     glutMainLoop();
 
