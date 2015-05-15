@@ -28,6 +28,7 @@
 #include "LoadShader.h"    /* Loading function for shader code */
 #include "Matrix.h"        /* Functions for matrix handling */
 #include "OBJParser.h"     /* Loading function for triangle meshes in OBJ format */
+#include "Bezier.h"        /* Functions for bezier curve computations */
 
 #ifndef M_PI
 	#define M_PI 3.14159265358979323846
@@ -105,6 +106,14 @@ obj_scene_data data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Reference time for animation */
 int oldTime = 0;
+
+/* The array of bezier curves to use for the automatic camera path */
+const float curves[][4][3] = {
+{{0, -4, -20}, {0, -8, -18}, {0, -8, -14}, {0, -4, -10}} 
+};
+
+/* Bezier curve parameter [0;1] */
+float t; 
 
 
 /*----------------------------------------------------------------*/
@@ -361,25 +370,17 @@ void OnIdle()
 	}
 
     /* Rotate camera */
-	//anim is used for ANIMATION, make another boolean for cam movement
     if(automatic) {
-		//you have to transform the viewport matrix here, i'm not sure what this code should achieve :D
-            /* Increment rotation angles and update matrix */
-        if(axis == Xaxis)
-	    {
-      	    camAngleX = fmod(camAngleX + delta/20.0, 360.0);  
-	        SetRotationX(camAngleX, RotationMatrixAnimX);
-	    }
-	    else if(axis == Yaxis)
-	    {
-	        camAngleY = fmod(camAngleY + delta/20.0, 360.0); 
-	        SetRotationY(camAngleY, RotationMatrixAnimY);  
-	    }
-	    else if(axis == Zaxis)
-	    {			
-	        camAngleZ = fmod(camAngleZ + delta/20.0, 360.0); 
-	        SetRotationZ(camAngleZ, RotationMatrixAnimZ);
-	    }
+        SetIdentityMatrix(ViewMatrix);
+        t = fmod(t + delta/2000.0, 1);
+        float p[3];
+        ComputeBezierPoint(curves[0], t, p);
+        ViewTransform[3] = p[0];
+        ViewTransform[7] = p[1];
+        ViewTransform[11] = p[2];
+        MultiplyMatrix(ViewTransform, ViewMatrix, ViewMatrix);		
+	        //camAngleZ = fmod(camAngleZ + delta/20.0, 360.0); 
+	        //SetRotationZ(camAngleZ, RotationMatrixAnimZ);
         /* Update of transformation matrices 
          * Note order of transformations and rotation of reference axes */
         MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);

@@ -1,7 +1,7 @@
 CC = gcc
 LD = gcc
 
-OBJ = MerryGoRound.o LoadShader.o Matrix.o StringExtra.o OBJParser.o List.o
+OBJ = MerryGoRound.o LoadShader.o Matrix.o StringExtra.o OBJParser.o List.o Bezier.o
 TARGET = MerryGoRound
 
 CFLAGS = -g -std=c99 -Wall -Wextra
@@ -27,4 +27,4 @@ clean:
 .PHONY: clean
 
 # Dependencies
-$(TARGET): $(BUILD_DIR)/LoadShader.o $(BUILD_DIR)/Matrix.o $(BUILD_DIR)/StringExtra.o $(BUILD_DIR)/OBJParser.o  $(BUILD_DIR)/List.o | $(BUILD_DIR)
+$(TARGET): $(BUILD_DIR)/LoadShader.o $(BUILD_DIR)/Matrix.o $(BUILD_DIR)/StringExtra.o $(BUILD_DIR)/OBJParser.o  $(BUILD_DIR)/List.o $(BUILD_DIR)/Bezier.o | $(BUILD_DIR)
