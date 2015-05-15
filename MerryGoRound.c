@@ -344,7 +344,7 @@ void Keyboard(unsigned char key, int x, int y)
        break;
 	
 	/* Toggle animation */
-	case 13: //spacebar
+	case 13: //enter or ctrl+m
 		if (anim)
 			anim = GL_FALSE;		
 		else
