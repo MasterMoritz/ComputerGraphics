@@ -262,8 +262,8 @@ void Mouse(int button, int state, int x, int y) {
 *******************************************************************/
 
 void RotateCamera(int x, int y) {
-    camAngleX = fmod(camAngleX + (y - yold)*0.7, 360.0);
-    camAngleY = fmod(camAngleY + (x - xold)*0.7, 360.0);
+    camAngleX = fmod(camAngleX + (y - yold)*0.4, 360.0);
+    camAngleY = fmod(camAngleY + (x - xold)*0.4, 360.0);
     xold = x;
     yold = y;
 }
