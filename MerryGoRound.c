@@ -39,8 +39,9 @@
 *
 *** Automatic Mode only:
 * 1 -> set camera speed to low
-* 2 -> set camera speed to normal
+* 2 -> set camera speed to medium
 * 3 -> set camera speed to fast
+* i -> invert the camera path
 *
 *** Manual Free Movement Mode only:
 * mouse click + drag mouse -> rotate camera  in dragging direction
@@ -56,7 +57,7 @@
 * ctrl + s  -> elevate down
 *
 *** Manual Examine Mode only:
-* mouse click + drag mouse -> rotate object around
+* mouse click + drag mouse -> rotation similar to the way it is in Blender
 * scroll wheel up/down -> zoom in/zoom out
 *
 ******************/
@@ -174,6 +175,9 @@ int curve = 0;
 
 /* The camera animation speed for automatic mode */
 float camSpeed = 1;
+
+/* Flag for path inversion */
+GLboolean invertCam = GL_FALSE;
 
 
 
@@ -392,6 +396,11 @@ void Keyboard(unsigned char key, int x, int y)
 				else
 				    camSpeed = 0;
 				break;
+            // Invert camera path
+            case 'i':
+                invertCam = !invertCam;
+                //t = 1-t;
+                break;
 		}
 	}
 
@@ -504,15 +513,33 @@ void OnIdle()
     if(camMode == 0) {
          /* Update camera translation */
         SetIdentityMatrix(ViewMatrix);
-        t += delta/2000.0*camSpeed;
-        if(t >= 1) {
-             if(curve == 1) {
-                camSpeed *= 2;
+        if(!invertCam) {
+            t += delta/2000.0*camSpeed;
+            if(t >= 1) {
+                 if(curve == 1) {
+                    camSpeed *= 2;
+                }
+                t = 0;
+                curve = fmod(curve+1, sizeof(curves)/sizeof(curves[0]));
+                if(curve == 1) {
+                    camSpeed /= 2;
+                }
             }
-            t = 0;
-            curve = fmod(curve+1, sizeof(curves)/sizeof(curves[0]));
-            if(curve == 1) {
-                camSpeed /= 2;
+        }
+        else {
+            t -= delta/2000.0*camSpeed;
+            if(t <= 0) {
+                 if(curve == 1) {
+                    camSpeed *= 2;
+                }
+                t = 1;
+                curve--;
+                if(curve < 0)
+                    curve = (sizeof(curves)/sizeof(curves[0]))-1;
+                printf("%i", curve);
+                if(curve == 1) {
+                    camSpeed /= 2;
+                }
             }
         }
         if(curve != 1) {
