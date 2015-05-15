@@ -13,8 +13,8 @@
 *
 * Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
-/*
-*********************** DESCRIPTION *************************
+
+/************************ DESCRIPTION *****************************
 * This program comes with 3 camera modes (automatic, manual free movement, manual examine).
 *
 * Automatic mode travels around the MerryGoRound in an engaging fashion.
@@ -60,7 +60,7 @@
 * mouse click + drag mouse -> rotation similar to the way it is in Blender
 * scroll wheel up/down -> zoom in/zoom out
 *
-******************/
+*****************************************************************/
 
 /************************ PROGRAM *******************************/
 /* Standard includes */
