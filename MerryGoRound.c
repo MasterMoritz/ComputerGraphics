@@ -26,7 +26,7 @@
 *
 * Manual examine mode allows the user to rotate the object and zoom in/out
 *
-* Switching from Automatic to Manual free leaves the camera position mostly intact (may have to rotate around the y-axis afterwards to look at Models again)
+* Switching from Automatic to Manual free leaves the camera position mostly intact (may have to rotate around the y-axis afterwards to look at models again)
 * switching from Manual to Automatic resets the position to its initial value.
 *
 *********************** KEY-BINDINGS ************************
@@ -61,11 +61,11 @@
 * scroll wheel up/down -> zoom in/zoom out
 *
 */
-/*
-******************** ADDITIONAL NOTES **********************
+/******************** ADDITIONAL NOTES **************************
 *
-* The (seemingly) random Lines are actually from the walls and the floor and 100% intended
-*/
+* The (seemingly) random lines in the background are actually from the walls and the floor and 100% intended
+*
+*****************************************************************/
 
 /************************ PROGRAM *******************************/
 /* Standard includes */
