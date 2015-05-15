@@ -40,8 +40,9 @@
 *
 *** Automatic Mode only:
 * 1 -> set camera speed to low
-* 2 -> set camera speed to normal
+* 2 -> set camera speed to medium
 * 3 -> set camera speed to fast
+* i -> invert the camera path
 *
 *** Manual Free Movement Mode only:
 * mouse click + drag mouse -> rotate camera  in dragging direction
@@ -57,7 +58,7 @@
 * ctrl + s  -> elevate down
 *
 *** Manual Examine Mode only:
-* mouse click + drag mouse -> rotate object around
+* mouse click + drag mouse -> rotation similar to the way it is in Blender
 * scroll wheel up/down -> zoom in/zoom out
 *
 ****************************************************************/
