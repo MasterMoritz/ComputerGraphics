@@ -13,7 +13,43 @@
 *
 * Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
-
+/******************************************************************
+*																  *
+*********************** DESCRIPTION *************************
+* This program comes with 2 camera modes (automatic, manual).
+*
+* Automatic mode travels around the MerryGoRound in an engaging fashion,
+* Manual mode allows the user to manually navigate with keyboard and mouse inputs in an rpg-like flying mode way
+* ( note that for moving up and down the corresponding elevate-keybindings[~] should be used, 
+*   although 'w' and 's' while looking up/down works too (but not as accurate at certain degrees)
+* )
+*
+* Switching from Automatic to Manual leaves the camera position intact while
+* switching from Manual to Automatic resets the position to its initial value.
+*
+*********************** KEY-BINDINGS ************************
+* 0 -> switch between automatic and manual camera mode
+* 
+*** Automatic Mode only:
+* 1 -> set camera speed to low
+* 2 -> set camera speed to normal
+* 3 -> set camera speed to fast
+*
+*** Manual Mode only:
+* mouse click + drag mouse -> rotate camera  in dragging direction
+*
+* w -> forward
+* s -> backward
+* a -> strafe left
+* d -> strafe right
+*
+* [~]
+* ctrl + w  -> elevate up 
+* ctrl + s  -> elevate down
+*
+*
+****************************************************************/
+/************************ PROGRAM *******************************/
 /* Standard includes */
 #include <stdio.h>
 #include <stdlib.h>
