@@ -282,10 +282,16 @@ void Keyboard(unsigned char key, int x, int y)
 
     /* Switch camera mode */
     case '0':
-       if(automatic)
+       if(automatic) {
             automatic = GL_FALSE;
-       else
+       }
+       else {
             automatic = GL_TRUE;
+       }
+       SetTranslation(0.0, -4.0, -20.0, ViewTransform);
+       camAngleX = 0;
+       camAngleY = 0;
+       camAngleZ = 0;
        break;
 	
 	/* Toggle animation */
@@ -371,6 +377,7 @@ void OnIdle()
 
     /* Rotate camera */
     if(automatic) {
+         /* Update camera translation */
         SetIdentityMatrix(ViewMatrix);
         t = fmod(t + delta/2000.0, 1);
         float p[3];
@@ -379,10 +386,10 @@ void OnIdle()
         ViewTransform[7] = p[1];
         ViewTransform[11] = p[2];
         MultiplyMatrix(ViewTransform, ViewMatrix, ViewMatrix);		
-	        //camAngleZ = fmod(camAngleZ + delta/20.0, 360.0); 
-	        //SetRotationZ(camAngleZ, RotationMatrixAnimZ);
-        /* Update of transformation matrices 
-         * Note order of transformations and rotation of reference axes */
+	    /* Update camera rotation */
+        SetRotationX(camAngleX, RotationMatrixAnimX);
+        SetRotationY(camAngleY, RotationMatrixAnimY);
+        SetRotationZ(camAngleZ, RotationMatrixAnimZ);
         MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
         MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
         MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
