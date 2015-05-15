@@ -189,7 +189,6 @@ void Display()
 *
 *******************************************************************/
 
-<<<<<<< HEAD
 void Mouse(int button, int state, int x, int y) {
     if(state == GLUT_DOWN) {
         xold = x;
