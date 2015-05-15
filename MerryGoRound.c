@@ -28,8 +28,12 @@
 * switching from Manual to Automatic resets the position to its initial value.
 *
 *********************** KEY-BINDINGS ************************
-* 0 -> switch between automatic and manual camera mode
-* 
+* c -> switch between automatic and manual camera mode
+* r -> reset camera
+* o -> reset object animations
+* enter (or ctrl+m) -> stop object animations
+* q -> quit program
+*
 *** Automatic Mode only:
 * 1 -> set camera speed to low
 * 2 -> set camera speed to normal
@@ -37,6 +41,7 @@
 *
 *** Manual Mode only:
 * mouse click + drag mouse -> rotate camera  in dragging direction
+* scroll wheel up/down -> increase/decrease movement speed
 *
 * w -> forward
 * s -> backward
@@ -84,7 +89,7 @@
 GLboolean anim = GL_TRUE;
 
 /* To switch between automatic and the two manual camera modes */
-int camMode = 0;
+int camMode = 1;
 
 /* Define handles to ertex buffer objects */
 GLuint VBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
@@ -381,7 +386,7 @@ void Keyboard(unsigned char key, int x, int y)
 		}
 
     /* Switch camera mode */
-    case '0':      
+    case 'c':      
         if(camMode == 1 || camMode == 2) {
 			SetTranslation(0.0, -4.0, -20.0, ViewTransform);
 		    camAngleX = 0;
