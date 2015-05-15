@@ -227,19 +227,6 @@ void Mouse(int button, int state, int x, int y) {
             scroll_down = 3;
             scroll_up = 4;  
         }
-        switch(button) {
-	        case GLUT_LEFT_BUTTON:    
-	            axis = Xaxis;
-		    break;
-
-	        case GLUT_MIDDLE_BUTTON:  
-      	        axis = Yaxis;
-	            break;
-		
-	        case GLUT_RIGHT_BUTTON: 
-	            axis = Zaxis;
-		    break;
-	    }
 
 		if (automatic == GL_FALSE) {
 		    if(button == scroll_down) {
