@@ -31,6 +31,7 @@
 * switching from Manual to Automatic resets the position to its initial value.
 *
 *********************** KEY-BINDINGS ************************
+*** General:
 * c -> cycle between the 3 camera modes
 * r -> reset camera
 * o -> reset object animations
@@ -95,7 +96,7 @@
 GLboolean anim = GL_TRUE;
 
 /* To switch between automatic and the two manual camera modes */
-int camMode = 1;
+int camMode = 0;
 
 /* Define handles to ertex buffer objects */
 GLuint VBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
@@ -333,8 +334,6 @@ void Keyboard(unsigned char key, int x, int y)
 	/* Camera free Movement (rpg-like flying mode) bindings */
 	if (camMode == 1) {
 		switch( key ) {
-
-
 			
 				case 'w':
 					//forward
@@ -373,6 +372,7 @@ void Keyboard(unsigned char key, int x, int y)
 					break;
 			}
 		}
+
 	/* Automatic Camera bindings */
 	else if (camMode == 0) {
 		switch( key ) {	
@@ -398,10 +398,13 @@ void Keyboard(unsigned char key, int x, int y)
 		}
 	}
 
+	/* General Bindings */
 	switch(key) {
 		/* Switch camera mode */
 		case 'c':      
 		    if(camMode == 1 || camMode == 2) {
+				curve = 0;
+				camSpeed = 1;
 				SetTranslation(0.0, -4.0, -20.0, ViewTransform);
 				camAngleX = 0;
 				camAngleY = 0;
