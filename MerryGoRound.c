@@ -399,7 +399,6 @@ void Keyboard(unsigned char key, int x, int y)
             // Invert camera path
             case 'i':
                 invertCam = !invertCam;
-                //t = 1-t;
                 break;
 		}
 	}
