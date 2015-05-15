@@ -188,27 +188,39 @@ void Display()
 *
 *******************************************************************/
 
-void Mouse(int button, int state, int x, int y) 
-{
-    if(state == GLUT_DOWN) 
-    {
-      /* Depending on button pressed, set rotation axis,
-       * turn on animation */
-        switch(button) 
-	{
-	    case GLUT_LEFT_BUTTON:    
-	        axis = Xaxis;
-		break;
+void Mouse(int button, int state, int x, int y) {
+    if(state == GLUT_DOWN) {
+        int scroll_down;
+        int scroll_up;
+        if (GLUT_MIDDLE_BUTTON == 3) {
+            scroll_down = 4;
+            scroll_up = 5;
+        }
+        else {
+            scroll_down = 3;
+            scroll_up = 4;  
+        }
+        switch(button) {
+	        case GLUT_LEFT_BUTTON:    
+	            axis = Xaxis;
+		    break;
 
-	    case GLUT_MIDDLE_BUTTON:  
-  	        axis = Yaxis;
-	        break;
+	        case GLUT_MIDDLE_BUTTON:  
+      	        axis = Yaxis;
+	            break;
 		
-	    case GLUT_RIGHT_BUTTON: 
-	        axis = Zaxis;
-		break;
-	}
-	anim = GL_TRUE;
+	        case GLUT_RIGHT_BUTTON: 
+	            axis = Zaxis;
+		    break;
+	    }
+        if(button == scroll_down) {
+            //zoom in
+            ViewTransform[11] *= .95;
+        }
+        else if(button == scroll_up) {
+            //zoom out
+            ViewTransform[11] *= 1.05;
+        }
     }
 }
 
@@ -243,11 +255,15 @@ void Keyboard(unsigned char key, int x, int y)
     switch( key ) 
     {
 
+    /* Set speed of automatic camera */
 	case '1': 
 		break;
 
 	case '2':	
 		break;
+
+    case '3':
+        break;
 
     /* Switch camera mode */
     case '0':
@@ -258,12 +274,17 @@ void Keyboard(unsigned char key, int x, int y)
        break;
 	
 	/* Toggle animation */
-	case 'p':
+	case 's':
 		if (anim)
 			anim = GL_FALSE;		
 		else
 			anim = GL_TRUE;
 		break;
+
+    /* Pause automatic camera */
+    case 'p':
+        //TODO
+        break;
 
 	/* Reset initial rotation of object */
 	case 'o':
@@ -360,6 +381,10 @@ void OnIdle()
         MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
     }
     else {
+        /* Update camera translation */
+        SetIdentityMatrix(ViewMatrix);
+        MultiplyMatrix(ViewTransform, ViewMatrix, ViewMatrix);
+        /* Update camera rotation */
         SetRotationX(camAngleX, RotationMatrixAnimX);
         SetRotationY(camAngleY, RotationMatrixAnimY);
         SetRotationZ(camAngleZ, RotationMatrixAnimZ);
