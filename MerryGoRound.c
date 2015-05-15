@@ -83,8 +83,8 @@
 /* Flag for starting/stopping animation */
 GLboolean anim = GL_TRUE;
 
-/* Flag for switching between automatic and manual camera mode */
-GLboolean automatic = GL_FALSE;
+/* To switch between automatic and the two manual camera modes */
+int camMode = 0;
 
 /* Define handles to ertex buffer objects */
 GLuint VBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
@@ -264,16 +264,25 @@ void Mouse(int button, int state, int x, int y) {
             scroll_up = 4;  
         }
 
-		if (automatic == GL_FALSE) {
-		    if(button == scroll_down) {
-		        //increase manual speed
-		        manualSpeed *= 1.12f;
-		    }
-		    else if(button == scroll_up) {
-		        //decrease manual speed
-		        manualSpeed /= 1.12f;
-		    }
-		}
+	    if(button == scroll_down) {
+            if(camMode == 1) {
+	            //increase manual speed
+	            manualSpeed *= 1.12f;
+            }
+            else if(camMode == 2) {
+                //zoom in
+                ViewTransform[11] *= .95;
+            }
+	    }
+	    else if(button == scroll_up) {
+            if(camMode == 1) {
+	            //decrease manual speed
+	            manualSpeed /= 1.12f;
+            }
+            else if(camMode == 2) {
+                ViewTransform[11] *= 1.05;
+            }
+	    }
     }
 }
 
@@ -289,10 +298,10 @@ void Mouse(int button, int state, int x, int y) {
 *******************************************************************/
 
 void RotateCamera(int x, int y) {
-   camAngleX = fmod(camAngleX + (y - yold)*0.4, 360.0);
-   camAngleY = fmod(camAngleY + (x - xold)*0.4, 360.0);
-	xold = x;
-	yold = y;
+    camAngleX = fmod(camAngleX + (y - yold)*0.4, 360.0);
+    camAngleY = fmod(camAngleY + (x - xold)*0.4, 360.0);
+    xold = x;
+    yold = y;
 }
 
 /******************************************************************
@@ -361,18 +370,14 @@ void Keyboard(unsigned char key, int x, int y)
 
     /* Switch camera mode */
     case '0':
-       if(automatic) {
-            automatic = GL_FALSE;
-       }
-       else {
-            automatic = GL_TRUE;
+        camMode = (camMode+1)%3;
+        if(camMode == 0 || camMode == 2) {
 			SetTranslation(0.0, -4.0, -20.0, ViewTransform);
-		   camAngleX = 0;
-		   camAngleY = 0;
-		   camAngleZ = 0;
-       }
-
-       break;
+		    camAngleX = 0;
+		    camAngleY = 0;
+		    camAngleZ = 0;
+        }
+        break;
 	
 	/* Toggle animation */
 	case 13: //enter or ctrl+m
@@ -460,7 +465,7 @@ void OnIdle()
 
     /* Rotate camera */
 	//automatic camera
-    if(automatic) {
+    if(camMode == 0) {
          /* Update camera translation */
         SetIdentityMatrix(ViewMatrix);
         t += delta/2000.0*camSpeed;
@@ -504,8 +509,13 @@ void OnIdle()
         SetRotationZ(camAngleZ, RotationMatrixAnimZ);
         MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
         MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
-
-        MultiplyMatrix(RotationMatrixAnim, ViewTransform, ViewMatrix);
+        
+        if(camMode == 1) {
+            MultiplyMatrix(RotationMatrixAnim, ViewTransform, ViewMatrix);
+        }
+        else if(camMode == 2) {
+            MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
+        }
     }	
     
     /* Issue display refresh */
