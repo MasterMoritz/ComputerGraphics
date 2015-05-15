@@ -13,7 +13,48 @@
 *
 * Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
-
+/******************************************************************
+*																  *
+*********************** DESCRIPTION *************************
+* This program comes with 2 camera modes (automatic, manual).
+*
+* Automatic mode travels around the MerryGoRound in an engaging fashion,
+* Manual mode allows the user to manually navigate with keyboard and mouse inputs in an rpg-like flying mode way
+* ( note that for moving up and down the corresponding elevate-keybindings[~] should be used, 
+*   although 'w' and 's' while looking up/down works too (but not as accurate at certain degrees)
+* )
+*
+* Switching from Automatic to Manual leaves the camera position intact while
+* switching from Manual to Automatic resets the position to its initial value.
+*
+*********************** KEY-BINDINGS ************************
+* c -> switch between automatic and manual camera mode
+* r -> reset camera
+* o -> reset object animations
+* enter (or ctrl+m) -> stop object animations
+* q -> quit program
+*
+*** Automatic Mode only:
+* 1 -> set camera speed to low
+* 2 -> set camera speed to normal
+* 3 -> set camera speed to fast
+*
+*** Manual Mode only:
+* mouse click + drag mouse -> rotate camera  in dragging direction
+* scroll wheel up/down -> increase/decrease movement speed
+*
+* w -> forward
+* s -> backward
+* a -> strafe left
+* d -> strafe right
+*
+* [~]
+* ctrl + w  -> elevate up 
+* ctrl + s  -> elevate down
+*
+*
+****************************************************************/
+/************************ PROGRAM *******************************/
 /* Standard includes */
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,7 +89,7 @@
 GLboolean anim = GL_TRUE;
 
 /* To switch between automatic and the two manual camera modes */
-int camMode = 0;
+int camMode = 1;
 
 /* Define handles to ertex buffer objects */
 GLuint VBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
@@ -281,67 +322,79 @@ void RotateCamera(int x, int y) {
 
 void Keyboard(unsigned char key, int x, int y)   
 {
-    switch( key ) 
-    {
-	/* Keyboard rpg Navigation */
-	case 'w':
-		//forward
-		ViewTransform[3] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
-		ViewTransform[7] += sin(camAngleX * (M_PI/180)) * manualSpeed;
-		ViewTransform[11]+= cos(camAngleY * (M_PI/180)) * manualSpeed;
-		break;
+    switch( key ) {
 
-	case 's':
-		//backward
-		ViewTransform[3] += sin(camAngleY * (M_PI/180)) * manualSpeed;
-		ViewTransform[7] -= sin(camAngleX * (M_PI/180)) * manualSpeed; 
-		ViewTransform[11]-= cos(camAngleY * (M_PI/180)) * manualSpeed;
-		break;
+		/* Keyboard rpg bindings */
+		if (camMode == 1) {
+			
+			case 'w':
+				//forward
+				ViewTransform[3] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
+				ViewTransform[7] += sin(camAngleX * (M_PI/180)) * manualSpeed;
+				ViewTransform[11]+= cos(camAngleY * (M_PI/180)) * manualSpeed;
+				break;
 
-	case 23: //ctrl+w
-		//up
-		ViewTransform[7]-=manualSpeed;
-		break;
+			case 's':
+				//backward
+				ViewTransform[3] += sin(camAngleY * (M_PI/180)) * manualSpeed;
+				ViewTransform[7] -= sin(camAngleX * (M_PI/180)) * manualSpeed; 
+				ViewTransform[11]-= cos(camAngleY * (M_PI/180)) * manualSpeed;
+				break;
 
-	case 19: //ctrl+s
-		//down
-		ViewTransform[7]+=manualSpeed;
-		break;
+			case 23: //ctrl+w
+				//up
+				ViewTransform[7]-=manualSpeed;
+				break;
 
-	case 'a':
-		//left
-		ViewTransform[3] += cos(camAngleY * (M_PI/180)) * manualSpeed;
-		ViewTransform[11] += sin(camAngleY * (M_PI/180)) * manualSpeed; 
-		break;
+			case 19: //ctrl+s
+				//down
+				ViewTransform[7]+=manualSpeed;
+				break;
 
-	case 'd':
-		//right
-		ViewTransform[3] -= cos(camAngleY * (M_PI/180)) * manualSpeed;
-		ViewTransform[11] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
-		break;
+			case 'a':
+				//left
+				ViewTransform[3] += cos(camAngleY * (M_PI/180)) * manualSpeed;
+				ViewTransform[11] += sin(camAngleY * (M_PI/180)) * manualSpeed; 
+				break;
 
-    /* Set speed of automatic camera */
-	case '1': 
-        camSpeed = .5;
-		break;
+			case 'd':
+				//right
+				ViewTransform[3] -= cos(camAngleY * (M_PI/180)) * manualSpeed;
+				ViewTransform[11] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
+				break;
+		}
+		/* Automatic Camera bindings */
+		if (camMode == 0) {
+			// Set speed of automatic camera
+			case '1': 
+				camSpeed = .5;
+				break;
 
-	case '2':	
-        camSpeed = 1;
-		break;
+			case '2':	
+				camSpeed = 1;
+				break;
 
-    case '3':
-        camSpeed = 2;
-        break;
+			case '3':
+				camSpeed = 2;
+				break;
+			// Pause automatic camera
+			case 'p':
+				if(camSpeed == 0)
+				    camSpeed = 1;
+				else
+				    camSpeed = 0;
+				break;
+		}
 
     /* Switch camera mode */
-    case '0':
-        camMode = (camMode+1)%3;
-        if(camMode == 0 || camMode == 2) {
+    case 'c':      
+        if(camMode == 1 || camMode == 2) {
 			SetTranslation(0.0, -4.0, -20.0, ViewTransform);
 		    camAngleX = 0;
 		    camAngleY = 0;
 		    camAngleZ = 0;
         }
+		camMode = (camMode+1)%3;
         break;
 	
 	/* Toggle animation */
@@ -352,13 +405,7 @@ void Keyboard(unsigned char key, int x, int y)
 			anim = GL_TRUE;
 		break;
 
-    /* Pause automatic camera */
-    case 'p':
-        if(camSpeed == 0)
-            camSpeed = 1;
-        else
-            camSpeed = 0;
-        break;
+
 
 	/* Reset initial rotation of object */
 	case 'o':
@@ -369,7 +416,18 @@ void Keyboard(unsigned char key, int x, int y)
 	    angleY = 0.0;
 	    angleZ = 0.0;
 	    break;
-	    
+
+	/* Reset camera */
+	case 'r':
+		camSpeed = 1;
+		manualSpeed = 0.2f;
+		SetTranslation(0.0, -4.0, -20.0, ViewTransform);
+		camAngleX = 0;
+		camAngleY = 0;
+		camAngleZ = 0;
+		break;
+
+	/* quit program */
 	case 'q': case 'Q':  
 	    exit(0);    
 		break;
@@ -479,9 +537,12 @@ void OnIdle()
         MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
         MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
         
+		//standard manual mode, free movement
         if(camMode == 1) {
             MultiplyMatrix(RotationMatrixAnim, ViewTransform, ViewMatrix);
         }
+
+		// alternative manual mode, only rotate around MerryGoRound object
         else if(camMode == 2) {
             MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
         }
