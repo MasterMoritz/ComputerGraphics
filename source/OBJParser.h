@@ -64,6 +64,11 @@ typedef struct
 
 typedef struct
 {
+	double t[2];
+} obj_tvector;
+
+typedef struct
+{
 	char name[MATERIAL_NAME_SIZE];
 	char texture_filename[OBJ_FILENAME_LENGTH];
 	double amb[3];
@@ -130,7 +135,7 @@ typedef struct
 {
 	obj_vector **vertex_list;
 	obj_vector **vertex_normal_list;
-	obj_vector **vertex_texture_list;
+	obj_tvector **vertex_texture_list;
 	
 	obj_face **face_list;
 	obj_sphere **sphere_list;

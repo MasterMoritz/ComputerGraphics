@@ -180,6 +180,13 @@ obj_light_disc* obj_parse_light_disc(obj_growable_scene_data *scene)
 	return obj;
 }
 
+obj_tvector* obj_parse_tvector() {
+	obj_tvector *v = (obj_tvector*)malloc(sizeof(obj_tvector));
+	v->t[0] = atof( strtok(NULL, WHITESPACE));
+	v->t[1] = atof( strtok(NULL, WHITESPACE));
+	return v;
+}
+
 obj_vector* obj_parse_vector()
 {
 	obj_vector *v = (obj_vector*)malloc(sizeof(obj_vector));
@@ -361,7 +368,7 @@ int obj_parse_obj_file(obj_growable_scene_data *growable_data, char *filename)
 		
 		else if( strequal(current_token, "vt") ) //process vertex texture
 		{
-			list_add_item(&growable_data->vertex_texture_list,  obj_parse_vector(), NULL);
+			list_add_item(&growable_data->vertex_texture_list,  obj_parse_tvector(), NULL);
 		}
 		
 		else if( strequal(current_token, "f") ) //process face
@@ -544,7 +551,7 @@ void obj_copy_to_out_storage(obj_scene_data *data_out, obj_growable_scene_data *
 	
 	data_out->vertex_list = (obj_vector**)growable_data->vertex_list.items;
 	data_out->vertex_normal_list = (obj_vector**)growable_data->vertex_normal_list.items;
-	data_out->vertex_texture_list = (obj_vector**)growable_data->vertex_texture_list.items;
+	data_out->vertex_texture_list = (obj_tvector**)growable_data->vertex_texture_list.items;
 
 	data_out->face_list = (obj_face**)growable_data->face_list.items;
 	data_out->sphere_list = (obj_sphere**)growable_data->sphere_list.items;
