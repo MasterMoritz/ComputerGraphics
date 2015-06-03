@@ -187,7 +187,18 @@ GLboolean invertCam = GL_FALSE;
 
 
 /*----------------------------------------------------------------*/
-
+//structure for our lights
+struct Light {
+	GLboolean isEnabled;
+	int type; //0 = point-light, 1 = spot-light
+	GLfloat ambient[3]; //ambient light contribution of this light
+	GLfloat color[3];
+	GLfloat position[3];
+	GLfloat coneDirection[3];
+	GLfloat coneCutOffAngle;
+	GLfloat attenuation;
+	GLfloat intensity; //light intensity between 0 and 1
+};
 
 
 /******************************************************************
