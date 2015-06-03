@@ -17,11 +17,23 @@ struct Light {
 const int MAX_LIGHTS = 10; 
 
 uniform Light lights[MAX_LIGHTS];
-in vec4 vColor;
+
+//structure for material properties
+struct Material {
+    GLfloat ambient[3];
+    GLfloat diffuse[3];
+    GLfloat specular[3];
+};
+
+uniform int numOfModels;
+uniform Material materials[numOfModels];
+
+//material index for the current face
+in int materialIndex;
 
 out vec4 FragColor;
 
 void main()
 {
-    FragColor = vColor;
+    FragColor = vec4(materials[materialIndex].diffuse[0], materials[materialIndex].diffuse[1], materials[materialIndex].diffuse[2]);
 }

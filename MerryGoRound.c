@@ -104,16 +104,19 @@ GLboolean anim = GL_TRUE;
 /* To switch between automatic and the two manual camera modes */
 int camMode = 0;
 
-/* Define handles to ertex buffer objects */
+/* Define handles to vertex buffer objects */
 GLuint VBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Define handles to index buffer objects */
 GLuint IBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
+/* Define handles to material index buffer objects */
+GLuint MBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+
 GLuint VAO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
-/* Indices to vertex attributes; in this case positon only */ 
-enum DataID {vPosition = 0}; 
+/* Indices to vertex attributes */ 
+enum DataID {Position = 0, MaterialIndex = 1}; 
 
 /* Strings for loading and storing shader code */
 static const char* VertexShaderString;
@@ -155,6 +158,9 @@ GLfloat *vertex_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 /* Arrays for holding indices of models */
 GLushort *index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
+/* Arrays for holding indices of materials */
+GLushort *material_index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+
 /* Structures for loading of OBJ data */
 obj_scene_data data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
@@ -186,7 +192,7 @@ GLboolean invertCam = GL_FALSE;
 
 
 
-/*----------------------------------------------------------------*/
+/*-----------------------------Uniforms----------------------------*/
 //structure for our lights
 struct Light {
 	GLboolean isEnabled;
@@ -198,6 +204,13 @@ struct Light {
 	GLfloat coneCutOffAngle;
 	GLfloat attenuation;
 	GLfloat intensity; //light intensity between 0 and 1
+};
+
+//structure for material properties
+struct Material {
+    GLfloat ambient[3];
+    GLfloat diffuse[3];
+    GLfloat specular[3];
 };
 
 
@@ -247,11 +260,18 @@ void Display()
 	/* Bind Vertex/Index Buffers of all Models and draw them */
 	int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
 	for (int i = 0; i < numObjects; i++) {
-		glEnableVertexAttribArray(vPosition);
+		glEnableVertexAttribArray(Position);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
-		glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glVertexAttribPointer(Position, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
+    
+        glDisableVertexAttribArray(Position);
+
+        glEnableVertexAttribArray(MaterialIndex);
+		glBindBuffer(GL_ARRAY_BUFFER, MBO[i]);
+		glVertexAttribPointer(MaterialIndex, 1, GL_INT, GL_FALSE, 0, 0);
+        glDisableVertexAttribArray(MaterialIndex);
 
 		GLint size; 
 		glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
@@ -261,8 +281,6 @@ void Display()
 		/* Issue draw command, using indexed triangle list */
 
 		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-
-		glDisableVertexAttribArray(vPosition);
 	}
 
     /* Swap between front and back buffer */ 
@@ -630,6 +648,10 @@ void SetupDataBuffers()
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*3*sizeof(GLushort), index_buffer_data[i], GL_STATIC_DRAW);
 
+        glGenBuffers(1, &(MBO[i]));
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, MBO[i]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*sizeof(GLushort), index_buffer_data[i], GL_STATIC_DRAW);
+
 		glBindVertexArray(VAO[i]);
 	}
 }
@@ -734,26 +756,45 @@ void CreateShaderProgram()
 
     /* Put linked shader program into drawing pipeline */
     glUseProgram(ShaderProgram);
+
+    /* Set uniforms */
+    GLuint numOfModelsLoc = glGetUniformLocation(ShaderProgram, "numOfModels");
+    glUniform1i(numOfModelsLoc, NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM);
+    
+    GLuint ambLoc = glGetUniformLocation(ShaderProgram, "materials[i].ambient");
+    GLuint diffLoc = glGetUniformLocation(ShaderProgram, "materials[i].diffuse");
+    GLuint specLoc = glGetUniformLocation(ShaderProgram, "materials[i].specular");
+    GLfloat ambient[3];
+    GLfloat diffuse[3];
+    GLfloat specularity[3];
+    for (int z = 0; z < NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM; z++) {
+        for(int i=0; i<data[z].material_count; i++) {
+            memcpy(ambient, (GLfloat*)(*data[z].material_list[i]).amb, sizeof(ambient));
+            memcpy(diffuse, (GLfloat*)(*(data[z]).material_list[i]).diff, sizeof(diffuse));
+            memcpy(specularity, (GLfloat*)(*(data[z]).material_list[i]).spec, sizeof(specularity));
+            glUniform3f(ambLoc, ambient[0], ambient[1], ambient[3]);
+            glUniform3f(diffLoc, diffuse[0], diffuse[1], diffuse[3]);
+            glUniform3f(specLoc, specularity[0], specularity[1], specularity[3]);
+        }
+    }
 }
 
 
 /******************************************************************
 *
-* Initialize
+* LoadObjFiles
 *
-* This function is called to initialize rendering elements, setup
-* vertex buffer objects, and to setup the vertex and fragment shader;
-* meshes are loaded from files in OBJ format; data is copied from
-* structures into vertex and index arrays
+* This function is called to load the different object files.
+* Materials are saved to uniforms in CreateShaderProgram().
 *
 *******************************************************************/
 
-void Initialize()
-{   
+void LoadObjFiles() 
+{
     int objIndex = 0;
     int success;
 
-	/* BEGIN load all models, don't forget to update the macros if you add/remove some */
+	/* Load all models, don't forget to update the macros if you add/remove some */
 	
 	/* Load all static models */
 
@@ -844,6 +885,7 @@ void Initialize()
 
     	vertex_buffer_data[z] = (GLfloat*) calloc (vert*3, sizeof(GLfloat));
     	index_buffer_data[z] = (GLushort*) calloc (indx*3, sizeof(GLushort));
+        material_index_buffer_data[z] = (GLushort*) calloc (indx, sizeof(GLushort));
   
 		/* Vertices */
 		for(int i=0; i<vert; i++) {
@@ -858,8 +900,30 @@ void Initialize()
 			index_buffer_data[z][i*3+1] = (GLushort)(*(data[z]).face_list[i]).vertex_index[1];
 			index_buffer_data[z][i*3+2] = (GLushort)(*(data[z]).face_list[i]).vertex_index[2];
 		}
+
+        /* Material indices */
+		for(int i=0; i<indx; i++) {
+			material_index_buffer_data[z][i] = (GLushort)(*(data[z]).face_list[i]).material_index;
+		}
 	}
-	/* END load all models */
+}
+
+
+/******************************************************************
+*
+* Initialize
+*
+* This function is called to initialize rendering elements, setup
+* vertex buffer objects, and to setup the vertex and fragment shader;
+* meshes are loaded from files in OBJ format; data is copied from
+* structures into vertex and index arrays
+*
+*******************************************************************/
+
+void Initialize()
+{   
+    /* Load the object files */
+    LoadObjFiles();
 
 	/* Set background (clear) color to soft bluegreen */ 
     glClearColor(0.0, 0.2, 0.4, 0.0);
@@ -868,7 +932,7 @@ void Initialize()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);    
 
-    /* Setup vertex, color, and index buffer objects */
+    /* Setup vertex and (material) index buffer objects */
     SetupDataBuffers();
 
     /* Setup shaders and shader program */
