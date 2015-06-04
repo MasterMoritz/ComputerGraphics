@@ -337,9 +337,9 @@ void Display()
 		/* bind index buffer */
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
 
-       /* glEnableVertexAttribArray(vNormal);
+        glEnableVertexAttribArray(vNormal);
 		glBindBuffer(GL_ARRAY_BUFFER, NBO[i]);
-		glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, 0);*/
+		glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
         glEnableVertexAttribArray(MaterialIndex);
 		glBindBuffer(GL_ARRAY_BUFFER, MBO[i]);
@@ -398,7 +398,7 @@ void Display()
 		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
         
         glDisableVertexAttribArray(vPosition);
-        //glDisableVertexAttribArray(vNormal);
+        glDisableVertexAttribArray(vNormal);
         glDisableVertexAttribArray(MaterialIndex);
 	}
 
@@ -796,9 +796,9 @@ void SetupDataBuffers()
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*3*sizeof(GLushort), index_buffer_data[i], GL_STATIC_DRAW);
 
-        /*glGenBuffers(1, &(NBO[i]));
+        glGenBuffers(1, &(NBO[i]));
 		glBindBuffer(GL_ARRAY_BUFFER, NBO[i]);
-		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_normal_count*3*sizeof(GLfloat), normal_buffer_data[i], GL_STATIC_DRAW);*/
+		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_normal_count*3*sizeof(GLfloat), normal_buffer_data[i], GL_STATIC_DRAW);
 
         glGenBuffers(1, &(MBO[i]));
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, MBO[i]);
@@ -1025,11 +1025,11 @@ void LoadObjFiles()
 		}
 
         /* Normals */
-		/*for(int i=0; i<nrml; i++) {
+		for(int i=0; i<nrml; i++) {
 		    normal_buffer_data[z][i*3] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[0];
 			normal_buffer_data[z][i*3+1] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[1];
 			normal_buffer_data[z][i*3+2] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[2];
-		}*/
+		}
 
         /* Material indices */
 		for(int i=0; i<indx; i++) {

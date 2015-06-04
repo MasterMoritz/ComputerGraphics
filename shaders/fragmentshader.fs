@@ -50,19 +50,19 @@ const int MAX_MATERIALS = 20;
 uniform Material materials[MAX_MATERIALS];
 
 
-uniform float Shininess;
-uniform float Strength;
+uniform float Shininess = 1.0;
+uniform float Strength = 1.0;
 
 //material index for the current face
 flat in int materialIndex;
-//in vec3 Normal;
+in vec3 Normal;
 in vec4 Position;
 
 out vec4 FragColor;
 
 void main()
 {
-   /* vec3 scatteredLight = vec3(0.0, 0.0, 0.0);  // the global ambient
+    vec3 scatteredLight = vec3(0.0, 0.0, 0.0);  // the global ambient
     vec3 reflectedLight = vec3(0.0);
     for(int i = 0; i < light_count; i++) {
         vec3 halfVector;
@@ -93,6 +93,6 @@ void main()
         }
         scatteredLight += lights[i].ambient * materials[materialIndex].ambient * attenuation + lights[i].color * materials[materialIndex].diffuse * diffuse * attenuation;
         reflectedLight += lights[i].color * materials[materialIndex].specular * specular * attenuation;
-    }*/
-    FragColor = vec4(1.0);//vec4(min(scatteredLight + reflectedLight, vec3(1.0)), 1.0);
+    }
+    FragColor = vec4(min(scatteredLight + reflectedLight, vec3(1.0)), 1.0);
 }

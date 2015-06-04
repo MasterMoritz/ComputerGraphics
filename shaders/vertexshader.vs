@@ -26,14 +26,14 @@ layout (location = 1) in vec3 vNormal;
 layout (location = 2) in int MaterialIndex;
 
 out vec4 Position;  //the non-projected position
-//out vec3 Normal;
+out vec3 Normal;
 flat out int materialIndex;
 
 void main()
 {
-	//mat3 NormalMatrix = transpose(inverse(mat3(ModelMatrix*ViewMatrix)));
+	mat3 NormalMatrix = transpose(inverse(mat3(ModelMatrix*ViewMatrix)));
     gl_Position = ProjectionMatrix*ViewMatrix*ModelMatrix*vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
     Position = ViewMatrix*ModelMatrix*vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
-    //Normal = normalize(mat3(NormalMatrix) * vNormal);        
+    Normal = normalize(mat3(NormalMatrix) * vNormal);        
     materialIndex = MaterialIndex;
 }
