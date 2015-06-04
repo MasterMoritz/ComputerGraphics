@@ -165,7 +165,7 @@ GLfloat *vertex_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 GLushort *index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Arrays for holding normals of models */
-GLushort *normal_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLfloat *normal_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Arrays for holding indices of materials */
 GLushort *material_index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
@@ -1088,6 +1088,10 @@ void Initialize()
 	lights[1].coneCutOffAngle = 45.0f; //cutoff cone at 45 degrees to either side
 	lights[1].attenuation = 0.0f; //no attenuation for testing purposes
 	lights[1].intensity = 1.0f;
+
+	//set the number of lights in shader
+	GLuint light_count = glGetUniformLocation(ShaderProgram, "light_count");
+	glUniform1i(light_count, NUM_LIGHT);
 }
 
 
