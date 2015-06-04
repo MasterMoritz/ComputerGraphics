@@ -36,5 +36,5 @@ out vec4 FragColor;
 
 void main()
 {
-    FragColor = vec4(.6);//vec4(materials[materialIndex].diffuse[0], materials[materialIndex].diffuse[1], materials[materialIndex].diffuse[2], 1.0);
+    FragColor = vec4(materials[materialIndex].diffuse[0], materials[materialIndex].diffuse[1], materials[materialIndex].diffuse[2], 0.0);
 }

@@ -87,7 +87,7 @@
 #ifndef M_PI
 	#define M_PI 3.14159265358979323846
 #endif
-#ifndef NUM_STATIC         /* Do not forget to set these in the fragment shader too! */
+#ifndef NUM_STATIC 
 	#define NUM_STATIC 4
 #endif
 #ifndef NUM_BASIC_ANIM
@@ -813,8 +813,7 @@ void CreateShaderProgram()
 *
 * LoadObjFiles
 *
-* This function is called to load the different object files.
-* Materials are saved to uniforms in CreateShaderProgram().
+* This function is called to load the different object files
 *
 *******************************************************************/
 
