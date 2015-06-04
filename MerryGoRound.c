@@ -259,11 +259,14 @@ void Display()
 
 	/* Bind Vertex/Index Buffers of all Models and draw them */
 	int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
+
 	for (int i = 0; i < numObjects; i++) {
+		/* bind vertex buffer */
 		glEnableVertexAttribArray(Position);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
 		glVertexAttribPointer(Position, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+		/* bind index buffer */
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
 
         glEnableVertexAttribArray(MaterialIndex);
@@ -273,10 +276,57 @@ void Display()
 		GLint size; 
 		glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
+		/* set model matrix */
 		glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix[i]); 
+		
+		/* bind materials */
+		GLuint material_count = glGetUniformLocation(ShaderProgram, "material_count");
+		glUniform1i(material_count, data[i].material_count);
+		
+		GLuint ambLoc;
+		GLuint diffLoc;
+		GLuint specLoc;
+		float ambient[3];
+		float diffuse[3];
+		float specular[3];
+		char buffer[22];
+
+		for(int z = 0; z < data[i].material_count; z++) {
+			strcpy(buffer, "materials[");
+			buffer[10] = '0' + z;
+			buffer[11] = '\0';
+			strcat(buffer, "].ambient");
+
+			ambLoc = glGetUniformLocation(ShaderProgram, buffer);
+			ambient[0] = (*(data[i]).material_list[z]).amb[0];
+			ambient[1] = (*(data[i]).material_list[z]).amb[1];
+			ambient[2] = (*(data[i]).material_list[z]).amb[2];
+			glUniform3f(ambLoc, ambient[0], ambient[1], ambient[2]);
+
+			strcpy(buffer, "materials[");
+			buffer[10] = '0' + z;
+			buffer[11] = '\0';
+			strcat(buffer, "].diffuse");
+
+			diffLoc = glGetUniformLocation(ShaderProgram, buffer);
+			diffuse[0] = (*(data[i]).material_list[z]).diff[0];
+			diffuse[1] = (*(data[i]).material_list[z]).diff[1];
+			diffuse[2] = (*(data[i]).material_list[z]).diff[2];
+			glUniform3f(diffLoc, diffuse[0], diffuse[1], diffuse[2]);
+
+			strcpy(buffer, "materials[");
+			buffer[10] = '0' + z;
+			buffer[11] = '\0';
+			strcat(buffer, "].specular");
+
+			specLoc = glGetUniformLocation(ShaderProgram, buffer);
+			specular[0] = (*(data[i]).material_list[z]).spec[0];
+			specular[1] = (*(data[i]).material_list[z]).spec[1];
+			specular[2] = (*(data[i]).material_list[z]).spec[2];
+			glUniform3f(specLoc, specular[0], specular[1], specular[2]);
+		}
 
 		/* Issue draw command, using indexed triangle list */
-
 		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
         
         glDisableVertexAttribArray(Position);
@@ -756,27 +806,6 @@ void CreateShaderProgram()
 
     /* Put linked shader program into drawing pipeline */
     glUseProgram(ShaderProgram);
-
-    /* Set uniforms */
-    //GLuint numOfModelsLoc = glGetUniformLocation(ShaderProgram, "numOfModels");
-    //glUniform1i(numOfModelsLoc, NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM);
-    
-    GLuint ambLoc = glGetUniformLocation(ShaderProgram, "materials[i].ambient");
-    GLuint diffLoc = glGetUniformLocation(ShaderProgram, "materials[i].diffuse");
-    GLuint specLoc = glGetUniformLocation(ShaderProgram, "materials[i].specular");
-    GLfloat ambient[3];
-    GLfloat diffuse[3];
-    GLfloat specularity[3];
-    for (int z = 0; z < NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM; z++) {
-        for(int i=0; i<data[z].material_count; i++) {
-            memcpy(ambient, (GLfloat*)(*data[z].material_list[i]).amb, sizeof(ambient));
-            memcpy(diffuse, (GLfloat*)(*(data[z]).material_list[i]).diff, sizeof(diffuse));
-            memcpy(specularity, (GLfloat*)(*(data[z]).material_list[i]).spec, sizeof(specularity));
-            glUniform3f(ambLoc, ambient[0], ambient[1], ambient[3]);
-            glUniform3f(diffLoc, diffuse[0], diffuse[1], diffuse[3]);
-            glUniform3f(specLoc, specularity[0], specularity[1], specularity[3]);
-        }
-    }
 }
 
 
