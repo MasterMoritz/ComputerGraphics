@@ -87,7 +87,7 @@
 #ifndef M_PI
 	#define M_PI 3.14159265358979323846
 #endif
-#ifndef NUM_STATIC
+#ifndef NUM_STATIC         /* Do not forget to set these in the fragment shader too! */
 	#define NUM_STATIC 5
 #endif
 #ifndef NUM_BASIC_ANIM
@@ -758,8 +758,8 @@ void CreateShaderProgram()
     glUseProgram(ShaderProgram);
 
     /* Set uniforms */
-    GLuint numOfModelsLoc = glGetUniformLocation(ShaderProgram, "numOfModels");
-    glUniform1i(numOfModelsLoc, NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM);
+    //GLuint numOfModelsLoc = glGetUniformLocation(ShaderProgram, "numOfModels");
+    //glUniform1i(numOfModelsLoc, NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM);
     
     GLuint ambLoc = glGetUniformLocation(ShaderProgram, "materials[i].ambient");
     GLuint diffLoc = glGetUniformLocation(ShaderProgram, "materials[i].diffuse");

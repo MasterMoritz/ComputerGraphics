@@ -20,20 +20,20 @@ uniform Light lights[MAX_LIGHTS];
 
 //structure for material properties
 struct Material {
-    GLfloat ambient[3];
-    GLfloat diffuse[3];
-    GLfloat specular[3];
+    float ambient[3];
+    float diffuse[3];
+    float specular[3];
 };
 
-uniform int numOfModels;
-uniform Material materials[numOfModels];
+const int NUM_OF_MODELS = 5 + 1 + 6;
+uniform Material materials[NUM_OF_MODELS];
 
 //material index for the current face
-in int materialIndex;
+flat in int materialIndex;
 
 out vec4 FragColor;
 
 void main()
 {
-    FragColor = vec4(materials[materialIndex].diffuse[0], materials[materialIndex].diffuse[1], materials[materialIndex].diffuse[2]);
+    FragColor = vec4(materials[materialIndex].diffuse[0], materials[materialIndex].diffuse[1], materials[materialIndex].diffuse[2], 1.0);
 }
