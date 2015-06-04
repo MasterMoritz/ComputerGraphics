@@ -304,7 +304,7 @@ void Display()
 			ambient[0] = (*(data[i]).material_list[z]).amb[0];
 			ambient[1] = (*(data[i]).material_list[z]).amb[1];
 			ambient[2] = (*(data[i]).material_list[z]).amb[2];
-			glUniform3f(ambLoc, ambient[0], ambient[1], ambient[3]);
+			glUniform3f(ambLoc, ambient[0], ambient[1], ambient[2]);
 
 			strcpy(buffer, "materials[");
 			buffer[10] = '0' + z;
@@ -315,7 +315,7 @@ void Display()
 			diffuse[0] = (*(data[i]).material_list[z]).diff[0];
 			diffuse[1] = (*(data[i]).material_list[z]).diff[1];
 			diffuse[2] = (*(data[i]).material_list[z]).diff[2];
-			glUniform3f(diffLoc, diffuse[0], diffuse[1], diffuse[3]);
+			glUniform3f(diffLoc, diffuse[0], diffuse[1], diffuse[2]);
 
 			strcpy(buffer, "materials[");
 			buffer[10] = '0' + z;
@@ -326,7 +326,7 @@ void Display()
 			specular[0] = (*(data[i]).material_list[z]).spec[0];
 			specular[1] = (*(data[i]).material_list[z]).spec[1];
 			specular[2] = (*(data[i]).material_list[z]).spec[2];
-			glUniform3f(specLoc, specular[0], specular[1], specular[3]);
+			glUniform3f(specLoc, specular[0], specular[1], specular[2]);
 		}
 
 		/* Issue draw command, using indexed triangle list */
