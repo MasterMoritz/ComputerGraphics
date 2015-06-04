@@ -64,7 +64,7 @@ void main()
 {
     vec3 scatteredLight = vec3(0.0, 0.0, 0.0);  // the global ambient
     vec3 reflectedLight = vec3(0.0);
-    for(int i = 0; i < lights_count; i++) {
+    for(int i = 0; i < light_count; i++) {
         vec3 halfVector;
         vec3 lightDirection = lights[i].position;
         flat attenuation = 1.0;
