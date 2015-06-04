@@ -96,6 +96,9 @@
 #ifndef NUM_ADV_ANIM
 	#define NUM_ADV_ANIM 6
 #endif
+#ifndef NUM_LIGHT
+	#define NUM_LIGHT 2
+#endif
 /*----------------------------------------------------------------*/
 
 /* Flag for starting/stopping animation */
@@ -205,6 +208,8 @@ struct Light {
 	GLfloat attenuation;
 	GLfloat intensity; //light intensity between 0 and 1
 };
+typedef struct Light Light;
+Light lights[NUM_LIGHT];
 
 //structure for material properties
 struct Material {
@@ -254,10 +259,8 @@ void Display()
         exit(-1);
     }
 
-	/* Set state to only draw wireframe (no lighting used, yet) */
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	/* Bind Vertex/Index Buffers of all Models and draw them */
+	/* draw Meshes */
 	int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
 
 	for (int i = 0; i < numObjects; i++) {
@@ -973,8 +976,41 @@ void Initialize()
     SetPerspectiveMatrix(fovy, aspect, nearPlane, farPlane, ProjectionMatrix);
 
     /* Set camera transform */
-    SetTranslation(0.0, -4.0, -20.0, ViewTransform);
+    SetTranslation(0.0, 20.0, -20.0, ViewTransform);
     MultiplyMatrix(ViewTransform, ViewMatrix, ViewMatrix);
+
+	/* place lights */
+	lights[0].isEnabled = GL_TRUE;
+	lights[0].type = 0; // light is point light
+	lights[0].ambient[0] = 0.2f;
+	lights[0].ambient[1] = 0.0f;
+	lights[0].ambient[2] = 0.05f;
+	lights[0].color[0] = 0.0f; //hue = red
+	lights[0].color[1] = 1.0f; //saturation = 100%
+	lights[0].color[2] = 1.0f; //value = 100%
+	lights[0].position[0] = 0.0f;
+	lights[0].position[1] = 20.0f;
+	lights[0].position[2] = -20.0f;
+	lights[0].attenuation = 0.0f; //no attenuation for testing purposes
+	lights[0].intensity = 1.0f;
+
+	lights[1].isEnabled = GL_TRUE;
+	lights[1].type = 1; // light is spot light
+	lights[1].ambient[0] = 0.0f;
+	lights[1].ambient[1] = 0.0f;
+	lights[1].ambient[2] = 0.0f;
+	lights[1].color[0] = 240.0f; //hue = blue
+	lights[1].color[1] = 1.0f; //saturation = 100%
+	lights[1].color[2] = 1.0f; //value = 100%
+	lights[1].position[0] = 0.0f;
+	lights[1].position[1] = 20.0f;
+	lights[1].position[2] = -20.0f;
+	lights[1].coneDirection[0] = 0.0f;
+	lights[1].coneDirection[1] = 0.0f;
+	lights[1].coneDirection[2] = 0.0f;
+	lights[1].coneCutOffAngle = 45.0f; //cutoff cone at 45 degrees to either side
+	lights[1].attenuation = 0.0f; //no attenuation for testing purposes
+	lights[1].intensity = 1.0f;
 }
 
 
