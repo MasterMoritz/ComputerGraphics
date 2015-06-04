@@ -110,13 +110,16 @@ GLuint VBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 /* Define handles to index buffer objects */
 GLuint IBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
+/* Define handles to normal buffer objects */
+GLuint NBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+
 /* Define handles to material index buffer objects */
 GLuint MBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 GLuint VAO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Indices to vertex attributes */ 
-enum DataID {Position = 0, MaterialIndex = 1}; 
+enum DataID {vPosition = 0, vNormal = 1, MaterialIndex = 2}; 
 
 /* Strings for loading and storing shader code */
 static const char* VertexShaderString;
@@ -157,6 +160,9 @@ GLfloat *vertex_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Arrays for holding indices of models */
 GLushort *index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+
+/* Arrays for holding normals of models */
+GLushort *normal_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Arrays for holding indices of materials */
 GLushort *material_index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
@@ -262,12 +268,16 @@ void Display()
 
 	for (int i = 0; i < numObjects; i++) {
 		/* bind vertex buffer */
-		glEnableVertexAttribArray(Position);
+		glEnableVertexAttribArray(vPosition);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
-		glVertexAttribPointer(Position, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 		/* bind index buffer */
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
+
+        glEnableVertexAttribArray(vNormal);
+		glBindBuffer(GL_ARRAY_BUFFER, NBO[i]);
+		glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
         glEnableVertexAttribArray(MaterialIndex);
 		glBindBuffer(GL_ARRAY_BUFFER, MBO[i]);
@@ -329,7 +339,8 @@ void Display()
 		/* Issue draw command, using indexed triangle list */
 		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
         
-        glDisableVertexAttribArray(Position);
+        glDisableVertexAttribArray(vPosition);
+        //glDisableVertexAttribArray(vNormal);
         glDisableVertexAttribArray(MaterialIndex);
 	}
 
@@ -697,6 +708,10 @@ void SetupDataBuffers()
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*3*sizeof(GLushort), index_buffer_data[i], GL_STATIC_DRAW);
 
+        glGenBuffers(1, &(NBO[i]));
+		glBindBuffer(GL_ARRAY_BUFFER, NBO[i]);
+		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_count*3*sizeof(GLfloat), normal_buffer_data[i], GL_STATIC_DRAW);
+
         glGenBuffers(1, &(MBO[i]));
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, MBO[i]);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*sizeof(GLushort), index_buffer_data[i], GL_STATIC_DRAW);
@@ -902,6 +917,7 @@ void LoadObjFiles()
 
     	vertex_buffer_data[z] = (GLfloat*) calloc (vert*3, sizeof(GLfloat));
     	index_buffer_data[z] = (GLushort*) calloc (indx*3, sizeof(GLushort));
+        normal_buffer_data[z] = (GLfloat*) calloc (vert*3, sizeof(GLfloat));
         material_index_buffer_data[z] = (GLushort*) calloc (indx, sizeof(GLushort));
   
 		/* Vertices */
@@ -916,6 +932,13 @@ void LoadObjFiles()
 			index_buffer_data[z][i*3] = (GLushort)(*(data[z]).face_list[i]).vertex_index[0];
 			index_buffer_data[z][i*3+1] = (GLushort)(*(data[z]).face_list[i]).vertex_index[1];
 			index_buffer_data[z][i*3+2] = (GLushort)(*(data[z]).face_list[i]).vertex_index[2];
+		}
+
+        /* Normals */
+		for(int i=0; i<vert; i++) {
+		    normal_buffer_data[z][i*3] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[0];
+			normal_buffer_data[z][i*3+1] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[1];
+			normal_buffer_data[z][i*3+2] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[2];
 		}
 
         /* Material indices */
