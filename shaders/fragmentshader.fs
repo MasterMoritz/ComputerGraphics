@@ -25,8 +25,9 @@ struct Material {
     float specular[3];
 };
 
-const int NUM_OF_MODELS = 5 + 1 + 6;
-uniform Material materials[NUM_OF_MODELS];
+uniform int material_count; //actual number of materials in the materials array
+const int MAX_MATERIALS = 20;
+uniform Material materials[MAX_MATERIALS];
 
 //material index for the current face
 flat in int materialIndex;
