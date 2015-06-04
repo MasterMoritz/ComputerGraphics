@@ -96,6 +96,9 @@
 #ifndef NUM_ADV_ANIM
 	#define NUM_ADV_ANIM 6
 #endif
+#ifndef NUM_LIGHT
+	#define NUM_LIGHT 2
+#endif
 /*----------------------------------------------------------------*/
 
 /* Flag for starting/stopping animation */
@@ -211,6 +214,8 @@ struct Light {
 	GLfloat attenuation;
 	GLfloat intensity; //light intensity between 0 and 1
 };
+typedef struct Light Light;
+Light lights[NUM_LIGHT];
 
 //structure for material properties
 struct Material {
@@ -260,10 +265,66 @@ void Display()
         exit(-1);
     }
 
-	/* Set state to only draw wireframe (no lighting used, yet) */
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	/* set lights in shader */
+	for (int i = 0; i < NUM_LIGHT; i++) {
+		//only support 10 lights maximum
+		if (i == 10) {
+			break;
+		}
+		char buffer[32];
+		GLuint light_attribute;
 
-	/* Bind Vertex/Index Buffers of all Models and draw them */
+		//set the light attributes
+		strcpy(buffer, "lights[");
+		buffer[7] = '0' + i;
+		buffer[8] = '\0';
+		strcat(buffer, "].isEnabled");
+		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		glUniform1i(light_attribute, lights[i].isEnabled);
+
+		buffer[10] = '\0';
+		strcat(buffer, "type");
+		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		glUniform1i(light_attribute, lights[i].type);
+
+		buffer[10] = '\0';
+		strcat(buffer, "ambient");
+		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		glUniform3f(light_attribute, lights[i].ambient[0], lights[i].ambient[1], lights[i].ambient[2]);
+
+		buffer[10] = '\0';
+		strcat(buffer, "color");
+		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		glUniform3f(light_attribute, lights[i].color[0], lights[i].color[1], lights[i].color[2]);
+
+		buffer[10] = '\0';
+		strcat(buffer, "position");
+		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		glUniform3f(light_attribute, lights[i].position[0], lights[i].position[1], lights[i].position[2]);
+
+		buffer[10] = '\0';
+		strcat(buffer, "coneDirection");
+		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		glUniform3f(light_attribute, lights[i].coneDirection[0], lights[i].coneDirection[1], lights[i].coneDirection[2]);
+
+		buffer[10] = '\0';
+		strcat(buffer, "coneCutOffAngle");
+		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		glUniform1f(light_attribute, lights[i].coneCutOffAngle);
+
+		buffer[10] = '\0';
+		strcat(buffer, "attenuation");
+		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		glUniform1f(light_attribute, lights[i].attenuation);
+
+		buffer[10] = '\0';
+		strcat(buffer, "intensity");
+		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		glUniform1f(light_attribute, lights[i].intensity);
+
+	}
+
+	/* draw Meshes */
 	int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
 
 	for (int i = 0; i < numObjects; i++) {
@@ -313,10 +374,8 @@ void Display()
 			ambient[2] = (GLfloat)(*(data[i]).material_list[z]).amb[2];
 			glUniform3f(ambLoc, ambient[0], ambient[1], ambient[2]);
 
-			strcpy(buffer, "materials[");
-			buffer[10] = '0' + z;
-			buffer[11] = '\0';
-			strcat(buffer, "].diffuse");
+			buffer[13] = '\0';
+			strcat(buffer, "diffuse");
 
 			diffLoc = glGetUniformLocation(ShaderProgram, buffer);
 			diffuse[0] = (GLfloat)(*(data[i]).material_list[z]).diff[0];
@@ -324,10 +383,8 @@ void Display()
 			diffuse[2] = (GLfloat)(*(data[i]).material_list[z]).diff[2];
 			glUniform3f(diffLoc, diffuse[0], diffuse[1], diffuse[2]);
 
-			strcpy(buffer, "materials[");
-			buffer[10] = '0' + z;
-			buffer[11] = '\0';
-			strcat(buffer, "].specular");
+			buffer[13] = '\0';
+			strcat(buffer, "specular");
 
 			specLoc = glGetUniformLocation(ShaderProgram, buffer);
 			specular[0] = (GLfloat)(*(data[i]).material_list[z]).spec[0];
@@ -998,6 +1055,39 @@ void Initialize()
     /* Set camera transform */
     SetTranslation(0.0, -4.0, -20.0, ViewTransform);
     MultiplyMatrix(ViewTransform, ViewMatrix, ViewMatrix);
+
+	/* place lights */
+	lights[0].isEnabled = GL_TRUE;
+	lights[0].type = 0; // light is point light
+	lights[0].ambient[0] = 0.2f;
+	lights[0].ambient[1] = 0.0f;
+	lights[0].ambient[2] = 0.05f;
+	lights[0].color[0] = 0.0f; //hue = red
+	lights[0].color[1] = 1.0f; //saturation = 100%
+	lights[0].color[2] = 1.0f; //value = 100%
+	lights[0].position[0] = 0.0f;
+	lights[0].position[1] = 20.0f;
+	lights[0].position[2] = -20.0f;
+	lights[0].attenuation = 0.0f; //no attenuation for testing purposes
+	lights[0].intensity = 1.0f;
+
+	lights[1].isEnabled = GL_TRUE;
+	lights[1].type = 1; // light is spot light
+	lights[1].ambient[0] = 0.0f;
+	lights[1].ambient[1] = 0.0f;
+	lights[1].ambient[2] = 0.0f;
+	lights[1].color[0] = 240.0f; //hue = blue
+	lights[1].color[1] = 1.0f; //saturation = 100%
+	lights[1].color[2] = 1.0f; //value = 100%
+	lights[1].position[0] = 0.0f;
+	lights[1].position[1] = 20.0f;
+	lights[1].position[2] = -20.0f;
+	lights[1].coneDirection[0] = 0.0f;
+	lights[1].coneDirection[1] = 0.0f;
+	lights[1].coneDirection[2] = 0.0f;
+	lights[1].coneCutOffAngle = 45.0f; //cutoff cone at 45 degrees to either side
+	lights[1].attenuation = 0.0f; //no attenuation for testing purposes
+	lights[1].intensity = 1.0f;
 }
 
 
