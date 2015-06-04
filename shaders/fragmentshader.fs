@@ -20,9 +20,9 @@ uniform Light lights[MAX_LIGHTS];
 
 //structure for material properties
 struct Material {
-    float ambient[3];
-    float diffuse[3];
-    float specular[3];
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
 };
 
 uniform int material_count; //actual number of materials in the materials array
@@ -36,5 +36,5 @@ out vec4 FragColor;
 
 void main()
 {
-    FragColor = vec4(materials[materialIndex].diffuse[0], materials[materialIndex].diffuse[1], materials[materialIndex].diffuse[2], 0.0);
+    FragColor = vec4(materials[materialIndex].diffuse[0], materials[materialIndex].diffuse[1], materials[materialIndex].diffuse[2], 1.0);
 }

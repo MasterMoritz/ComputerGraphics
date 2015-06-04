@@ -279,16 +279,16 @@ void Display()
 		/* set model matrix */
 		glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix[i]); 
 		
-		/* bind materials */
+		/* set material index */
 		GLuint material_count = glGetUniformLocation(ShaderProgram, "material_count");
 		glUniform1i(material_count, data[i].material_count);
 		
 		GLuint ambLoc;
 		GLuint diffLoc;
 		GLuint specLoc;
-		float ambient[3];
-		float diffuse[3];
-		float specular[3];
+		GLfloat ambient[3];
+		GLfloat diffuse[3];
+		GLfloat specular[3];
 		char buffer[22];
 
 		for(int z = 0; z < data[i].material_count; z++) {
@@ -298,9 +298,9 @@ void Display()
 			strcat(buffer, "].ambient");
 
 			ambLoc = glGetUniformLocation(ShaderProgram, buffer);
-			ambient[0] = (*(data[i]).material_list[z]).amb[0];
-			ambient[1] = (*(data[i]).material_list[z]).amb[1];
-			ambient[2] = (*(data[i]).material_list[z]).amb[2];
+			ambient[0] = (GLfloat)(*(data[i]).material_list[z]).amb[0];
+			ambient[1] = (GLfloat)(*(data[i]).material_list[z]).amb[1];
+			ambient[2] = (GLfloat)(*(data[i]).material_list[z]).amb[2];
 			glUniform3f(ambLoc, ambient[0], ambient[1], ambient[2]);
 
 			strcpy(buffer, "materials[");
@@ -309,9 +309,9 @@ void Display()
 			strcat(buffer, "].diffuse");
 
 			diffLoc = glGetUniformLocation(ShaderProgram, buffer);
-			diffuse[0] = (*(data[i]).material_list[z]).diff[0];
-			diffuse[1] = (*(data[i]).material_list[z]).diff[1];
-			diffuse[2] = (*(data[i]).material_list[z]).diff[2];
+			diffuse[0] = (GLfloat)(*(data[i]).material_list[z]).diff[0];
+			diffuse[1] = (GLfloat)(*(data[i]).material_list[z]).diff[1];
+			diffuse[2] = (GLfloat)(*(data[i]).material_list[z]).diff[2];
 			glUniform3f(diffLoc, diffuse[0], diffuse[1], diffuse[2]);
 
 			strcpy(buffer, "materials[");
@@ -320,9 +320,9 @@ void Display()
 			strcat(buffer, "].specular");
 
 			specLoc = glGetUniformLocation(ShaderProgram, buffer);
-			specular[0] = (*(data[i]).material_list[z]).spec[0];
-			specular[1] = (*(data[i]).material_list[z]).spec[1];
-			specular[2] = (*(data[i]).material_list[z]).spec[2];
+			specular[0] = (GLfloat)(*(data[i]).material_list[z]).spec[0];
+			specular[1] = (GLfloat)(*(data[i]).material_list[z]).spec[1];
+			specular[2] = (GLfloat)(*(data[i]).material_list[z]).spec[2];
 			glUniform3f(specLoc, specular[0], specular[1], specular[2]);
 		}
 
@@ -619,7 +619,6 @@ void OnIdle()
                 curve--;
                 if(curve < 0)
                     curve = (sizeof(curves)/sizeof(curves[0]))-1;
-                printf("%i", curve);
                 if(curve == 1) {
                     camSpeed /= 2;
                 }
@@ -715,7 +714,7 @@ void SetupDataBuffers()
 *
 *******************************************************************/
 
-void AddShader(GLuint ShaderProgram, const char* ShaderCode, GLenum ShaderType)
+void AddShader(const char* ShaderCode, GLenum ShaderType)
 {
     /* Create shader object */
     GLuint ShaderObj = glCreateShader(ShaderType);
@@ -774,8 +773,8 @@ void CreateShaderProgram()
     FragmentShaderString = LoadShader("shaders/fragmentshader.fs");
 
     /* Separately add vertex and fragment shader to program */
-    AddShader(ShaderProgram, VertexShaderString, GL_VERTEX_SHADER);
-    AddShader(ShaderProgram, FragmentShaderString, GL_FRAGMENT_SHADER);
+    AddShader(VertexShaderString, GL_VERTEX_SHADER);
+    AddShader(FragmentShaderString, GL_FRAGMENT_SHADER);
 
     GLint Success = 0;
     GLchar ErrorLog[1024];
