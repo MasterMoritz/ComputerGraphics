@@ -2,7 +2,7 @@
 *
 * MerryGoRound.c
 *
-* Assignment 2
+* Assignment 3
 *
 * Computer Graphics Proseminar SS 2015
 * 

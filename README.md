@@ -1,2 +1,2 @@
 # ComputerGraphics
-MerryRound implementation of the CG prosminar task
+MerryRound implementation of the CG proseminar task

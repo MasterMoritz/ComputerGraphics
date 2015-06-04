@@ -1,3 +1,20 @@
+/******************************************************************
+*
+* Based on D. Shreiner, G. Sellers, J. Kessenich, B. Licea-Kane, 
+* “OpenGL Programming Guide: The Official Guide to Learning OpenGL, 
+* Version 4.3” Addison-Wesley, 8th edition, 978-0321773036, 2013.
+*
+* Computer Graphics Proseminar SS 2015
+* 
+* Interactive Graphics and Simulation Group
+* Institute of Computer Science
+* University of Innsbruck
+*
+* Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
+*
+*******************************************************************/
+
+
 #version 330 core
 
 uniform mat4 ProjectionMatrix;
