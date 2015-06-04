@@ -199,7 +199,8 @@ float camSpeed = 1;
 /* Flag for path inversion */
 GLboolean invertCam = GL_FALSE;
 
-
++/* the currently selected light whose values the user may change */
++int selectedLight = 0;
 
 /*-----------------------------Uniforms----------------------------*/
 //structure for our lights
@@ -578,8 +579,6 @@ void Keyboard(unsigned char key, int x, int y)
 				anim = GL_TRUE;
 			break;
 
-
-
 		/* Reset initial rotation of object */
 		case 'o':
 			SetIdentityMatrix(RotationMatrixAnimX);
@@ -599,6 +598,38 @@ void Keyboard(unsigned char key, int x, int y)
 			camAngleY = 0;
 			camAngleZ = 0;
 			break;
+
+        /* cycle through lights */
++		case 'l':
++			selectedLight = (selectedLight + 1) % NUM_LIGHT;
++			break;
++
++		/* change hue of selected light */
++		case '+':
++			lights[selectedLight].color[0] = lights[selectedLight].color[0] + 10.0;
++			if (lights[selectedLight].color[0] > 360.0) {
++				lights[selectedLight].color[0] -= 360.0;
++			}
++			break;
++		case '-':
++			lights[selectedLight].color[0] = lights[selectedLight].color[0] - 10.0;
++			if (lights[selectedLight].color[0] < 0) {
++				lights[selectedLight].color[0] = 360.0 - lights[selectedLight].color[0];
++			}
+            break;
++
++		/* change value of selected light */
++		case '*':
++			lights[selectedLight].color[2] = lights[selectedLight].color[2] + 0.02;
++			if (lights[selectedLight].color[2] > 1.0) {
++				lights[selectedLight].color[2] = 1.0;
++			}
++			break;
++		case '/':
++			lights[selectedLight].color[2] = lights[selectedLight].color[2] - 0.02;
++			if (lights[selectedLight].color[2] < 0) {
++				lights[selectedLight].color[2] = 0.0;
++			}
 
 		/* quit program */
 		case 'q': case 'Q':  
