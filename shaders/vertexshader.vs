@@ -31,8 +31,9 @@ out int matInd;
 
 void main()
 {
+	mat3 NormalMatrix = transpose(inverse(mat3(ModelMatrix*ViewMatrix)));
     gl_Position = ProjectionMatrix*ViewMatrix*ModelMatrix*vec4(Position.x, Position.y, Position.z, 1.0);
     Position = ViewMatrix*ModelMatrix*vec4(Position.x, Position.y, Position.z, 1.0);
-    Normal = normalize(NormalMatrix * vNormal);        
+    Normal = normalize(mat3(NormalMatrix) * vNormal);        
     matInd = MaterialIndex;
 }

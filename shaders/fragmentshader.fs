@@ -67,7 +67,7 @@ void main()
     for(int i = 0; i < light_count; i++) {
         vec3 halfVector;
         vec3 lightDirection = lights[i].position;
-        flat attenuation = 1.0;
+        float attenuation = 1.0;
         
         lightDirection -= vec3(Position);
         lightDirection /= length(lightDirection);
