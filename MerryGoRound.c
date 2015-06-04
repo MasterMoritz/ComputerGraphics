@@ -767,7 +767,7 @@ void SetupDataBuffers()
 
         glGenBuffers(1, &(NBO[i]));
 		glBindBuffer(GL_ARRAY_BUFFER, NBO[i]);
-		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_count*3*sizeof(GLfloat), normal_buffer_data[i], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_normal_count*3*sizeof(GLfloat), normal_buffer_data[i], GL_STATIC_DRAW);
 
         glGenBuffers(1, &(MBO[i]));
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, MBO[i]);
@@ -967,14 +967,16 @@ void LoadObjFiles()
 	objIndex = 0;
     int vert = 0;
     int indx = 0;
+	int nrml = 0;
 
 	for (int z = 0; z < NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM; z++) {
 		vert = data[z].vertex_count;
 		indx = data[z].face_count;
+		nrml = data[z].vertex_normal_count;
 
     	vertex_buffer_data[z] = (GLfloat*) calloc (vert*3, sizeof(GLfloat));
     	index_buffer_data[z] = (GLushort*) calloc (indx*3, sizeof(GLushort));
-        normal_buffer_data[z] = (GLfloat*) calloc (vert*3, sizeof(GLfloat));
+        normal_buffer_data[z] = (GLfloat*) calloc (nrml*3, sizeof(GLfloat));
         material_index_buffer_data[z] = (GLushort*) calloc (indx, sizeof(GLushort));
   
 		/* Vertices */
@@ -992,7 +994,7 @@ void LoadObjFiles()
 		}
 
         /* Normals */
-		for(int i=0; i<vert; i++) {
+		for(int i=0; i<nrml; i++) {
 		    normal_buffer_data[z][i*3] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[0];
 			normal_buffer_data[z][i*3+1] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[1];
 			normal_buffer_data[z][i*3+2] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[2];
