@@ -88,7 +88,7 @@
 	#define M_PI 3.14159265358979323846
 #endif
 #ifndef NUM_STATIC         /* Do not forget to set these in the fragment shader too! */
-	#define NUM_STATIC 5
+	#define NUM_STATIC 4
 #endif
 #ifndef NUM_BASIC_ANIM
 	#define NUM_BASIC_ANIM 1
@@ -255,7 +255,7 @@ void Display()
     }
 
 	/* Set state to only draw wireframe (no lighting used, yet) */
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	/* Bind Vertex/Index Buffers of all Models and draw them */
 	int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
@@ -265,13 +265,10 @@ void Display()
 		glVertexAttribPointer(Position, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
-    
-        glDisableVertexAttribArray(Position);
 
         glEnableVertexAttribArray(MaterialIndex);
 		glBindBuffer(GL_ARRAY_BUFFER, MBO[i]);
 		glVertexAttribPointer(MaterialIndex, 1, GL_INT, GL_FALSE, 0, 0);
-        glDisableVertexAttribArray(MaterialIndex);
 
 		GLint size; 
 		glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
@@ -281,6 +278,9 @@ void Display()
 		/* Issue draw command, using indexed triangle list */
 
 		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+        
+        glDisableVertexAttribArray(Position);
+        glDisableVertexAttribArray(MaterialIndex);
 	}
 
     /* Swap between front and back buffer */ 
@@ -799,16 +799,6 @@ void LoadObjFiles()
 	/* Load all static models */
 
     char* filename = "models/pillars.obj"; 
-    success = parse_obj_scene(&(data[objIndex]), filename);
-	SetIdentityMatrix(ModelMatrix[objIndex]);
-	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
-
-	objIndex += 1;
-    if(!success) {
-        printf("Could not load file. Exiting.\n");
-	}
-	
-	filename = "models/skybox.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
 	SetIdentityMatrix(ModelMatrix[objIndex]);
 	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
