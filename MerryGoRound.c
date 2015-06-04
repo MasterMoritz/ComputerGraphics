@@ -199,8 +199,7 @@ float camSpeed = 1;
 /* Flag for path inversion */
 GLboolean invertCam = GL_FALSE;
 
-/* the currently selected light whose values the user may change */
-int selectedLight = 0;
+
 
 /*-----------------------------Uniforms----------------------------*/
 //structure for our lights
@@ -337,9 +336,9 @@ void Display()
 		/* bind index buffer */
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
 
-        glEnableVertexAttribArray(vNormal);
+       /* glEnableVertexAttribArray(vNormal);
 		glBindBuffer(GL_ARRAY_BUFFER, NBO[i]);
-		glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, 0);*/
 
         glEnableVertexAttribArray(MaterialIndex);
 		glBindBuffer(GL_ARRAY_BUFFER, MBO[i]);
@@ -579,6 +578,8 @@ void Keyboard(unsigned char key, int x, int y)
 				anim = GL_TRUE;
 			break;
 
+
+
 		/* Reset initial rotation of object */
 		case 'o':
 			SetIdentityMatrix(RotationMatrixAnimX);
@@ -598,37 +599,6 @@ void Keyboard(unsigned char key, int x, int y)
 			camAngleY = 0;
 			camAngleZ = 0;
 			break;
-
-		/* cycle through lights */
-		case 'l':
-			selectedLight = (selectedLight + 1) % NUM_LIGHT;
-			break;
-
-		/* change hue of selected light */
-		case '+':
-			lights[selectedLight].color[0] = lights[selectedLight].color[0] + 10.0;
-			if (lights[selectedLight].color[0] > 360.0) {
-				lights[selectedLight].color[0] -= 360.0;
-			}
-			break;
-		case '-':
-			lights[selectedLight].color[0] = lights[selectedLight].color[0] - 10.0;
-			if (lights[selectedLight].color[0] < 0) {
-				lights[selectedLight].color[0] = 360.0 - lights[selectedLight].color[0];
-			}
-
-		/* change value of selected light */
-		case '*':
-			lights[selectedLight].color[2] = lights[selectedLight].color[2] + 0.02;
-			if (lights[selectedLight].color[2] > 1.0) {
-				lights[selectedLight].color[2] = 1.0;
-			}
-			break;
-		case '/':
-			lights[selectedLight].color[2] = lights[selectedLight].color[2] - 0.02;
-			if (lights[selectedLight].color[2] < 0) {
-				lights[selectedLight].color[2] = 0.0;
-			}
 
 		/* quit program */
 		case 'q': case 'Q':  
@@ -795,9 +765,9 @@ void SetupDataBuffers()
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*3*sizeof(GLushort), index_buffer_data[i], GL_STATIC_DRAW);
 
-        glGenBuffers(1, &(NBO[i]));
+        /*glGenBuffers(1, &(NBO[i]));
 		glBindBuffer(GL_ARRAY_BUFFER, NBO[i]);
-		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_normal_count*3*sizeof(GLfloat), normal_buffer_data[i], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_normal_count*3*sizeof(GLfloat), normal_buffer_data[i], GL_STATIC_DRAW);*/
 
         glGenBuffers(1, &(MBO[i]));
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, MBO[i]);
@@ -1024,11 +994,11 @@ void LoadObjFiles()
 		}
 
         /* Normals */
-		for(int i=0; i<nrml; i++) {
+		/*for(int i=0; i<nrml; i++) {
 		    normal_buffer_data[z][i*3] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[0];
 			normal_buffer_data[z][i*3+1] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[1];
 			normal_buffer_data[z][i*3+2] = (GLfloat)(*(data[z]).vertex_normal_list[i]).e[2];
-		}
+		}*/
 
         /* Material indices */
 		for(int i=0; i<indx; i++) {
