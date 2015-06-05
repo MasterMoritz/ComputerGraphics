@@ -220,7 +220,7 @@ struct Light {
 	GLboolean isEnabled;
 	int type; //0 = point-light, 1 = spot-light
 	GLfloat ambient[3]; //ambient light contribution of this light
-	GLfloat color[3];
+	vec3 color;
 	GLfloat position[3];
 	GLfloat coneDirection[3];
 	GLfloat coneCutOffAngleCos;
@@ -290,7 +290,7 @@ void Display()
 		buffer[10] = '\0';
 		strcat(buffer, "color");
 		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
-		glUniform3f(light_attribute, lights[i].color[0], lights[i].color[1], lights[i].color[2]);
+		glUniform3fv(light_attribute, 1, value_ptr(hsvToRgb(lights[i].color)));
 
 		buffer[10] = '\0';
 		strcat(buffer, "position");
@@ -1081,11 +1081,9 @@ void Initialize()
 	lights[0].ambient[0] = 0.0f;
 	lights[0].ambient[1] = 0.0f;
 	lights[0].ambient[2] = 0.0f;
-	lights[0].color[0] = 1.0f;//0.0f; //hue = red
-	lights[0].color[1] = 0.0f;//1.0f; //saturation = 100%
-	lights[0].color[2] = 0.0f;//1.0f; //value = 100%
+	lights[0].color = vec3 (360.0f, 1.0f, 1.0f); //red
 	lights[0].position[0] = 0.0f;
-	lights[0].position[1] = 2.0f;
+	lights[0].position[1] = 20.0f;
 	lights[0].position[2] = 0.0f;
 	lights[0].attenuation = 0.05f;
 	lights[0].intensity = 1.0f;
@@ -1095,9 +1093,7 @@ void Initialize()
 	lights[1].ambient[0] = 0.0f;
 	lights[1].ambient[1] = 0.0f;
 	lights[1].ambient[2] = 0.0f;
-	lights[1].color[0] = 0.0f;//240.0f; //hue = blue
-	lights[1].color[1] = 0.0f;//1.0f; //saturation = 100%
-	lights[1].color[2] = 1.0f;//1.0f; //value = 100%
+	lights[1].color = vec3 (240.0f, 1.0f, 1.0f); //blue
 	lights[1].position[0] = 0.0f;
 	lights[1].position[1] = 0.0f;
 	lights[1].position[2] = -20.0f;
