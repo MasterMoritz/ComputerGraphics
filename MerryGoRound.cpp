@@ -812,7 +812,7 @@ void SetupDataBuffers()
 
         glGenBuffers(1, &(MBO[i]));
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, MBO[i]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*sizeof(GLushort), index_buffer_data[i], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*sizeof(GLushort), material_index_buffer_data[i], GL_STATIC_DRAW);
 
 		glBindVertexArray(VAO[i]);
 	}
