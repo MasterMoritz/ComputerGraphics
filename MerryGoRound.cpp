@@ -112,7 +112,7 @@ using namespace glm;
 	#define M_PI 3.14159265358979323846
 #endif
 #ifndef NUM_STATIC 
-	#define NUM_STATIC 4
+	#define NUM_STATIC 6
 #endif
 #ifndef NUM_BASIC_ANIM
 	#define NUM_BASIC_ANIM 1
@@ -979,6 +979,24 @@ void LoadObjFiles()
         printf("Could not load file. Exiting.\n");
 	}
 
+    filename = "models/wall.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
+
+	objIndex += 1;
+    if(!success) {
+        printf("Could not load file. Exiting.\n");
+	}
+
+    filename = "models/floor.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
+
+	objIndex += 1;
+    if(!success) {
+        printf("Could not load file. Exiting.\n");
+	}
+
     filename = "models/floor_static.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
 	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
@@ -1115,11 +1133,6 @@ void Initialize()
 	ViewTransform = translate(mat4(1.0f), vec3(0.0f, -4.0f, -20.0f));
 	ViewMatrix = ViewTransform * ViewMatrix;
 
-    /* convert the light colors */
-    //vec3 rgb = hsvToRgb(vec3(0.0f, 1.0f, 1.0f));
-    //vec3 rgb = hsvToRgb(vec3(240.0f, 1.0f, 1.0f));
-        
-    
 	/* setup lights */
 	lights[0].isEnabled = GL_TRUE;
 	lights[0].type = 0; // light is point light
@@ -1128,10 +1141,10 @@ void Initialize()
 	lights[0].ambient[2] = 0.0f;
 	lights[0].color = vec3 (360.0f, 1.0f, 1.0f); //red
 	lights[0].position[0] = 0.0f;
-	lights[0].position[1] = 4.0f;
+	lights[0].position[1] = 2.0f;
 	lights[0].position[2] = 0.0f;
 	lights[0].attenuation = 0.05f;
-	lights[0].intensity = 0.5f;
+	lights[0].intensity = 0.2f;
 
 	lights[1].isEnabled = GL_TRUE;
 	lights[1].type = 1; // light is spot light
@@ -1140,12 +1153,12 @@ void Initialize()
 	lights[1].ambient[2] = 0.0f;
 	lights[1].color = vec3 (240.0f, 1.0f, 1.0f); //blue
 	lights[1].position[0] = 0.0f;
-	lights[1].position[1] = 3.0f;
+	lights[1].position[1] = 0.0f;
 	lights[1].position[2] = 0.0f;
 	lights[1].coneDirection[0] = 0.0f;
-	lights[1].coneDirection[1] = -3.0f;
+	lights[1].coneDirection[1] = 1.0f;
 	lights[1].coneDirection[2] = 0.0f;
-	lights[1].coneCutOffAngleCos = cos(radians(45.0f)); //cutoff cone at 45 degrees to either side
+	lights[1].coneCutOffAngleCos = cos(radians(20.0f)); //cutoff cone at 45 degrees to either side
 	lights[1].attenuation = 0.5f;
 	lights[1].intensity = .2f;
 

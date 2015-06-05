@@ -60,9 +60,9 @@ void obj_set_material_defaults(obj_material *mtl)
 	mtl->diff[0] = 0.8;
 	mtl->diff[1] = 0.8;
 	mtl->diff[2] = 0.8;
-	mtl->spec[0] = 1.0;
-	mtl->spec[1] = 1.0;
-	mtl->spec[2] = 1.0;
+	mtl->spec[0] = 0.0;
+	mtl->spec[1] = 0.0;
+	mtl->spec[2] = 0.0;
 	mtl->reflect = 0.0;
 	mtl->trans = 1;
 	mtl->glossy = 98;
