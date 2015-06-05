@@ -606,13 +606,13 @@ void Keyboard(unsigned char key, int x, int y)
 
 		/* change hue of selected light */
 		case '+':
-			lights[selectedLight].color[0] = lights[selectedLight].color[0] + 10.0;
+			lights[selectedLight].color[0] = lights[selectedLight].color[0] + 60.0;
 			if (lights[selectedLight].color[0] > 360.0) {
 				lights[selectedLight].color[0] -= 360.0;
 			}
 			break;
 		case '-':
-			lights[selectedLight].color[0] = lights[selectedLight].color[0] - 10.0;
+			lights[selectedLight].color[0] = lights[selectedLight].color[0] - 60.0;
 			if (lights[selectedLight].color[0] < 0) {
 				lights[selectedLight].color[0] = 360.0 - lights[selectedLight].color[0];
 			}
