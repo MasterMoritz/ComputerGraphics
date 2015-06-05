@@ -121,7 +121,7 @@ using namespace glm;
 	#define NUM_ADV_ANIM 6
 #endif
 #ifndef NUM_LIGHT
-	#define NUM_LIGHT 2
+	#define NUM_LIGHT 3
 #endif
 /*----------------------------------------------------------------*/
 
@@ -334,8 +334,12 @@ void Display()
 		strcat(buffer, "intensity");
 		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
 		glUniform1f(light_attribute, lights[i].intensity);
-
 	}
+
+    /* animate the animated spotlight */
+    GLuint light_attribute = glGetUniformLocation(ShaderProgram, "lights[2].position");
+    vec4 positions = ViewMatrix * ModelMatrix[6] * vec4(lights[2].position[0], lights[2].position[1], lights[2].position[2], 1.0);
+	glUniform3f(light_attribute, positions[0], positions[1], positions[2]);
 
 	/* draw Meshes */
 	int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
@@ -1140,9 +1144,25 @@ void Initialize()
 	lights[1].coneDirection[0] = 0.0f;
 	lights[1].coneDirection[1] = 1.0f;
 	lights[1].coneDirection[2] = 0.0f;
-	lights[1].coneCutOffAngleCos = cos(radians(20.0f)); //cutoff cone at 45 degrees to either side
+	lights[1].coneCutOffAngleCos = cos(radians(20.0f)); //cutoff cone at 20 degrees to either side
 	lights[1].attenuation = 0.5f;
 	lights[1].intensity = .2f;
+
+    lights[2].isEnabled = GL_TRUE;
+	lights[2].type = 1; // light is point light
+	lights[2].ambient[0] = 0.0f;
+	lights[2].ambient[1] = 0.0f;
+	lights[2].ambient[2] = 0.0f;
+	lights[2].color = vec3 (0.0f, 0.0f, 1.0f); //white
+	lights[2].position[0] = -3.0f;
+	lights[2].position[1] = 1.0f;
+	lights[2].position[2] = 0.0f;
+    lights[2].coneDirection[0] = 3.0f;
+	lights[2].coneDirection[1] = -1.0f;
+	lights[2].coneDirection[2] = 0.0f;
+	lights[2].coneCutOffAngleCos = cos(radians(20.0f)); //cutoff cone at 20 degrees to either side
+	lights[2].attenuation = .2f;
+	lights[2].intensity = .1f;
 
 	//set the number of lights in shader
 	GLuint light_count = glGetUniformLocation(ShaderProgram, "light_count");
