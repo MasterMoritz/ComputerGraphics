@@ -53,12 +53,24 @@
 * d -> strafe right
 *
 * [~]
-* ctrl + w  -> elevate up 
-* ctrl + s  -> elevate down
+* ctrl + w -> elevate up 
+* ctrl + s -> elevate down
 *
 *** Manual Examine Mode only:
 * mouse click + drag mouse -> rotation similar to the way it is in Blender
 * scroll wheel up/down -> zoom in/zoom out
+*
+*
+*
+*** Lighting:
+* + -> add 60° to hue of central pointlight
+* - -> remove 60° from hue of central pointlight
+* hold * -> increase value of central pointlight
+* hold / -> decrease value of central pointlight
+*
+* shift + a -> enable/disable ambient rendering
+* shift + d -> enable/disable diffuse rendering
+* shift + s -> enable/disable specular rendering
 *
 */
 /******************** ADDITIONAL NOTES **************************
@@ -214,6 +226,11 @@ GLboolean invertCam = GL_FALSE;
 /* the currently selected light whose values the user may change */
 int selectedLight = 0;
 
+/* flags to toggle specific parts of the rendering */
+int ambientRendering = 1;
+int diffuseRendering = 1;
+int specularRendering = 1;
+
 /*-----------------------------Uniforms----------------------------*/
 //structure for our lights
 struct Light {
@@ -351,6 +368,14 @@ void Display()
 		/* set material index */
 		GLuint material_count = glGetUniformLocation(ShaderProgram, "material_count");
 		glUniform1i(material_count, data[i].material_count);
+
+        /* set render flags */
+        GLuint ambientRenderingLoc = glGetUniformLocation(ShaderProgram, "ambientRendering");
+        glUniform1i(ambientRenderingLoc, ambientRendering);
+        GLuint diffuseRenderingLoc = glGetUniformLocation(ShaderProgram, "diffuseRendering");
+        glUniform1i(diffuseRenderingLoc, diffuseRendering);
+        GLuint specularRenderingLoc = glGetUniformLocation(ShaderProgram, "specularRendering");
+        glUniform1i(specularRenderingLoc, specularRendering);
 		
 		GLuint ambLoc;
 		GLuint diffLoc;
@@ -631,6 +656,26 @@ void Keyboard(unsigned char key, int x, int y)
 				lights[selectedLight].color[2] = 0.0;
 			}
 			break;
+
+        /* toggle specific components of the rendering */
+        case 'b':
+                if(ambientRendering)
+                    ambientRendering = 0;
+                else
+                    ambientRendering = 1;
+            break;
+        case 'n':
+                  if(diffuseRendering)
+                    diffuseRendering = 0;
+                else
+                    diffuseRendering = 1;
+            break;
+        case 'm':
+                  if(specularRendering)
+                    specularRendering = 0;
+                else
+                    specularRendering = 1;
+            break;
 		/* quit program */
 		case 'q': case 'Q':  
 			exit(0);    

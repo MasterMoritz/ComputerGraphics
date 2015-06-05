@@ -52,6 +52,11 @@ const int MAX_MATERIALS = 20;
 //the array of materials
 uniform Material materials[MAX_MATERIALS];
 
+//flags to turn on/off parts of the calculations
+uniform int ambientRendering;
+uniform int diffuseRendering;
+uniform int specularRendering;
+
 //how "sharp"/narrow the reflection should be
 uniform float Shininess = 20.0;
 //how bright the reflection should be
@@ -134,7 +139,7 @@ void main()
         Is += vec3(ks[0] * Il[0] * x, ks[1] * Il[1] * x, ks[2] * Il[2] * x);
     }
 
-    vec3 I = Ia + Is + Id;
+    vec3 I = Ia*ambientRendering + Is*specularRendering + Id*diffuseRendering;
         
     
     FragColor = vec4(I, 1.0);
