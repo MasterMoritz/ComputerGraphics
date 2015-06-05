@@ -89,14 +89,16 @@ void main()
     vec3 Is = vec3(0.0);
 
     for(int i = 0; i < light_count; i++) {
-        
+        if (!lights[i].isEnabled) {
+			continue;
+		}
         //incoming light direction (pointing away from surface)
         vec3 l = normalize(lights[i].position - vec3(Position));
         //incoming light intensity per channel
         vec3 Il = vec3(lights[i].intensity * lights[i].color[0], lights[i].intensity * lights[i].color[1], lights[i].intensity * lights[i].color[2]);
         IlGes += Il;
         //reflection vector
-        vec3 r = normalize((2n(n*l))-l);
+        vec3 r = normalize((2*n*(n*l))-l);
 
         //diffuse reflection
         float x = dot(n, l);
@@ -113,7 +115,7 @@ void main()
     vec3 I = Ia + Is + Id;
         
     
-    FragColor = I;
+    FragColor = vec4(I, 1.0);
 
     /*vec3 scatteredLight = vec3(0.0, 0.0, 0.0);  // the global ambient
     vec3 reflectedLight = vec3(0.0);
