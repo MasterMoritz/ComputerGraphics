@@ -1083,10 +1083,10 @@ void Initialize()
 	lights[0].ambient[2] = 0.0f;
 	lights[0].color = vec3 (360.0f, 1.0f, 1.0f); //red
 	lights[0].position[0] = 0.0f;
-	lights[0].position[1] = 20.0f;
+	lights[0].position[1] = 4.0f;
 	lights[0].position[2] = 0.0f;
 	lights[0].attenuation = 0.05f;
-	lights[0].intensity = 1.0f;
+	lights[0].intensity = 0.5f;
 
 	lights[1].isEnabled = GL_TRUE;
 	lights[1].type = 1; // light is spot light
