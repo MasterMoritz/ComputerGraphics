@@ -14,10 +14,11 @@
 * Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
 
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"         /* Vector/matrix handling */
-#include "glm/gtc/type_precision.hpp"
-using namespace glm;
+#define GLM_FORCE_RADIANS  /* Use radians in all GLM functions */
+#include "../glm/glm.hpp"
+#include "../glm/gtc/type_ptr.hpp"         /* Vector/matrix handling */
+#include "../glm/gtc/type_precision.hpp"
+using glm::vec3;
 
 vec3 hsvToRgb(vec3 hsv) {
     hsv[0] = fmod(hsv[0], 360); //limit hue to interval [0;360)
