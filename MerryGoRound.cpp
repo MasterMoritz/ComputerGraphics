@@ -85,6 +85,10 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp" /* Provides glm::translate, glm::rotate, 
                                          * glm::scale, glm::perspective */
+#include "glm/gtc/type_ptr.hpp"         /* Vector/matrix handling */
+#include "glm/gtc/type_precision.hpp"
+using namespace glm;
+
 /* Local includes */
 extern "C" 
 {
@@ -142,21 +146,21 @@ GLuint ShaderProgram;
 
 
 /* Matrices for uniform variables in vertex shader */
-float ProjectionMatrix[16]; /* Perspective projection matrix */
-float ViewMatrix[16];       /* Camera view matrix */ 
-float ModelMatrix[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM][16];      /* Model matrices */ 
+mat4 ProjectionMatrix; /* Perspective projection matrix */
+mat4 ViewMatrix;       /* Camera view matrix */ 
+mat4 ModelMatrix[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];      /* Model matrices */ 
   
 /* Transformation matrices for model rotation */
-float RotationMatrixAnimX[16];
-float RotationMatrixAnimY[16];
-float RotationMatrixAnimZ[16];
-float RotationMatrixAnim[16];
+mat4 RotationMatrixAnimX;
+mat4 RotationMatrixAnimY;
+mat4 RotationMatrixAnimZ;
+mat4 RotationMatrixAnim;
 
 /* Additional transformation matrices */
-float T[16];
-float R[16];
-float InitialTransform[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM][16];
-float ViewTransform[16];
+mat4 T;
+mat4 R;
+mat4 InitialTransform[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+mat4 ViewTransform;
 
 /* Variables for storing current rotation angles */
 float angleX, angleY, angleZ = 0.0f; 
@@ -259,7 +263,7 @@ void Display()
         fprintf(stderr, "Could not bind uniform ProjectionMatrix\n");
 	exit(-1);
     }
-    glUniformMatrix4fv(projectionUniform, 1, GL_TRUE, ProjectionMatrix);
+    glUniformMatrix4fv(projectionUniform, 1, GL_FALSE, value_ptr(ProjectionMatrix));
     
     GLint ViewUniform = glGetUniformLocation(ShaderProgram, "ViewMatrix");
     if (ViewUniform == -1) 
@@ -267,7 +271,7 @@ void Display()
         fprintf(stderr, "Could not bind uniform ViewMatrix\n");
         exit(-1);
     }
-    glUniformMatrix4fv(ViewUniform, 1, GL_TRUE, ViewMatrix);
+    glUniformMatrix4fv(ViewUniform, 1, GL_FALSE, value_ptr(ViewMatrix));
    
     GLint RotationUniform = glGetUniformLocation(ShaderProgram, "ModelMatrix");
     if (RotationUniform == -1) 
@@ -359,7 +363,7 @@ void Display()
 		glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
 		/* set model matrix */
-		glUniformMatrix4fv(RotationUniform, 1, GL_TRUE, ModelMatrix[i]); 
+		glUniformMatrix4fv(RotationUniform, 1, GL_FALSE, value_ptr(ModelMatrix[i])); 
 		
 		/* set material index */
 		GLuint material_count = glGetUniformLocation(ShaderProgram, "material_count");
@@ -448,7 +452,7 @@ void Mouse(int button, int state, int x, int y) {
             }
             else if(camMode == 2) {
                 //zoom in
-                ViewTransform[11] *= .95;
+				ViewTransform = scale(ViewTransform, vec3(1.0, 1.0, 0.95));
             }
 	    }
 	    else if(button == scroll_up) {
@@ -457,7 +461,7 @@ void Mouse(int button, int state, int x, int y) {
 	            manualSpeed /= 1.12f;
             }
             else if(camMode == 2) {
-                ViewTransform[11] *= 1.05;
+                ViewTransform = scale(ViewTransform, vec3(1.0, 1.0, 1.05));
             }
 	    }
     }
@@ -501,38 +505,41 @@ void Keyboard(unsigned char key, int x, int y)
 			
 			case 'w':
 				//forward
-				ViewTransform[3] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
-				ViewTransform[7] += sin(camAngleX * (M_PI/180)) * manualSpeed;
-				ViewTransform[11]+= cos(camAngleY * (M_PI/180)) * manualSpeed;
+				ViewTransform = translate(ViewTransform, 
+					vec3(-sin(camAngleY * (M_PI/180)) * manualSpeed, 
+						sin(camAngleX * (M_PI/180)) * manualSpeed, 
+						cos(camAngleY * (M_PI/180)) * manualSpeed
+					));
+
 				break;
 	
 			case 's':
 				//backward
-				ViewTransform[3] += sin(camAngleY * (M_PI/180)) * manualSpeed;
-				ViewTransform[7] -= sin(camAngleX * (M_PI/180)) * manualSpeed; 
-				ViewTransform[11]-= cos(camAngleY * (M_PI/180)) * manualSpeed;
+				ViewTransform = translate(ViewTransform, 
+					vec3(sin(camAngleY * (M_PI/180)) * manualSpeed, 
+						-sin(camAngleX * (M_PI/180)) * manualSpeed, 
+						-cos(camAngleY * (M_PI/180)) * manualSpeed
+					));
 				break;
 
 			case 23: //ctrl+w
 				//up
-				ViewTransform[7]-=manualSpeed;
+				ViewTransform = translate(ViewTransform, vec3(0.0, -manualSpeed, 0.0));
 				break;
 
 			case 19: //ctrl+s
 				//down
-				ViewTransform[7]+=manualSpeed;
+				ViewTransform = translate(ViewTransform, vec3(0.0, manualSpeed, 0.0));
 				break;
 
 			case 'a':
 				//left
-				ViewTransform[3] += cos(camAngleY * (M_PI/180)) * manualSpeed;
-				ViewTransform[11] += sin(camAngleY * (M_PI/180)) * manualSpeed; 
+				ViewTransform = translate(ViewTransform, vec3(cos(camAngleY * (M_PI/180)) * manualSpeed, 0.0, sin(camAngleY * (M_PI/180)) * manualSpeed));
 				break;
 
 			case 'd':
 				//right
-				ViewTransform[3] -= cos(camAngleY * (M_PI/180)) * manualSpeed;
-				ViewTransform[11] -= sin(camAngleY * (M_PI/180)) * manualSpeed;
+				ViewTransform = translate(ViewTransform, vec3(-cos(camAngleY * (M_PI/180)) * manualSpeed, 0.0, -sin(camAngleY * (M_PI/180)) * manualSpeed));
 				break;
 		}
 	}
@@ -573,7 +580,7 @@ void Keyboard(unsigned char key, int x, int y)
 		    if(camMode == 1 || camMode == 2) {
 				curve = 0;
 				camSpeed = 1;
-				SetTranslation(0.0, -4.0, -20.0, ViewTransform);
+				ViewTransform = translate(mat4(1.0f), vec3(0.0f, -4.0f, -20.0f));
 				camAngleX = 0;
 				camAngleY = 0;
 				camAngleZ = 0;
@@ -591,9 +598,9 @@ void Keyboard(unsigned char key, int x, int y)
 
 		/* Reset initial rotation of object */
 		case 'o':
-			SetIdentityMatrix(RotationMatrixAnimX);
-			SetIdentityMatrix(RotationMatrixAnimY);
-			SetIdentityMatrix(RotationMatrixAnimZ);
+			RotationMatrixAnimX = mat4(1.0);
+			RotationMatrixAnimY = mat4(1.0);
+			RotationMatrixAnimZ = mat4(1.0);
 			angleX = 0.0;
 			angleY = 0.0;
 			angleZ = 0.0;
@@ -603,7 +610,7 @@ void Keyboard(unsigned char key, int x, int y)
 		case 'r':
 			camSpeed = 1;
 			manualSpeed = 0.2f;
-			SetTranslation(0.0, -4.0, -20.0, ViewTransform);
+			ViewTransform = translate(mat4(1.0f), vec3(0.0f, -4.0f, -20.0f));
 			camAngleX = 0;
 			camAngleY = 0;
 			camAngleZ = 0;
@@ -640,13 +647,14 @@ void Keyboard(unsigned char key, int x, int y)
 			if (lights[selectedLight].color[2] < 0) {
 				lights[selectedLight].color[2] = 0.0;
 			}
-
+			break;
 		/* quit program */
 		case 'q': case 'Q':  
 			exit(0);    
 			break;
 	}
-    glutPostRedisplay();
+    /* Issue display refresh 
+    glutPostRedisplay();*/
 }
 
 
@@ -680,21 +688,20 @@ void OnIdle()
 	if(anim) {
 		/* Increment rotation angles and update matrix */
 		angleY = fmod(angleY + delta/20.0, 360.0); 
-		SetRotationY(-angleY, R);
+		R = rotate(mat4(1.0f), -angleY, vec3(0.0f, 1.0f, 0.0f));
 
 		/* rotate all non-static objects */
 		int num_non_static = NUM_BASIC_ANIM + NUM_ADV_ANIM;
 
 		for (int i = 0; i < num_non_static; i++) {
-			MultiplyMatrix(R, InitialTransform[i + NUM_STATIC], ModelMatrix[i + NUM_STATIC]);
+			ModelMatrix[i + NUM_STATIC] = R * InitialTransform[i + NUM_STATIC];
 		}
 
 		/* move advanced animation objects up and down with individual delay */
 		int delay = 0;
 		for (int i = 0; i < NUM_ADV_ANIM; i++) {
-			SetTranslation(0.0, -moves(angleY, delay), 0.0, T);
-			MultiplyMatrix(T, ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM], ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM]);
-
+			T = translate(mat4(1.0f), vec3(0.0f, -moves(angleY, delay), 0.0f));
+			ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM] = T * ModelMatrix[i + NUM_STATIC + NUM_BASIC_ANIM];
 			delay += 20;
 		}
 	}
@@ -704,7 +711,7 @@ void OnIdle()
 	//automatic camera mode
     if(camMode == 0) {
          /* Update camera translation */
-        SetIdentityMatrix(ViewMatrix);
+        ViewMatrix = mat4(1.0f);
         if(!invertCam) {
             t += delta/2000.0*camSpeed;
             if(t >= 1) {
@@ -736,9 +743,7 @@ void OnIdle()
         if(curve != 1) {
             float p[3];
             ComputeBezierPoint(curves[curve], t, p);
-            ViewTransform[3] = p[0];
-            ViewTransform[7] = p[1];
-            ViewTransform[11] = p[2];
+			ViewTransform = translate(mat4(1.0f), vec3(p[0],p[1],p[2]));
         }
         if(curve == 1) {
             camAngleY = t*360;
@@ -750,33 +755,32 @@ void OnIdle()
             camAngleY = 180-t*180;
         }		
 	    /* Update camera view */
-        SetRotationX(camAngleX, RotationMatrixAnimX);
-        SetRotationY(camAngleY, RotationMatrixAnimY);
-        SetRotationZ(camAngleZ, RotationMatrixAnimZ);
-        MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
-        MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
-        MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
+        RotationMatrixAnimX = rotate(mat4(1.0f), camAngleX, vec3(1.0f,0.0f,0.0f));
+		RotationMatrixAnimY = rotate(mat4(1.0f), camAngleY, vec3(0.0f,1.0f,0.0f));
+		RotationMatrixAnimZ = rotate(mat4(1.0f), camAngleZ, vec3(0.0f,0.0f,1.0f));
+
+		ViewMatrix = ViewTransform * RotationMatrixAnimX * RotationMatrixAnimY * RotationMatrixAnimZ;
     }
 
 	//manual camera mode
     else {
-        SetIdentityMatrix(ViewMatrix);
+        ViewMatrix = mat4(1.0);
 
         /* Update camera view */
-        SetRotationX(camAngleX, RotationMatrixAnimX);
-        SetRotationY(camAngleY, RotationMatrixAnimY);
-        SetRotationZ(camAngleZ, RotationMatrixAnimZ);
-        MultiplyMatrix(RotationMatrixAnimX, RotationMatrixAnimY, RotationMatrixAnim);
-        MultiplyMatrix(RotationMatrixAnim, RotationMatrixAnimZ, RotationMatrixAnim);
+		RotationMatrixAnimX = rotate(mat4(1.0f), camAngleX, vec3(1.0f,0.0f,0.0f));
+		RotationMatrixAnimY = rotate(mat4(1.0f), camAngleY, vec3(0.0f,1.0f,0.0f));
+		RotationMatrixAnimZ = rotate(mat4(1.0f), camAngleZ, vec3(0.0f,0.0f,1.0f));
+
+		RotationMatrixAnim = RotationMatrixAnimX * RotationMatrixAnimY * RotationMatrixAnimZ;
         
 		// free movement mode
         if(camMode == 1) {
-            MultiplyMatrix(RotationMatrixAnim, ViewTransform, ViewMatrix);
+			ViewMatrix = RotationMatrixAnim * ViewTransform;
         }
 
 		// examine mode
         else if(camMode == 2) {
-            MultiplyMatrix(ViewTransform, RotationMatrixAnim, ViewMatrix);
+			ViewMatrix = ViewTransform * RotationMatrixAnim;
         }
     }	
     
@@ -940,8 +944,7 @@ void LoadObjFiles()
 
     char* filename = "models/pillars.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
-	SetIdentityMatrix(ModelMatrix[objIndex]);
-	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
+	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
 
 	objIndex += 1;
     if(!success) {
@@ -950,8 +953,7 @@ void LoadObjFiles()
 
     filename = "models/floor_static.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
-	SetIdentityMatrix(ModelMatrix[objIndex]);
-	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
+	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
 
 	objIndex += 1;
     if(!success) {
@@ -960,8 +962,7 @@ void LoadObjFiles()
 
     filename = "models/roof.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
-	SetIdentityMatrix(ModelMatrix[objIndex]);
-	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
+	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
 
 	objIndex += 1;
     if(!success) {
@@ -970,8 +971,7 @@ void LoadObjFiles()
 
     filename = "models/dragonHead.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
-	SetIdentityMatrix(ModelMatrix[objIndex]);
-	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
+	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
 
 	objIndex += 1;
     if(!success) {
@@ -981,8 +981,7 @@ void LoadObjFiles()
 	/* Load all Basic animation models */
     filename = "models/floor_rotating.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
-	SetIdentityMatrix(ModelMatrix[objIndex]);
-	SetTranslation(0, 0, 0, InitialTransform[objIndex]);
+	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
 
 	objIndex += 1;
     if(!success) {
@@ -995,8 +994,7 @@ void LoadObjFiles()
 
 		filename = "models/horse_on_pole.obj"; 
 		success = parse_obj_scene(&(data[objIndex]), filename);
-		SetIdentityMatrix(ModelMatrix[objIndex]);
-		SetRotationY(60*i, InitialTransform[objIndex]);
+		InitialTransform[objIndex] = rotate(mat4(1.0f), float(60*i), vec3(0.0f,1.0f,0.0f));
 
 		objIndex += 1;
 		if(!success) {
@@ -1077,27 +1075,17 @@ void Initialize()
 
     /* Setup shaders and shader program */
     CreateShaderProgram();  
-
-    /* Initialize matrices */
-    SetIdentityMatrix(ProjectionMatrix);
-    SetIdentityMatrix(ViewMatrix);
-
-    /* Initialize animation matrices */
-    SetIdentityMatrix(RotationMatrixAnimX);
-    SetIdentityMatrix(RotationMatrixAnimY);
-    SetIdentityMatrix(RotationMatrixAnimZ);
-    SetIdentityMatrix(RotationMatrixAnim);
     
     /* Set projection transform */
     float fovy = 45.0;
     float aspect = 1.0; 
     float nearPlane = 1.0; 
     float farPlane = 50.0;
-    SetPerspectiveMatrix(fovy, aspect, nearPlane, farPlane, ProjectionMatrix);
+	ProjectionMatrix = perspective(fovy, aspect, nearPlane, farPlane);
 
     /* Set camera transform */
-    SetTranslation(0.0, -4.0, -20.0, ViewTransform);
-    MultiplyMatrix(ViewTransform, ViewMatrix, ViewMatrix);
+	ViewTransform = translate(mat4(1.0f), vec3(0.0f, -4.0f, -20.0f));
+	ViewMatrix = ViewTransform * ViewMatrix;
 
 	/* place lights */
 	lights[0].isEnabled = GL_TRUE;
