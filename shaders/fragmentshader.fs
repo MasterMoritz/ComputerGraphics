@@ -79,8 +79,11 @@ void main()
     vec3 kd = materials[materialIndex].diffuse;
     vec3 ks = materials[materialIndex].specular;
 
-    //incoming light intensity of all lights
-    vec3 IlGes;
+    //ambient light
+    vec3 Ila = vec3(.2, .2, .2);
+
+    //ambient reflection
+    vec3 Ia = vec3(ka[0] * Ila[0], ka[1] * Ila[1], ka[2] * Ila[2]);
     
     //diffuse reflection
     vec3 Id = vec3(0.0);
@@ -95,8 +98,30 @@ void main()
         //incoming light direction (pointing away from surface)
         vec3 l = normalize(lights[i].position - vec3(Position));
         //incoming light intensity per channel
-        vec3 Il = vec3(lights[i].intensity * lights[i].color[0], lights[i].intensity * lights[i].color[1], lights[i].intensity * lights[i].color[2]);
-        IlGes += Il;
+        vec3 Il;
+        if(lights[i].type == 0) {
+            Il = vec3(lights[i].intensity * lights[i].color[0], lights[i].intensity * lights[i].color[1], lights[i].intensity * lights[i].color[2]);
+        }
+        else {
+            float cl = dot(lights[i].coneDirection, -l);
+            if(cl > lights[i].coneCutOffAngleCos) {
+                Il = vec3(0.0);
+            }
+            else {
+                //spot exponent
+                float n = 0.3;
+                float cln = pow(cl, n);
+                Il = vec3(lights[i].intensity * lights[i].color[0] * cln, lights[i].intensity * lights[i].color[1] * cln, lights[i].intensity * lights[i].color[2] * cln);
+            }
+        }
+        //distance from positional light to surface
+        vec3 d = abs(l);
+        //attenuation
+        float k1 = 0.2;
+        float k2 = 0.3;
+        float k3 = 0.6;
+        Il /= (k1 + k2*d + k3*d*d);
+
         //reflection vector
         vec3 r = normalize((2*n*(n*l))-l);
 
@@ -108,9 +133,6 @@ void main()
         x = pow(dot(r, v), m);
         Is += vec3(ks[0] * Il[0] * x, ks[1] * Il[1] * x, ks[2] * Il[2] * x);
     }
-
-    //ambient reflection
-    vec3 Ia = vec3(ka[0] * IlGes[1], ka[1] * IlGes[1], ka[2] * IlGes[2]);
 
     vec3 I = Ia + Is + Id;
         
