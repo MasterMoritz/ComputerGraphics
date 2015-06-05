@@ -1111,7 +1111,7 @@ void Initialize()
 	lights[0].position[0] = 0.0f;
 	lights[0].position[1] = 20.0f;
 	lights[0].position[2] = -20.0f;
-	lights[0].attenuation = 0.0f; //no attenuation for testing purposes
+	lights[0].attenuation = 0.5f;
 	lights[0].intensity = 1.0f;
 
 	lights[1].isEnabled = GL_TRUE;
@@ -1129,7 +1129,7 @@ void Initialize()
 	lights[1].coneDirection[1] = 0.0f;
 	lights[1].coneDirection[2] = 0.0f;
 	lights[1].coneCutOffAngle = 45.0f; //cutoff cone at 45 degrees to either side
-	lights[1].attenuation = 0.0f; //no attenuation for testing purposes
+	lights[1].attenuation = 0.5f;
 	lights[1].intensity = 1.0f;
 
 	//set the number of lights in shader
