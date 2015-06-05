@@ -79,10 +79,13 @@
 #include <GL/freeglut.h>
 
 /* Local includes */
+extern "C" 
+{
 #include "LoadShader.h"    /* Loading function for shader code */
 #include "Matrix.h"        /* Functions for matrix handling */
 #include "OBJParser.h"     /* Loading function for triangle meshes in OBJ format */
 #include "Bezier.h"        /* Functions for bezier curve computations */
+}
 
 #ifndef M_PI
 	#define M_PI 3.14159265358979323846

@@ -23,7 +23,8 @@
 *******************************************************************/
 
 void ComputeBezierPoint(const float points[4][3], float t, float result[3]) {
-    for(int i = 0; i < 3; i++) {
+	int i = 0;
+    for(i = 0; i < 3; i++) {
         result[i] = pow(1-t, 3)*points[0][i] + 3*t*pow(1-t, 2)*points[1][i] + 3*t*t*(1-t)*points[2][i] + t*t*t*points[3][i];
     }
 }

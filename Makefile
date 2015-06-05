@@ -4,8 +4,8 @@ LD = gcc
 OBJ = MerryGoRound.o LoadShader.o Matrix.o StringExtra.o OBJParser.o List.o Bezier.o
 TARGET = MerryGoRound
 
-CFLAGS = -g -std=c99 -Wall -Wextra
-LDLIBS = -lm -lglut -lGLEW -lGL
+CFLAGS = -g -Wall -Wextra
+LDLIBS = -lstdc++ -lm -lglut -lGLEW -lGL
 INCLUDES = -Isource
 
 SRC_DIR = source
@@ -15,7 +15,7 @@ VPATH = source
 # Rules
 all: $(TARGET)
 
-$(TARGET).o: $(TARGET).c
+$(TARGET).o: $(TARGET).cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -c $^ -o $@
 
 $(BUILD_DIR)/%.o: %.c
