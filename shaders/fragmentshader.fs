@@ -48,7 +48,7 @@ struct Material {
 //actual number of materials in the materials array
 uniform int material_count;
 //maximum number of materials in the materials array
-const int MAX_MATERIALS = 20;
+const int MAX_MATERIALS = 10;
 //the array of materials
 uniform Material materials[MAX_MATERIALS];
 
