@@ -1082,13 +1082,13 @@ void Initialize()
 	lights[0].ambient[1] = 0.0f;
 	lights[0].ambient[2] = 0.05f;
 	lights[0].color[0] = 1.0f;//0.0f; //hue = red
-	lights[0].color[1] = 0.0f;//1.0f; //saturation = 100%
-	lights[0].color[2] = 0.0f;//1.0f; //value = 100%
+	lights[0].color[1] = 1.0f;//1.0f; //saturation = 100%
+	lights[0].color[2] = 1.0f;//1.0f; //value = 100%
 	lights[0].position[0] = 0.0f;
-	lights[0].position[1] = 20.0f;
-	lights[0].position[2] = -20.0f;
-	lights[0].attenuation = 0.5f;
-	lights[0].intensity = 1.0f;
+	lights[0].position[1] = 100.0f;
+	lights[0].position[2] = -10.0f;
+	lights[0].attenuation = 0.05f;
+	lights[0].intensity = 100.0f;
 
 	lights[1].isEnabled = GL_TRUE;
 	lights[1].type = 1; // light is spot light
