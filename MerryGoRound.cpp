@@ -297,7 +297,8 @@ void Display()
 		buffer[10] = '\0';
 		strcat(buffer, "position");
 		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
-		glUniform3f(light_attribute, lights[i].position[0], lights[i].position[1], lights[i].position[2]);
+        vec4 positions = ViewMatrix * vec4(lights[i].position[0], lights[i].position[1], lights[i].position[2], 1.0);
+		glUniform3f(light_attribute, positions[0], positions[1], positions[2]);
 
 		buffer[10] = '\0';
 		strcat(buffer, "coneDirection");
