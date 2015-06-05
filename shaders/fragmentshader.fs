@@ -143,41 +143,4 @@ void main()
         
     
     FragColor = vec4(I, 1.0);
-
-    /*vec3 scatteredLight = vec3(0.0, 0.0, 0.0);  // the global ambient
-    vec3 reflectedLight = vec3(0.0);
-    for(int i = 0; i < light_count; i++) {
-        if(lights[i].isEnabled) {
-        vec3 halfVector;
-        vec3 lightDirection = lights[i].position;
-        float attenuation = 1.0;
-        
-        lightDirection -= vec3(Position);
-        lightDirection /= length(lightDirection);
-        attenuation = 1.0 / lights[i].attenuation;
-        if(lights[i].type == 1) {
-            float dotProd = dot(lightDirection, -lights[i].coneDirection);
-            if (dotProd < lights[i].coneCutOffAngleCos) {
-                attenuation = 0.0;
-            }
-            else {
-                attenuation *= pow(dotProd, .2);       //second argument sets the spot exponent
-            }    
-        }
-        halfVector = normalize(lightDirection + vec3(0, 0, 1));
-        float diffuse = max(0.0, dot(Normal, lightDirection));  //should be >0
-        float specular = max(0.0, dot(Normal, halfVector));  //should be >0
-
-        if(diffuse == 0.0) {
-            specular = 0.0;
-        }
-        else {
-            specular = pow(specular, Shininess) * Strength;
-        }
-        scatteredLight += lights[i].ambient * materials[materialIndex].ambient * attenuation + lights[i].color * materials[materialIndex].diffuse * diffuse * attenuation;
-        reflectedLight += lights[i].color * materials[materialIndex].specular * specular * attenuation;
-        }
-    }
-    FragColor = vec4(min(scatteredLight + reflectedLight, vec3(1.0)), 1.0);
-    */
 }
