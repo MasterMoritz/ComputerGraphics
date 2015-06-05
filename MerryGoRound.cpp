@@ -338,7 +338,7 @@ void Display()
 
     /* animate the animated spotlight */
     GLuint light_attribute = glGetUniformLocation(ShaderProgram, "lights[2].position");
-    vec4 positions = ViewMatrix * ModelMatrix[6] * vec4(lights[2].position[0], lights[2].position[1], lights[2].position[2], 1.0);
+    vec4 positions = ViewMatrix * ModelMatrix[NUM_STATIC+NUM_BASIC_ANIM] * vec4(lights[2].position[0], lights[2].position[1], lights[2].position[2], 1.0);
 	glUniform3f(light_attribute, positions[0], positions[1], positions[2]);
 
 	/* draw Meshes */
