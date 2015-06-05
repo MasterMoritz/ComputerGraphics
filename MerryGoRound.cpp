@@ -257,28 +257,10 @@ void Display()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	/* Associate program with shader matrices */
-    GLint projectionUniform = glGetUniformLocation(ShaderProgram, "ProjectionMatrix");
-    if (projectionUniform == -1) 
-    {
-        fprintf(stderr, "Could not bind uniform ProjectionMatrix\n");
-	exit(-1);
-    }
-    glUniformMatrix4fv(projectionUniform, 1, GL_FALSE, value_ptr(ProjectionMatrix));
-    
-    GLint ViewUniform = glGetUniformLocation(ShaderProgram, "ViewMatrix");
-    if (ViewUniform == -1) 
-    {
-        fprintf(stderr, "Could not bind uniform ViewMatrix\n");
-        exit(-1);
-    }
-    glUniformMatrix4fv(ViewUniform, 1, GL_FALSE, value_ptr(ViewMatrix));
-   
-    GLint RotationUniform = glGetUniformLocation(ShaderProgram, "ModelMatrix");
-    if (RotationUniform == -1) 
-    {
-        fprintf(stderr, "Could not bind uniform ModelMatrix\n");
-        exit(-1);
-    }
+    GLint PVM_Uniform = glGetUniformLocation(ShaderProgram, "PVM_Matrix");    
+	GLint VM_Uniform = glGetUniformLocation(ShaderProgram, "VM_Matrix");
+	GLint NormalUniform = glGetUniformLocation(ShaderProgram, "NormalMatrix");
+ 
 
 	/* set lights in shader */
 	for (int i = 0; i < NUM_LIGHT; i++) {
@@ -363,8 +345,10 @@ void Display()
 		glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
 		/* set model matrix */
-		glUniformMatrix4fv(RotationUniform, 1, GL_FALSE, value_ptr(ModelMatrix[i])); 
-		
+		glUniformMatrix4fv(PVM_Uniform, 1, GL_FALSE, value_ptr(ProjectionMatrix * ViewMatrix * ModelMatrix[i]));
+		glUniformMatrix4fv(VM_Uniform, 1, GL_FALSE, value_ptr(ViewMatrix * ModelMatrix[i]));
+		glUniformMatrix4fv(NormalUniform, 1, GL_FALSE, value_ptr(transpose(inverse(ModelMatrix[i]*ViewMatrix))));
+
 		/* set material index */
 		GLuint material_count = glGetUniformLocation(ShaderProgram, "material_count");
 		glUniform1i(material_count, data[i].material_count);
