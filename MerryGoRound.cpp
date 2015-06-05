@@ -688,7 +688,7 @@ void OnIdle()
 	if(anim) {
 		/* Increment rotation angles and update matrix */
 		angleY = fmod(angleY + delta/20.0, 360.0); 
-		R = rotate(mat4(1.0f), -angleY, vec3(0.0f, 1.0f, 0.0f));
+		R = rotate(mat4(1.0f), radians(-angleY), vec3(0.0f, 1.0f, 0.0f));
 
 		/* rotate all non-static objects */
 		int num_non_static = NUM_BASIC_ANIM + NUM_ADV_ANIM;
@@ -755,9 +755,9 @@ void OnIdle()
             camAngleY = 180-t*180;
         }		
 	    /* Update camera view */
-        RotationMatrixAnimX = rotate(mat4(1.0f), camAngleX, vec3(1.0f,0.0f,0.0f));
-		RotationMatrixAnimY = rotate(mat4(1.0f), camAngleY, vec3(0.0f,1.0f,0.0f));
-		RotationMatrixAnimZ = rotate(mat4(1.0f), camAngleZ, vec3(0.0f,0.0f,1.0f));
+        RotationMatrixAnimX = rotate(mat4(1.0f), radians(camAngleX), vec3(1.0f,0.0f,0.0f));
+		RotationMatrixAnimY = rotate(mat4(1.0f), radians(camAngleY), vec3(0.0f,1.0f,0.0f));
+		RotationMatrixAnimZ = rotate(mat4(1.0f), radians(camAngleZ), vec3(0.0f,0.0f,1.0f));
 
 		ViewMatrix = ViewTransform * RotationMatrixAnimX * RotationMatrixAnimY * RotationMatrixAnimZ;
     }
@@ -767,9 +767,9 @@ void OnIdle()
         ViewMatrix = mat4(1.0);
 
         /* Update camera view */
-		RotationMatrixAnimX = rotate(mat4(1.0f), camAngleX, vec3(1.0f,0.0f,0.0f));
-		RotationMatrixAnimY = rotate(mat4(1.0f), camAngleY, vec3(0.0f,1.0f,0.0f));
-		RotationMatrixAnimZ = rotate(mat4(1.0f), camAngleZ, vec3(0.0f,0.0f,1.0f));
+		RotationMatrixAnimX = rotate(mat4(1.0f), radians(camAngleX), vec3(1.0f,0.0f,0.0f));
+		RotationMatrixAnimY = rotate(mat4(1.0f), radians(camAngleY), vec3(0.0f,1.0f,0.0f));
+		RotationMatrixAnimZ = rotate(mat4(1.0f), radians(camAngleZ), vec3(0.0f,0.0f,1.0f));
 
 		RotationMatrixAnim = RotationMatrixAnimX * RotationMatrixAnimY * RotationMatrixAnimZ;
         
@@ -994,7 +994,7 @@ void LoadObjFiles()
 
 		filename = "models/horse_on_pole.obj"; 
 		success = parse_obj_scene(&(data[objIndex]), filename);
-		InitialTransform[objIndex] = rotate(mat4(1.0f), float(60*i), vec3(0.0f,1.0f,0.0f));
+		InitialTransform[objIndex] = rotate(mat4(1.0f), radians(float(60*i)), vec3(0.0f,1.0f,0.0f));
 
 		objIndex += 1;
 		if(!success) {
