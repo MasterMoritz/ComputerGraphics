@@ -1076,7 +1076,7 @@ void Initialize()
         
     
 	/* setup lights */
-	lights[0].isEnabled = GL_TRUE;
+	lights[0].isEnabled = GL_FALSE;
 	lights[0].type = 0; // light is point light
 	lights[0].ambient[0] = 0.2f;
 	lights[0].ambient[1] = 0.0f;
@@ -1088,7 +1088,7 @@ void Initialize()
 	lights[0].position[1] = 100.0f;
 	lights[0].position[2] = -10.0f;
 	lights[0].attenuation = 0.05f;
-	lights[0].intensity = 100.0f;
+	lights[0].intensity = 1.0f;
 
 	lights[1].isEnabled = GL_TRUE;
 	lights[1].type = 1; // light is spot light
@@ -1100,7 +1100,7 @@ void Initialize()
 	lights[1].color[2] = 1.0f;//1.0f; //value = 100%
 	lights[1].position[0] = 0.0f;
 	lights[1].position[1] = 20.0f;
-	lights[1].position[2] = -20.0f;
+	lights[1].position[2] = -0.0f;
 	lights[1].coneDirection[0] = 0.0f;
 	lights[1].coneDirection[1] = 0.0f;
 	lights[1].coneDirection[2] = 0.0f;

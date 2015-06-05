@@ -1,6 +1,7 @@
 /******************************************************************
 *
-* Based on D. Shreiner, G. Sellers, J. Kessenich, B. Licea-Kane, 
+* A simple Phong shader (i.e. lighting is calculated in the fragment and not the vertex shader, employing interpolated normals).
+* Based on lecture slides and D. Shreiner, G. Sellers, J. Kessenich, B. Licea-Kane, 
 * “OpenGL Programming Guide: The Official Guide to Learning OpenGL, 
 * Version 4.3” Addison-Wesley, 8th edition, 978-0321773036, 2013.
 *
@@ -34,6 +35,7 @@ struct Light {
 uniform int light_count;
 // maximum number of lights to be rendered per shader invocation
 const int MAX_LIGHTS = 10; 
+// the array of lights
 uniform Light lights[MAX_LIGHTS];
 
 //structure for material properties
@@ -47,24 +49,76 @@ struct Material {
 uniform int material_count;
 //maximum number of materials in the materials array
 const int MAX_MATERIALS = 20;
+//the array of materials
 uniform Material materials[MAX_MATERIALS];
 
-
+//how "sharp"/narrow the reflection should be
 uniform float Shininess = 20.0;
+//how bright the reflection should be
 uniform float Strength = 10.0;
 
 //material index for the current face
 flat in int materialIndex;
+//the vertex normal (should not be used for hard edges)
 in vec3 Normal;
+//the position of the vertex before the perspective transformation
 in vec4 Position;
 
 out vec4 FragColor;
 
 void main()
-{
-    vec3 scatteredLight = vec3(0.0, 0.0, 0.0);  // the global ambient
+{ 
+    //vector towards viewing position
+    vec3 v = vec3(0, 0, 1);
+    //orientation of local surface
+    vec3 n = normalize(Normal);
+    //shininess (i.e. how "sharp"/narrow the reflection should be)
+    float m = 0.2; 
+    //parameters determining reflection behaviour
+    vec3 ka = materials[materialIndex].ambient;
+    vec3 kd = materials[materialIndex].diffuse;
+    vec3 ks = materials[materialIndex].specular;
+
+    //incoming light intensity of all lights
+    vec3 IlGes;
+    
+    //diffuse reflection
+    vec3 Id = vec3(0.0);
+
+    //specular reflection
+    vec3 Is = vec3(0.0);
+
+    for(int i = 0; i < light_count; i++) {
+        
+        //incoming light direction (pointing away from surface)
+        vec3 l = normalize(lights[i].position - vec3(Position));
+        //incoming light intensity per channel
+        vec3 Il = vec3(lights[i].intensity * lights[i].color[0], lights[i].intensity * lights[i].color[1], lights[i].intensity * lights[i].color[2]);
+        IlGes += Il;
+        //reflection vector
+        vec3 r = normalize((2n(n*l))-l);
+
+        //diffuse reflection
+        float x = dot(n, l);
+        Id += vec3(kd[0] * Il[0] * x, kd[1] * Il[1] * x, kd[2] * Il[2] * x);
+
+        //specular reflection
+        x = pow(dot(r, v), m);
+        Is += vec3(ks[0] * Il[0] * x, ks[1] * Il[1] * x, ks[2] * Il[2] * x);
+    }
+
+    //ambient reflection
+    vec3 Ia = vec3(ka[0] * IlGes[1], ka[1] * IlGes[1], ka[2] * IlGes[2]);
+
+    vec3 I = Ia + Is + Id;
+        
+    
+    FragColor = I;
+
+    /*vec3 scatteredLight = vec3(0.0, 0.0, 0.0);  // the global ambient
     vec3 reflectedLight = vec3(0.0);
     for(int i = 0; i < light_count; i++) {
+        if(lights[i].isEnabled) {
         vec3 halfVector;
         vec3 lightDirection = lights[i].position;
         float attenuation = 1.0;
@@ -93,6 +147,8 @@ void main()
         }
         scatteredLight += lights[i].ambient * materials[materialIndex].ambient * attenuation + lights[i].color * materials[materialIndex].diffuse * diffuse * attenuation;
         reflectedLight += lights[i].color * materials[materialIndex].specular * specular * attenuation;
+        }
     }
     FragColor = vec4(min(scatteredLight + reflectedLight, vec3(1.0)), 1.0);
+    */
 }
