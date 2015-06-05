@@ -63,14 +63,15 @@
 *
 *
 *** Lighting:
-* + -> add 60° to hue of central pointlight
-* - -> remove 60° from hue of central pointlight
-* hold * -> increase value of central pointlight
-* hold / -> decrease value of central pointlight
+* l -> cycle through lights to change their hue/value
+* + -> add 60° to hue of selected light
+* - -> remove 60° from hue of selected light
+* hold * -> increase value of selected light
+* hold / -> decrease value of selected light
 *
-* shift + a -> enable/disable ambient rendering
-* shift + d -> enable/disable diffuse rendering
-* shift + s -> enable/disable specular rendering
+* b -> enable/disable ambient rendering
+* n -> enable/disable diffuse rendering
+* m -> enable/disable specular rendering
 *
 */
 /******************** ADDITIONAL NOTES **************************
