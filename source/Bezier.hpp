@@ -2,7 +2,7 @@
 *
 * Bezier.h
 *
-* Description: Helper routine for for bezier curve computations.
+* Description: Helper routine for bezier curve computations.
 * 	
 *
 * Computer Graphics Proseminar SS 2015
@@ -11,6 +11,7 @@
 * Institute of Computer Science
 * University of Innsbruck
 *
+* Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
 
 void ComputeBezierPoint(const float[4][3], float, float[3]);

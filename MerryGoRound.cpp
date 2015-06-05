@@ -90,13 +90,11 @@
 using namespace glm;
 
 /* Local includes */
-extern "C" 
-{
-#include "LoadShader.h"    /* Loading function for shader code */
-#include "Matrix.h"        /* Functions for matrix handling */
-#include "OBJParser.h"     /* Loading function for triangle meshes in OBJ format */
-#include "Bezier.h"        /* Functions for bezier curve computations */
-}
+#include "LoadShader.hpp"     /* Loading function for shader code */
+#include "Matrix.hpp"         /* Functions for matrix handling */
+#include "OBJParser.hpp"      /* Loading function for triangle meshes in OBJ format */
+#include "Bezier.hpp"         /* Functions for bezier curve computations */
+#include "ColorConversion.hpp"/* Function for color space transformations */
 
 #ifndef M_PI
 	#define M_PI 3.14159265358979323846
@@ -225,7 +223,7 @@ struct Light {
 	GLfloat color[3];
 	GLfloat position[3];
 	GLfloat coneDirection[3];
-	GLfloat coneCutOffAngle;
+	GLfloat coneCutOffAngleCos;
 	GLfloat attenuation;
 	GLfloat intensity; //light intensity between 0 and 1
 };
@@ -306,9 +304,9 @@ void Display()
 		glUniform3f(light_attribute, lights[i].coneDirection[0], lights[i].coneDirection[1], lights[i].coneDirection[2]);
 
 		buffer[10] = '\0';
-		strcat(buffer, "coneCutOffAngle");
+		strcat(buffer, "coneCutOffAngleCos");
 		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
-		glUniform1f(light_attribute, lights[i].coneCutOffAngle);
+		glUniform1f(light_attribute, lights[i].coneCutOffAngleCos);
 
 		buffer[10] = '\0';
 		strcat(buffer, "attenuation");
@@ -1072,15 +1070,20 @@ void Initialize()
 	ViewTransform = translate(mat4(1.0f), vec3(0.0f, -4.0f, -20.0f));
 	ViewMatrix = ViewTransform * ViewMatrix;
 
-	/* place lights */
+    /* convert the light colors */
+    //vec3 rgb = hsvToRgb(vec3(0.0f, 1.0f, 1.0f));
+    //vec3 rgb = hsvToRgb(vec3(240.0f, 1.0f, 1.0f));
+        
+    
+	/* setup lights */
 	lights[0].isEnabled = GL_TRUE;
 	lights[0].type = 0; // light is point light
 	lights[0].ambient[0] = 0.2f;
 	lights[0].ambient[1] = 0.0f;
 	lights[0].ambient[2] = 0.05f;
-	lights[0].color[0] = 0.0f; //hue = red
-	lights[0].color[1] = 1.0f; //saturation = 100%
-	lights[0].color[2] = 1.0f; //value = 100%
+	lights[0].color[0] = 1.0f;//0.0f; //hue = red
+	lights[0].color[1] = 0.0f;//1.0f; //saturation = 100%
+	lights[0].color[2] = 0.0f;//1.0f; //value = 100%
 	lights[0].position[0] = 0.0f;
 	lights[0].position[1] = 20.0f;
 	lights[0].position[2] = -20.0f;
@@ -1092,16 +1095,16 @@ void Initialize()
 	lights[1].ambient[0] = 0.0f;
 	lights[1].ambient[1] = 0.0f;
 	lights[1].ambient[2] = 0.0f;
-	lights[1].color[0] = 240.0f; //hue = blue
-	lights[1].color[1] = 1.0f; //saturation = 100%
-	lights[1].color[2] = 1.0f; //value = 100%
+	lights[1].color[0] = 0.0f;//240.0f; //hue = blue
+	lights[1].color[1] = 0.0f;//1.0f; //saturation = 100%
+	lights[1].color[2] = 1.0f;//1.0f; //value = 100%
 	lights[1].position[0] = 0.0f;
 	lights[1].position[1] = 20.0f;
 	lights[1].position[2] = -20.0f;
 	lights[1].coneDirection[0] = 0.0f;
 	lights[1].coneDirection[1] = 0.0f;
 	lights[1].coneDirection[2] = 0.0f;
-	lights[1].coneCutOffAngle = 45.0f; //cutoff cone at 45 degrees to either side
+	lights[1].coneCutOffAngleCos = cos(45.0f * (M_PI/180)); //cutoff cone at 45 degrees to either side
 	lights[1].attenuation = 0.5f;
 	lights[1].intensity = 1.0f;
 

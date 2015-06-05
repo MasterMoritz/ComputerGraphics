@@ -25,7 +25,7 @@ struct Light {
 	vec3 color;
 	vec3 position;
 	vec3 coneDirection;
-	float coneCutOffAngle;
+	float coneCutOffAngleCos;
 	float attenuation;
 	float intensity; //light intensity between 0 and 1
 };
@@ -50,8 +50,8 @@ const int MAX_MATERIALS = 20;
 uniform Material materials[MAX_MATERIALS];
 
 
-uniform float Shininess = 1.0;
-uniform float Strength = 1.0;
+uniform float Shininess = 20.0;
+uniform float Strength = 10.0;
 
 //material index for the current face
 flat in int materialIndex;
@@ -74,7 +74,7 @@ void main()
         attenuation = 1.0 / lights[i].attenuation;
         if(lights[i].type == 1) {
             float dotProd = dot(lightDirection, -lights[i].coneDirection);
-            if (dotProd < lights[i].coneCutOffAngle) {
+            if (dotProd < lights[i].coneCutOffAngleCos) {
                 attenuation = 0.0;
             }
             else {

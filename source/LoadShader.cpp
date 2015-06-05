@@ -49,7 +49,7 @@ const char* LoadShader(const char* filename)
     int len = ftell(infile);
     fseek(infile, 0, SEEK_SET);
 
-    char* source = malloc(sizeof(char) * (len+1));
+    char* source = (char*) malloc(sizeof(char) * (len+1));
 
     fread(source, 1, len, infile);
     fclose(infile);

@@ -1,7 +1,7 @@
 CC = gcc
 LD = gcc
 
-OBJ = MerryGoRound.o LoadShader.o Matrix.o StringExtra.o OBJParser.o List.o Bezier.o
+OBJ = MerryGoRound.o LoadShader.o Matrix.o StringExtra.o OBJParser.o List.o Bezier.o ColorConversion.o
 TARGET = MerryGoRound
 
 CFLAGS = -g -Wall -Wextra
@@ -18,7 +18,7 @@ all: $(TARGET)
 $(TARGET).o: $(TARGET).cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -c $^ -o $@
 
-$(BUILD_DIR)/%.o: %.c
+$(BUILD_DIR)/%.o: %.cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -c $^ -o $@
 
 clean:
@@ -27,4 +27,4 @@ clean:
 .PHONY: clean
 
 # Dependencies
-$(TARGET): $(BUILD_DIR)/LoadShader.o $(BUILD_DIR)/Matrix.o $(BUILD_DIR)/StringExtra.o $(BUILD_DIR)/OBJParser.o  $(BUILD_DIR)/List.o $(BUILD_DIR)/Bezier.o | $(BUILD_DIR)
+$(TARGET): $(BUILD_DIR)/LoadShader.o $(BUILD_DIR)/Matrix.o $(BUILD_DIR)/StringExtra.o $(BUILD_DIR)/OBJParser.o  $(BUILD_DIR)/List.o $(BUILD_DIR)/Bezier.o $(BUILD_DIR)/ColorConversion.o | $(BUILD_DIR)

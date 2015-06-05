@@ -22,8 +22,8 @@
 #ifndef OBJ_PARSER_H
 #define OBJ_PARSER_H
 
-#include "List.h"
-#include "StringExtra.h"
+#include "List.hpp"
+#include "StringExtra.hpp"
 
 #define OBJ_FILENAME_LENGTH 500
 #define MATERIAL_NAME_SIZE 255

@@ -11,6 +11,7 @@
 * Institute of Computer Science
 * University of Innsbruck
 *
+* Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
 *******************************************************************/
 
 /* Standard includes */

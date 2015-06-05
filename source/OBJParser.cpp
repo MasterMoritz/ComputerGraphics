@@ -23,7 +23,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "OBJParser.h"
+#include "OBJParser.hpp"
 #define WHITESPACE " \t\n\r"
 
 
