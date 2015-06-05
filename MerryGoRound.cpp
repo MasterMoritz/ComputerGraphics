@@ -78,6 +78,13 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+/* GLM includes */
+#define GLM_FORCE_RADIANS  /* Use radians in all GLM functions */
+
+/* GLM includes - adjust path as required for local installation */
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp" /* Provides glm::translate, glm::rotate, 
+                                         * glm::scale, glm::perspective */
 /* Local includes */
 extern "C" 
 {
