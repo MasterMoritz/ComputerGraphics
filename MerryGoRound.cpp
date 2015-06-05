@@ -112,7 +112,7 @@ using namespace glm;
 	#define M_PI 3.14159265358979323846
 #endif
 #ifndef NUM_STATIC 
-	#define NUM_STATIC 6
+	#define NUM_STATIC 4
 #endif
 #ifndef NUM_BASIC_ANIM
 	#define NUM_BASIC_ANIM 1
@@ -971,24 +971,6 @@ void LoadObjFiles()
 	/* Load all static models */
 
     char* filename = "models/pillars.obj"; 
-    success = parse_obj_scene(&(data[objIndex]), filename);
-	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
-
-	objIndex += 1;
-    if(!success) {
-        printf("Could not load file. Exiting.\n");
-	}
-
-    filename = "models/wall.obj"; 
-    success = parse_obj_scene(&(data[objIndex]), filename);
-	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
-
-	objIndex += 1;
-    if(!success) {
-        printf("Could not load file. Exiting.\n");
-	}
-
-    filename = "models/floor.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
 	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
 
