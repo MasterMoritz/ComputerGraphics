@@ -100,7 +100,7 @@ using namespace glm;
 	#define M_PI 3.14159265358979323846
 #endif
 #ifndef NUM_STATIC 
-	#define NUM_STATIC 4
+	#define NUM_STATIC 6
 #endif
 #ifndef NUM_BASIC_ANIM
 	#define NUM_BASIC_ANIM 1
@@ -934,6 +934,24 @@ void LoadObjFiles()
         printf("Could not load file. Exiting.\n");
 	}
 
+    filename = "models/wall.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
+
+	objIndex += 1;
+    if(!success) {
+        printf("Could not load file. Exiting.\n");
+	}
+
+    filename = "models/floor.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
+
+	objIndex += 1;
+    if(!success) {
+        printf("Could not load file. Exiting.\n");
+	}
+
     filename = "models/floor_static.obj"; 
     success = parse_obj_scene(&(data[objIndex]), filename);
 	InitialTransform[objIndex] = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
@@ -1070,11 +1088,6 @@ void Initialize()
 	ViewTransform = translate(mat4(1.0f), vec3(0.0f, -4.0f, -20.0f));
 	ViewMatrix = ViewTransform * ViewMatrix;
 
-    /* convert the light colors */
-    //vec3 rgb = hsvToRgb(vec3(0.0f, 1.0f, 1.0f));
-    //vec3 rgb = hsvToRgb(vec3(240.0f, 1.0f, 1.0f));
-        
-    
 	/* setup lights */
 	lights[0].isEnabled = GL_TRUE;
 	lights[0].type = 0; // light is point light
