@@ -103,13 +103,13 @@ void main()
             Il = vec3(lights[i].intensity * lights[i].color[0], lights[i].intensity * lights[i].color[1], lights[i].intensity * lights[i].color[2]);
         }
         else {
-            float cl = dot(lights[i].coneDirection, -l);
+            float cl = dot(lights[i].coneDirection, l);
             if(cl > lights[i].coneCutOffAngleCos) {
                 Il = vec3(0.0);
             }
             else {
                 //spot exponent
-                float n = 0.3;
+                float n = 2;
                 float cln = pow(cl, n);
                 Il = vec3(lights[i].intensity * lights[i].color[0] * cln, lights[i].intensity * lights[i].color[1] * cln, lights[i].intensity * lights[i].color[2] * cln);
             }
@@ -156,7 +156,7 @@ void main()
                 attenuation = 0.0;
             }
             else {
-                attenuation *= pow(dotProd, 2.0);       //second argument sets the spot exponent
+                attenuation *= pow(dotProd, .2);       //second argument sets the spot exponent
             }    
         }
         halfVector = normalize(lightDirection + vec3(0, 0, 1));

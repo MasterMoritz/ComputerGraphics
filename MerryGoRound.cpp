@@ -1095,14 +1095,14 @@ void Initialize()
 	lights[1].ambient[2] = 0.0f;
 	lights[1].color = vec3 (240.0f, 1.0f, 1.0f); //blue
 	lights[1].position[0] = 0.0f;
-	lights[1].position[1] = 0.0f;
-	lights[1].position[2] = -20.0f;
+	lights[1].position[1] = 3.0f;
+	lights[1].position[2] = 0.0f;
 	lights[1].coneDirection[0] = 0.0f;
-	lights[1].coneDirection[1] = 0.0f;
-	lights[1].coneDirection[2] = 1.0f;
+	lights[1].coneDirection[1] = -3.0f;
+	lights[1].coneDirection[2] = 0.0f;
 	lights[1].coneCutOffAngleCos = cos(radians(45.0f)); //cutoff cone at 45 degrees to either side
 	lights[1].attenuation = 0.5f;
-	lights[1].intensity = 1.0f;
+	lights[1].intensity = .2f;
 
 	//set the number of lights in shader
 	GLuint light_count = glGetUniformLocation(ShaderProgram, "light_count");
