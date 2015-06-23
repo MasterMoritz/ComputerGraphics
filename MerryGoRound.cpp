@@ -721,7 +721,7 @@ void OnIdle()
 	if(anim) {
 		/* Increment rotation angles and update matrix */
 		angleY = fmod(angleY + delta/20.0, 360.0); 
-		R = rotate(mat4(1.0f), radians(-angleY), vec3(0.0f, 1.0f, 0.0f));
+		R = rotate(mat4(1.0f), radians(angleY), vec3(0.0f, 1.0f, 0.0f));
 
 		/* rotate all non-static objects */
 		int num_non_static = NUM_BASIC_ANIM + NUM_ADV_ANIM;
@@ -1025,9 +1025,11 @@ void LoadObjFiles()
 	//add 6 horsies at different positions, note that horsies are special to transform because they bugged out in maya :D
 	for (int i = 0; i < 6; i++) {
 
-		filename = "models/horse_on_pole.obj"; 
+		filename = "models/myLittleDragon.obj"; 
 		success = parse_obj_scene(&(data[objIndex]), filename);
 		InitialTransform[objIndex] = rotate(mat4(1.0f), radians(float(60*i)), vec3(0.0f,1.0f,0.0f));
+		InitialTransform[objIndex] = translate(InitialTransform[objIndex], vec3(-4.0f, 0.6f, 0.0f));
+		InitialTransform[objIndex] = scale(InitialTransform[objIndex], vec3(-0.4f, 0.4f, 0.4f));
 
 		objIndex += 1;
 		if(!success) {
