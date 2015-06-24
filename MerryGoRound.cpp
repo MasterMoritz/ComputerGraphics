@@ -86,6 +86,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <jpeglib.h> /* Include for billboard graphics */
+#include <jerror.h>
 
 /* OpenGL includes */
 #include <GL/glew.h>
@@ -131,6 +133,15 @@ using namespace glm;
 #ifndef NUM_LIGHT
 	#define NUM_LIGHT 3
 #endif
+#ifndef	BILLBOARD_ROTATION_X
+	#define BILLBOARD_ROTATION_X 30
+#endif
+#ifndef	BILLBOARD_ROTATION_Y
+	#define BILLBOARD_ROTATION_Y 15
+#endif
+#ifndef	BILLBOARD_ROTATION_Z
+	#define BILLBOARD_ROTATION_Z -5
+#endif
 /*----------------------------------------------------------------*/
 
 enum
@@ -165,9 +176,15 @@ GLuint VAO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 // Posisition and velocity buffers for particles
 GLuint particle_position_buffer;
 GLuint particle_velocity_buffer;
+// Texture buffers for particles
+GLuint particle_position_tbo;
+GLuint particle_velocity_tbo;
 
 /* texture image, for now just 1 hardcoded for testing puposes */
 unsigned char* image;
+
+/* texture for billboard */
+static GLuint billboardTexture;
 
 /* Indices to vertex attributes */ 
 enum DataID {vPosition = 0, vNormal = 1, MaterialIndex = 2, texCoord = 3}; 
@@ -234,7 +251,7 @@ float attractor_masses[MAX_ATTRACTORS];
 GLuint particle_vao;
 
 /* Reference time for animation */
-int oldTime = 0;    //in ms
+int oldTime = 0;
 float elapsedTime = 0;  //in s
 
 /* The array of bezier curves to use for the automatic camera path */
@@ -300,13 +317,13 @@ char materialAttributes[3][32]; //the attribute names in the shader, for easier 
 
 
 /******************************************************************
-*
-* Particle simulation helper functions
-*
-* These functions are called to calculate
-* random floats and vectors.
-*
-*******************************************************************/
++*
++* Particle simulation helper functions
++*
++* These functions are called to calculate
++* random floats and vectors.
++*
++*******************************************************************/
 inline float random_float()
 {
     float res;
@@ -329,6 +346,45 @@ vec3 random_vector(float minmag = 0.0f, float maxmag = 1.0f)
     randomvec *= (random_float() * (maxmag - minmag) + minmag);
 
     return randomvec;
+}
+
+
+/******************************************************************
+*
+* CreateBillboardSquare
+*
+* This function is called to create the billboard square.
+*
+*******************************************************************/
+
+void CreateBillboardSquare() {
+  const float u[3] = {0.2, 0, 0};
+  const float v[3] = {0, 0.2, 0};
+    
+  glBegin(GL_QUADS);
+  glTexCoord2i(0, 0); glVertex3f ( u[0] + v[0],  u[1] + v[1],  u[2] + v[2]);
+  glTexCoord2i(1, 0); glVertex3f (-u[0] + v[0], -u[1] + v[1], -u[2] + v[2]);
+  glTexCoord2i(1, 1); glVertex3f (-u[0] - v[0], -u[1] - v[1], -u[2] - v[2]);
+  glTexCoord2i(0, 1); glVertex3f ( u[0] - v[0],  u[1] - v[1],  u[2] - v[2]);
+  glEnd ();
+}
+
+
+/******************************************************************
+*
+* BillboardScreen
+*
+* This function is called to screen align the billboard.
+*
+*******************************************************************/
+
+void BillboardScreen() {
+  glPushMatrix();
+  glRotatef(BILLBOARD_ROTATION_X, 0, -1, 0);
+  glRotatef(BILLBOARD_ROTATION_Y, -1, 0, 0);
+  glRotatef(BILLBOARD_ROTATION_Z, 0, 0, -1);
+  CreateBillboardSquare();
+  glPopMatrix();
 }
 
 
@@ -455,7 +511,7 @@ void Display()
         glUniform1i(diffuseRenderingLoc, diffuseRendering);
         GLuint specularRenderingLoc = glGetUniformLocation(ShaderProgram, "specularRendering");
         glUniform1i(specularRenderingLoc, specularRendering);
-        GLuint particleRenderingLoc = glGetUniformLocation(ShaderProgram, "particleRendering");
+	GLuint particleRenderingLoc = glGetUniformLocation(ShaderProgram, "particleRendering");
         glUniform1i(particleRenderingLoc, 0);
 		
 		GLuint ambLoc;
@@ -499,10 +555,10 @@ void Display()
         glDisableVertexAttribArray(vPosition);
         glDisableVertexAttribArray(vNormal);
         glDisableVertexAttribArray(MaterialIndex);
-		glDisableVertexAttribArray(texCoord);
+	glDisableVertexAttribArray(texCoord);
 	}
-
-    glUniformMatrix4fv(PVM_Uniform, 1, GL_FALSE, value_ptr(ProjectionMatrix * ViewMatrix));
+	
+	glUniformMatrix4fv(PVM_Uniform, 1, GL_FALSE, value_ptr(ProjectionMatrix * ViewMatrix));
     GLuint particleRenderingLoc = glGetUniformLocation(ShaderProgram, "particleRendering");
     glUniform1i(particleRenderingLoc, 1);
     glEnableVertexAttribArray(vPosition);
@@ -514,6 +570,25 @@ void Display()
     glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
     glDisableVertexAttribArray(vPosition);
     //glDisable(GL_BLEND);
+	
+  /* Add billboard to scenery 
+  glClear(GL_COLOR_BUFFER_BIT);
+  glLoadIdentity();
+  glTranslatef(0, 0, -10.);
+  
+  glRotatef(BILLBOARD_ROTATION_X, 0, 0, 1);
+  glRotatef(BILLBOARD_ROTATION_Y, 1, 0, 0);
+  glRotatef(BILLBOARD_ROTATION_Z, 0, 1, 0);
+  
+  // display billboard
+  glPushMatrix();
+  glTranslatef(0, 0, 0);
+  glColor3f(0.2, 0.2, 0.2);
+  
+  // screen aligned billboards
+  BillboardScreen();*/
+  
+  glPopMatrix();
 
     /* Swap between front and back buffer */ 
     glutSwapBuffers();
@@ -570,7 +645,7 @@ void Mouse(int button, int state, int x, int y) {
 /******************************************************************
 *
 * RotateCamera
-*particle_position_tbo
+* particle_position_tbo
 * Function is called when mouse pointer moves while one or 
 * more buttons are pressed. Only used in manual camera mode.
 * Note that in glut the window relative coordinates are "swapped".
@@ -831,10 +906,11 @@ void OnIdle()
 
 	/* Determine delta time between two frames to ensure constant animation */
 	int newTime = glutGet(GLUT_ELAPSED_TIME);
-    //The time between two frames. Usually between 17 and 22ms, depending on hardware.	
-    int delta = newTime - oldTime;
+	//The time between two frames. Usually between 17 and 22ms, depending on hardware.	
+	int delta = newTime - oldTime;
 	oldTime = newTime;
-    //delta for particles (tweaked to look good)
+	
+	//delta for particles (tweaked to look good)
     float deltaForParticles = delta/180.0f;
     //upate the time the program is running since the very start (in sec, determines TTL)
     elapsedTime += delta/1000.0f;
@@ -887,8 +963,6 @@ void OnIdle()
     glUnmapBuffer(GL_ARRAY_BUFFER);
     glBindBuffer(GL_ARRAY_BUFFER, particle_position_buffer);    
     glUnmapBuffer(GL_ARRAY_BUFFER);
-
-
 	
 	if(anim) {
 		/* Increment rotation angles and update matrix */
@@ -1028,10 +1102,8 @@ void SetupDataBuffers()
 		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_texture_count*2*sizeof(GLfloat), texture_buffer_data[i], GL_STATIC_DRAW);
 
 		glBindVertexArray(VAO[i]);
-	}
-
-
-    glGenVertexArrays(1, &particle_vao);
+		
+		glGenVertexArrays(1, &particle_vao);
     glBindVertexArray(particle_vao);
 
     glGenBuffers(1, &particle_position_buffer);
@@ -1055,6 +1127,7 @@ void SetupDataBuffers()
         velocities[i] = vec4(random_vector(-0.1f, 0.1f), 0.0f);
     }
     glUnmapBuffer(GL_ARRAY_BUFFER);
+	}
 }
 
 
@@ -1119,8 +1192,6 @@ void CreateShaderProgram()
         fprintf(stderr, "Error creating shader program\n");
         exit(1);
     }
-
-
 
     /* Load shader code from file */
     VertexShaderString = LoadShader("shaders/vertexshader.vs");
@@ -1296,6 +1367,99 @@ void LoadObjFiles()
 
 /******************************************************************
 *
+* LoadJpegFiles
+*
+* This function is called to load jpeg image files for the billboard.
+*
+******************************	//add 6 horsies at different positions, note that horsies are special to transform because they bugged out in maya :D*************************************/
+
+int LoadJpegFiles (const char* filename, unsigned char* dest, const int format, const unsigned int size) {
+    /* define file pointer and necessary structs */
+    FILE *fp;
+    struct jpeg_decompress_struct jinfo; // decompressed jpeg info struct
+    struct jpeg_error_mgr jerr; // jpeg error struct
+    unsigned char* line;
+    
+    jinfo.err = jpeg_std_error(&jerr); // set error handling
+    jpeg_create_decompress(&jinfo); // init jpeg decompress
+    
+    // try to open jpeg file
+    if ((fp = fopen(filename, "rb")) == 0) {
+      return 1; // file could not be opened
+    }
+    
+    // set standard in/out source & header
+    jpeg_stdio_src(&jinfo, fp);
+    jpeg_read_header(&jinfo, TRUE);
+    
+    // check image width/height and return an error on mismatch
+    if (jinfo.image_width != size || jinfo.image_height != size) {
+      return 1;
+    }
+    
+    if (GL_RGB == format) { // rgb is used
+      if (jinfo.out_color_space == JCS_GRAYSCALE) { // exit if image is grayscaled
+	return 1;
+      }
+    }
+    else { // something other than rgb is used
+      if (jinfo.out_color_space != JCS_GRAYSCALE) { // exit if image is not grayscaled
+	return 1;
+      }
+    }
+    
+    // start decompressing image
+    jpeg_start_decompress(&jinfo);
+    
+    // read image line per line
+    while (jinfo.output_scanline < jinfo.output_height) {
+      line = dest + (GL_RGB == format ? 3 * size : size) * jinfo.output_scanline;
+      jpeg_read_scanlines(&jinfo, &line, 1);
+    }
+    
+    // finish decompression of image and destroy decompressed info
+    jpeg_finish_decompress(&jinfo);
+    jpeg_destroy_decompress(&jinfo);
+    
+    return 0; // success
+}
+
+
+/******************************************************************
+*
+* BillboardAxis
+*
+* This function is called to axis align the billboard.
+*
+*******************************************************************/
+
+/*void BillboardAxis() {
+  glPushMatrix();
+  glRotatef(BILLBOARD_ROTATION_X, 0, -1, 0);
+  CreateBillboardSquare();
+  glPopMatrix();
+}*/
+
+
+/******************************************************************
+*
+* BillboardWorld
+*
+* This function is called to world align the billboard.
+*
+*******************************************************************/
+
+/*void BillboardWorld() {
+  glPushMatrix();
+  glRotatef(BILLBOARD_ROTATION_X, 0, -1, 0);
+  glRotatef(BILLBOARD_ROTATION_Y, -1, 0, 0);
+  CreateBillboardSquare();
+  glPopMatrix();
+}*/
+
+
+/******************************************************************
+*
 * Initialize
 *
 * This function is called to initialize rendering elements, setup
@@ -1386,6 +1550,16 @@ void Initialize()
 	//set the number of lights in shader
 	GLuint light_count = glGetUniformLocation(ShaderProgram, "light_count");
 	glUniform1i(light_count, NUM_LIGHT);
+	
+	 //Set initial attractor positions and masses
+    for (int i = 0; i < MAX_ATTRACTORS; i++)
+    {
+        attractor_masses[i] = 0.5f + random_float() * 0.5f;
+    }
+    for (int i = 0; i < MAX_ATTRACTORS; i++)
+    {
+        attractors[i] = vec4(0, 2, 0, attractor_masses[i]);
+    }
 
 	//initialize light attribute strings for shader access
 	lightAttributes[0][0] = '\0';
@@ -1414,16 +1588,6 @@ void Initialize()
 	strcat(materialAttributes[0], "materials[0].ambient\0");
 	strcat(materialAttributes[1], "materials[0].diffuse\0");
 	strcat(materialAttributes[2], "materials[0].specular\0");
-    
-    //Set initial attractor positions and masses
-    for (int i = 0; i < MAX_ATTRACTORS; i++)
-    {
-        attractor_masses[i] = 0.5f + random_float() * 0.5f;
-    }
-    for (int i = 0; i < MAX_ATTRACTORS; i++)
-    {
-        attractors[i] = vec4(0, 2, 0, attractor_masses[i]);
-    }
 }
 
 /******
@@ -1484,6 +1648,20 @@ int main(int argc, char** argv)
 
     /* Setup scene and rendering parameters */
     Initialize();
+    
+    /* Load billboard 
+    unsigned char billboardTextureData[4096]; // equals 64*64
+    if (LoadJpegFiles("test.jpg", billboardTextureData, GL_ALPHA, 64) != 0) {
+      return 1;
+    }
+    
+    glGenTextures(1, &billboardTexture);
+    glBindTexture(GL_TEXTURE_2D, billboardTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 64, 64, 0, GL_ALPHA, GL_UNSIGNED_BYTE, billboardTextureData);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);*/
 
     /* Specify callback functions;enter GLUT event processing loop, 
      * handing control over to GLUT */

@@ -5,7 +5,7 @@ OBJ = MerryGoRound.o LoadShader.o Matrix.o StringExtra.o OBJParser.o List.o Bezi
 TARGET = MerryGoRound
 
 CFLAGS = -g -Wall -Wextra
-LDLIBS = -lstdc++ -lm -lglut -lGLEW -lGL
+LDLIBS = -lstdc++ -lm -lglut -lGLEW -lGL -ljpeg
 INCLUDES = -Isource
 
 SRC_DIR = source
