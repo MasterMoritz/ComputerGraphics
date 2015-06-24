@@ -57,6 +57,9 @@ uniform int ambientRendering;
 uniform int diffuseRendering;
 uniform int specularRendering;
 
+//flag to mark particle rendering
+uniform int particleRendering;
+
 //how "sharp"/narrow the reflection should be
 uniform float Shininess = 20.0;
 //how bright the reflection should be
@@ -73,74 +76,80 @@ out vec4 FragColor;
 
 void main()
 { 
-    //vector towards viewing position
-    vec3 v = vec3(0, 0, 1);
-    //orientation of local surface
-    vec3 n = normalize(Normal);
-    //shininess (i.e. how "sharp"/narrow the reflection should be)
-    float m = 0.2; 
-    //parameters determining reflection behaviour
-    vec3 ka = materials[materialIndex].ambient;
-    vec3 kd = materials[materialIndex].diffuse;
-    vec3 ks = materials[materialIndex].specular;
+    //a particle
+    if(particleRendering == 1) {
+        FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+    else {
+        //vector towards viewing position
+        vec3 v = vec3(0, 0, 1);
+        //orientation of local surface
+        vec3 n = normalize(Normal);
+        //shininess (i.e. how "sharp"/narrow the reflection should be)
+        float m = 0.2; 
+        //parameters determining reflection behaviour
+        vec3 ka = materials[materialIndex].ambient;
+        vec3 kd = materials[materialIndex].diffuse;
+        vec3 ks = materials[materialIndex].specular;
 
-    //ambient light
-    vec3 Ila = vec3(.2, .2, .2);
+        //ambient light
+        vec3 Ila = vec3(.2, .2, .2);
 
-    //ambient reflection
-    vec3 Ia = vec3(ka[0] * Ila[0], ka[1] * Ila[1], ka[2] * Ila[2]);
-    
-    //diffuse reflection
-    vec3 Id = vec3(0.0);
-
-    //specular reflection
-    vec3 Is = vec3(0.0);
-
-    for(int i = 0; i < light_count; i++) {
-        if (!lights[i].isEnabled) {
-			continue;
-		}
-        //incoming light direction (pointing away from surface)
-        vec3 l = normalize(lights[i].position - vec3(Position));
-        //incoming light intensity per channel
-        vec3 Il;
-        if(lights[i].type == 0) {
-            Il = vec3(lights[i].intensity * lights[i].color[0], lights[i].intensity * lights[i].color[1], lights[i].intensity * lights[i].color[2]);
-        }
-        else {
-            float cl = dot(lights[i].coneDirection, l);
-            if(cl > lights[i].coneCutOffAngleCos) {
-                Il = vec3(0.0);
-            }
-            else {
-                //spot exponent
-                float n = 2;
-                float cln = pow(cl, n);
-                Il = vec3(lights[i].intensity * lights[i].color[0] * cln, lights[i].intensity * lights[i].color[1] * cln, lights[i].intensity * lights[i].color[2] * cln);
-            }
-        }
-        //distance from positional light to surface
-        vec3 d = abs(l);
-        //attenuation
-        float k1 = 0.2;
-        float k2 = 0.3;
-        float k3 = 0.6;
-        Il /= (k1 + k2*d + k3*d*d);
-
-        //reflection vector
-        vec3 r = normalize((2*n*(n*l))-l);
-
+        //ambient reflection
+        vec3 Ia = vec3(ka[0] * Ila[0], ka[1] * Ila[1], ka[2] * Ila[2]);
+        
         //diffuse reflection
-        float x = dot(n, l);
-        Id += vec3(kd[0] * Il[0] * x, kd[1] * Il[1] * x, kd[2] * Il[2] * x);
+        vec3 Id = vec3(0.0);
 
         //specular reflection
-        x = pow(dot(r, v), m);
-        Is += vec3(ks[0] * Il[0] * x, ks[1] * Il[1] * x, ks[2] * Il[2] * x);
-    }
+        vec3 Is = vec3(0.0);
 
-    vec3 I = Ia*ambientRendering + Is*specularRendering + Id*diffuseRendering;
+        for(int i = 0; i < light_count; i++) {
+            if (!lights[i].isEnabled) {
+			    continue;
+		    }
+            //incoming light direction (pointing away from surface)
+            vec3 l = normalize(lights[i].position - vec3(Position));
+            //incoming light intensity per channel
+            vec3 Il;
+            if(lights[i].type == 0) {
+                Il = vec3(lights[i].intensity * lights[i].color[0], lights[i].intensity * lights[i].color[1], lights[i].intensity * lights[i].color[2]);
+            }
+            else {
+                float cl = dot(lights[i].coneDirection, l);
+                if(cl > lights[i].coneCutOffAngleCos) {
+                    Il = vec3(0.0);
+                }
+                else {
+                    //spot exponent
+                    float n = 2;
+                    float cln = pow(cl, n);
+                    Il = vec3(lights[i].intensity * lights[i].color[0] * cln, lights[i].intensity * lights[i].color[1] * cln, lights[i].intensity * lights[i].color[2] * cln);
+                }
+            }
+            //distance from positional light to surface
+            vec3 d = abs(l);
+            //attenuation
+            float k1 = 0.2;
+            float k2 = 0.3;
+            float k3 = 0.6;
+            Il /= (k1 + k2*d + k3*d*d);
+
+            //reflection vector
+            vec3 r = normalize((2*n*(n*l))-l);
+
+            //diffuse reflection
+            float x = dot(n, l);
+            Id += vec3(kd[0] * Il[0] * x, kd[1] * Il[1] * x, kd[2] * Il[2] * x);
+
+            //specular reflection
+            x = pow(dot(r, v), m);
+            Is += vec3(ks[0] * Il[0] * x, ks[1] * Il[1] * x, ks[2] * Il[2] * x);
+        }
+
+        vec3 I = Ia*ambientRendering + Is*specularRendering + Id*diffuseRendering;
+            
         
-    
-    FragColor = vec4(I, 1.0);
+        FragColor = vec4(I, 1.0);
+    }
 }

@@ -126,6 +126,12 @@ using namespace glm;
 #endif
 /*----------------------------------------------------------------*/
 
+enum
+{
+    PARTICLE_COUNT          = 20000,
+    MAX_ATTRACTORS          = 1
+};
+
 /* Flag for starting/stopping animation */
 GLboolean anim = GL_TRUE;
 
@@ -145,6 +151,13 @@ GLuint NBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 GLuint MBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 GLuint VAO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+
+// Posisition and velocity buffers for particles
+GLuint particle_position_buffer;
+GLuint particle_velocity_buffer;
+// Texture buffers for particles
+GLuint particle_position_tbo;
+GLuint particle_velocity_tbo;
 
 /* Indices to vertex attributes */ 
 enum DataID {vPosition = 0, vNormal = 1, MaterialIndex = 2}; 
@@ -198,8 +211,18 @@ GLushort *material_index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 /* Structures for loading of OBJ data */
 obj_scene_data data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
+// Attractors
+vec4 attractors[MAX_ATTRACTORS];
+
+// Mass of the attractors
+float attractor_masses[MAX_ATTRACTORS];
+
+//Particle VAO
+GLuint particle_vao;
+
 /* Reference time for animation */
-int oldTime = 0;
+int oldTime = 0;    //in ms
+float elapsedTime = 0;  //in s
 
 /* The array of bezier curves to use for the automatic camera path */
 const float curves[][4][3] = {
@@ -254,6 +277,40 @@ struct Material {
     GLfloat diffuse[3];
     GLfloat specular[3];
 };
+
+
+
+/******************************************************************
+*
+* Particle simulation helper functions
+*
+* These functions are called to calculate
+* random floats and vectors.
+*
+*******************************************************************/
+inline float random_float()
+{
+    float res;
+    unsigned int tmp;
+    static unsigned int seed = 0xFFFF0C59;
+
+    seed *= 16807;
+
+    tmp = seed ^ (seed >> 4) ^ (seed << 15);
+
+    *((unsigned int *) &res) = (tmp >> 9) | 0x3F800000;
+
+    return (res - 1.0f);
+}
+
+vec3 random_vector(float minmag = 0.0f, float maxmag = 1.0f)
+{
+    vec3 randomvec(random_float() * 2.0f - 1.0f, random_float() * 2.0f - 1.0f, random_float() * 2.0f - 1.0f);
+    randomvec = normalize(randomvec);
+    randomvec *= (random_float() * (maxmag - minmag) + minmag);
+
+    return randomvec;
+}
 
 
 /******************************************************************
@@ -381,6 +438,8 @@ void Display()
         glUniform1i(diffuseRenderingLoc, diffuseRendering);
         GLuint specularRenderingLoc = glGetUniformLocation(ShaderProgram, "specularRendering");
         glUniform1i(specularRenderingLoc, specularRendering);
+        GLuint particleRenderingLoc = glGetUniformLocation(ShaderProgram, "particleRendering");
+        glUniform1i(particleRenderingLoc, 0);
 		
 		GLuint ambLoc;
 		GLuint diffLoc;
@@ -428,6 +487,19 @@ void Display()
         glDisableVertexAttribArray(vNormal);
         glDisableVertexAttribArray(MaterialIndex);
 	}
+
+    glUniformMatrix4fv(PVM_Uniform, 1, GL_FALSE, value_ptr(ProjectionMatrix * ViewMatrix));
+    GLuint particleRenderingLoc = glGetUniformLocation(ShaderProgram, "particleRendering");
+    glUniform1i(particleRenderingLoc, 1);
+    glEnableVertexAttribArray(vPosition);
+	glBindBuffer(GL_ARRAY_BUFFER, particle_position_buffer);
+    glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_ONE, GL_ONE);
+    //glPointSize(1.4f);
+    glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
+    glDisableVertexAttribArray(vPosition);
+    //glDisable(GL_BLEND);
 
     /* Swap between front and back buffer */ 
     glutSwapBuffers();
@@ -484,7 +556,7 @@ void Mouse(int button, int state, int x, int y) {
 /******************************************************************
 *
 * RotateCamera
-*
+*particle_position_tbo
 * Function is called when mouse pointer moves while one or 
 * more buttons are pressed. Only used in manual camera mode.
 * Note that in glut the window relative coordinates are "swapped".
@@ -715,8 +787,64 @@ void OnIdle()
 {
 	/* Determine delta time between two frames to ensure constant animation */
 	int newTime = glutGet(GLUT_ELAPSED_TIME);
-	int delta = newTime - oldTime;
+    //The time between two frames. Usually between 17 and 22ms, depending on hardware.	
+    int delta = newTime - oldTime;
 	oldTime = newTime;
+    //delta for particles (tweaked to look good)
+    float deltaForParticles = delta/180.0f;
+    //upate the time the program is running since the very start (in sec, determines TTL)
+    elapsedTime += delta/1000.0f;
+
+
+    //update the attractor positions
+    /*for (int i = 0; i < MAX_ATTRACTORS; i++)
+    {
+        attractors[i] = vec4(sinf(elapsedTime * (float)(i + 4) * 7.5f * 20.0f) * 50.0f,
+                                    cosf(elapsedTime * (float)(i + 7) * 3.9f * 20.0f) * 50.0f,
+                                    sinf(elapsedTime * (float)(i + 3) * 5.3f * 20.0f) * cosf(elapsedTime * (float)(i + 5) * 9.1f) * 100.0f,
+                                    attractor_masses[i]);
+    }*/
+
+	glBindBuffer(GL_ARRAY_BUFFER, particle_position_buffer);
+    vec4* particlePositions = (vec4 *)glMapBufferRange(GL_ARRAY_BUFFER, 0, PARTICLE_COUNT * sizeof(vec4), GL_MAP_WRITE_BIT);
+    glBindBuffer(GL_ARRAY_BUFFER, particle_velocity_buffer);
+    vec4 * velocities = (vec4 *)glMapBufferRange(GL_ARRAY_BUFFER, 0, PARTICLE_COUNT * sizeof(vec4), GL_MAP_WRITE_BIT);
+    for (int i = 0; i < PARTICLE_COUNT; i++)
+    {
+        vec4 pos = particlePositions[i];
+        vec4 vel = velocities[i];
+        pos.x += vel.x * deltaForParticles;
+        pos.y += vel.y * deltaForParticles;
+        pos.z += vel.z * deltaForParticles;
+        pos.w -= 0.0001 * deltaForParticles;
+
+        for (int j = 0; j < MAX_ATTRACTORS; j++)
+        {
+            vec3 dist = vec3(attractors[j].x - pos.x, attractors[j].y - pos.y, attractors[j].z - pos.z);
+            vel.x += deltaForParticles * deltaForParticles * attractors[j].w * normalize(dist).x / (dot(dist, dist) + 10.0);
+            vel.y += deltaForParticles * deltaForParticles * attractors[j].w * normalize(dist).y / (dot(dist, dist) + 10.0);
+            vel.z += deltaForParticles * deltaForParticles * attractors[j].w * normalize(dist).z / (dot(dist, dist) + 10.0);
+        }
+
+        if (pos.w <= 0.0)
+        {
+            //fprintf(stderr, "particle died\n");
+            pos.x = -pos.x * 0.01;
+            pos.y = -pos.y * 0.01;
+            pos.z = -pos.z * 0.01;
+            vel.x *= 0.01;
+            vel.y *= 0.01;
+            vel.z *= 0.01;
+            pos.w += 1.0f;
+        }
+        particlePositions[i] = pos;
+        velocities[i] = vel;
+    }
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+    glBindBuffer(GL_ARRAY_BUFFER, particle_position_buffer);    
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+
+
 	
 	if(anim) {
 		/* Increment rotation angles and update matrix */
@@ -853,6 +981,32 @@ void SetupDataBuffers()
 
 		glBindVertexArray(VAO[i]);
 	}
+
+
+    glGenVertexArrays(1, &particle_vao);
+    glBindVertexArray(particle_vao);
+
+    glGenBuffers(1, &particle_position_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, particle_position_buffer);
+    glBufferData(GL_ARRAY_BUFFER, PARTICLE_COUNT * sizeof(vec4), NULL, GL_DYNAMIC_DRAW);
+
+    vec4* particlePositions = (vec4 *)glMapBufferRange(GL_ARRAY_BUFFER, 0, PARTICLE_COUNT * sizeof(vec4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    for (int i = 0; i < PARTICLE_COUNT; i++)
+    {
+        vec3 randomVec = random_vector(-10.0f, 10.0f);
+        particlePositions[i] = vec4(randomVec.x, randomVec.y, randomVec.z, random_float());
+    }
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+
+    glGenBuffers(1, &particle_velocity_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, particle_velocity_buffer);
+    glBufferData(GL_ARRAY_BUFFER, PARTICLE_COUNT * sizeof(vec4), NULL, GL_DYNAMIC_DRAW);
+    vec4 * velocities = (vec4 *)glMapBufferRange(GL_ARRAY_BUFFER, 0, PARTICLE_COUNT * sizeof(vec4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    for (int i = 0; i < PARTICLE_COUNT; i++)
+    {
+        velocities[i] = vec4(random_vector(-0.1f, 0.1f), 0.0f);
+    }
+    glUnmapBuffer(GL_ARRAY_BUFFER);
 }
 
 
@@ -917,6 +1071,8 @@ void CreateShaderProgram()
         fprintf(stderr, "Error creating shader program\n");
         exit(1);
     }
+
+
 
     /* Load shader code from file */
     VertexShaderString = LoadShader("shaders/vertexshader.vs");
@@ -1168,6 +1324,16 @@ void Initialize()
 	//set the number of lights in shader
 	GLuint light_count = glGetUniformLocation(ShaderProgram, "light_count");
 	glUniform1i(light_count, NUM_LIGHT);
+
+    //Set initial attractor positions and masses
+    for (int i = 0; i < MAX_ATTRACTORS; i++)
+    {
+        attractor_masses[i] = 0.5f + random_float() * 0.5f;
+    }
+    for (int i = 0; i < MAX_ATTRACTORS; i++)
+    {
+        attractors[i] = vec4(0, 2, 0, attractor_masses[i]);
+    }
 }
 
 

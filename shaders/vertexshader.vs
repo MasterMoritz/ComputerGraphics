@@ -21,7 +21,7 @@ uniform mat4 PVM_Matrix;
 uniform mat4 VM_Matrix;
 uniform mat4 NormalMatrix;
 
-layout (location = 0) in vec3 vPosition;
+layout (location = 0) in vec4 vPosition;
 layout (location = 1) in vec3 vNormal;
 layout (location = 2) in int MaterialIndex;
 
