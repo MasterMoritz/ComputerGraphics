@@ -1137,6 +1137,10 @@ void Initialize()
 
 	/* Set background (clear) color to soft bluegreen */ 
     glClearColor(0.0, 0.2, 0.4, 0.0);
+	
+	/* Enable culling */
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
     /* Enable depth testing */
     glEnable(GL_DEPTH_TEST);
