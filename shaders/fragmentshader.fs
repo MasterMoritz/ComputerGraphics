@@ -72,6 +72,9 @@ in vec3 Normal;
 //the position of the vertex before the perspective transformation
 in vec4 Position;
 
+in vec2 texcoord;
+uniform sampler2D tex;
+
 out vec4 FragColor;
 
 void main()
@@ -148,8 +151,8 @@ void main()
         }
 
         vec3 I = Ia*ambientRendering + Is*specularRendering + Id*diffuseRendering;
-            
-        
-        FragColor = vec4(I, 1.0);
+     
+        //FragColor = vec4(I, 1.0);
+        FragColor = texture(tex, texcoord);
     }
 }

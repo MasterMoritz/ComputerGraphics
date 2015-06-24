@@ -100,9 +100,16 @@
                                          * glm::scale, glm::perspective */
 #include "glm/gtc/type_ptr.hpp"         /* Vector/matrix handling */
 #include "glm/gtc/type_precision.hpp"
-using namespace glm;
 
 /* Local includes */
+#define STB_IMAGE_IMPLEMENTATION
+extern "C" 
+{
+
+    #include "stb_image.h"   /* Provides loading function for texture images https://github.com/nothings/stb */
+}
+
+using namespace glm;
 #include "LoadShader.hpp"     /* Loading function for shader code */
 #include "Matrix.hpp"         /* Functions for matrix handling */
 #include "OBJParser.hpp"      /* Loading function for triangle meshes in OBJ format */
@@ -150,17 +157,20 @@ GLuint NBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 /* Define handles to material index buffer objects */
 GLuint MBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
+/* Define handles to texture coord buffer */
+GLuint TBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+
 GLuint VAO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 // Posisition and velocity buffers for particles
 GLuint particle_position_buffer;
 GLuint particle_velocity_buffer;
-// Texture buffers for particles
-GLuint particle_position_tbo;
-GLuint particle_velocity_tbo;
+
+/* texture image, for now just 1 hardcoded for testing puposes */
+unsigned char* image;
 
 /* Indices to vertex attributes */ 
-enum DataID {vPosition = 0, vNormal = 1, MaterialIndex = 2}; 
+enum DataID {vPosition = 0, vNormal = 1, MaterialIndex = 2, texCoord = 3}; 
 
 /* Strings for loading and storing shader code */
 static const char* VertexShaderString;
@@ -207,6 +217,9 @@ GLfloat *normal_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Arrays for holding indices of materials */
 GLushort *material_index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+
+/* Arrays for holding texture coordinates of vertices */
+GLfloat *texture_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Structures for loading of OBJ data */
 obj_scene_data data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
@@ -255,6 +268,11 @@ int ambientRendering = 1;
 int diffuseRendering = 1;
 int specularRendering = 1;
 
+/* for fps calculation */
+int frameCount = 0;
+int fps = 0;
+int currentTime = 0, previousTime = 0;
+
 /*-----------------------------Uniforms----------------------------*/
 //structure for our lights
 struct Light {
@@ -270,6 +288,7 @@ struct Light {
 };
 typedef struct Light Light;
 Light lights[NUM_LIGHT];
+char lightAttributes[9][32]; //the attribute names in the shader, for easier access
 
 //structure for material properties
 struct Material {
@@ -277,7 +296,7 @@ struct Material {
     GLfloat diffuse[3];
     GLfloat specular[3];
 };
-
+char materialAttributes[3][32]; //the attribute names in the shader, for easier access
 
 
 /******************************************************************
@@ -333,69 +352,60 @@ void Display()
     GLint PVM_Uniform = glGetUniformLocation(ShaderProgram, "PVM_Matrix");    
 	GLint VM_Uniform = glGetUniformLocation(ShaderProgram, "VM_Matrix");
 	GLint NormalUniform = glGetUniformLocation(ShaderProgram, "NormalMatrix");
- 
+
+	GLuint light_attribute;
 
 	/* set lights in shader */
+
 	for (int i = 0; i < NUM_LIGHT; i++) {
 		//only support 10 lights maximum
 		if (i == 10) {
 			break;
 		}
-		char buffer[32];
-		GLuint light_attribute;
+		char c = 48+i;
 
 		//set the light attributes
-		strcpy(buffer, "lights[");
-		buffer[7] = '0' + i;
-		buffer[8] = '\0';
-		strcat(buffer, "].isEnabled");
-		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		lightAttributes[0][7] = c;
+		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[0]);
 		glUniform1i(light_attribute, lights[i].isEnabled);
 
-		buffer[10] = '\0';
-		strcat(buffer, "type");
-		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		lightAttributes[1][7] = c;
+		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[1]);
 		glUniform1i(light_attribute, lights[i].type);
 
-		buffer[10] = '\0';
-		strcat(buffer, "ambient");
-		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		lightAttributes[2][7] = c;
+		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[2]);
 		glUniform3f(light_attribute, lights[i].ambient[0], lights[i].ambient[1], lights[i].ambient[2]);
 
-		buffer[10] = '\0';
-		strcat(buffer, "color");
-		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		lightAttributes[3][7] = c;
+		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[3]);
 		glUniform3fv(light_attribute, 1, value_ptr(hsvToRgb(lights[i].color)));
 
-		buffer[10] = '\0';
-		strcat(buffer, "position");
-		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		lightAttributes[4][7] = c;
+		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[4]);
+
         vec4 positions = ViewMatrix * vec4(lights[i].position[0], lights[i].position[1], lights[i].position[2], 1.0);
 		glUniform3f(light_attribute, positions[0], positions[1], positions[2]);
 
-		buffer[10] = '\0';
-		strcat(buffer, "coneDirection");
-		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		lightAttributes[5][7] = c;
+		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[5]);
 		glUniform3f(light_attribute, lights[i].coneDirection[0], lights[i].coneDirection[1], lights[i].coneDirection[2]);
 
-		buffer[10] = '\0';
-		strcat(buffer, "coneCutOffAngleCos");
-		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		lightAttributes[6][7] = c;
+		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[6]);
 		glUniform1f(light_attribute, lights[i].coneCutOffAngleCos);
 
-		buffer[10] = '\0';
-		strcat(buffer, "attenuation");
-		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		lightAttributes[7][7] = c;
+		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[7]);
 		glUniform1f(light_attribute, lights[i].attenuation);
 
-		buffer[10] = '\0';
-		strcat(buffer, "intensity");
-		light_attribute = glGetUniformLocation(ShaderProgram, buffer);
+		lightAttributes[8][7] = c;
+		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[8]);
 		glUniform1f(light_attribute, lights[i].intensity);
 	}
 
     /* animate the animated spotlight */
-    GLuint light_attribute = glGetUniformLocation(ShaderProgram, "lights[2].position");
+    light_attribute = glGetUniformLocation(ShaderProgram, "lights[2].position");
     vec4 positions = ViewMatrix * ModelMatrix[NUM_STATIC+NUM_BASIC_ANIM] * vec4(lights[2].position[0], lights[2].position[1], lights[2].position[2], 1.0);
 	glUniform3f(light_attribute, positions[0], positions[1], positions[2]);
 
@@ -410,21 +420,28 @@ void Display()
 
 		/* bind index buffer */
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
+		GLint size; 
+		glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
+		/* bind normal buffer */
         glEnableVertexAttribArray(vNormal);
 		glBindBuffer(GL_ARRAY_BUFFER, NBO[i]);
 		glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+		/* bind material buffer */
         glEnableVertexAttribArray(MaterialIndex);
 		glBindBuffer(GL_ARRAY_BUFFER, MBO[i]);
 		glVertexAttribPointer(MaterialIndex, 1, GL_INT, GL_FALSE, 0, 0);
 
-		GLint size; 
-		glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+		/* bind texture uv */
+		glEnableVertexAttribArray(texCoord);
+		glBindBuffer(GL_ARRAY_BUFFER, TBO[i]);
+		glVertexAttribPointer(texCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 		/* set model matrix */
-		glUniformMatrix4fv(PVM_Uniform, 1, GL_FALSE, value_ptr(ProjectionMatrix * ViewMatrix * ModelMatrix[i]));
-		glUniformMatrix4fv(VM_Uniform, 1, GL_FALSE, value_ptr(ViewMatrix * ModelMatrix[i]));
+		mat4 vm = ViewMatrix * ModelMatrix[i];
+		glUniformMatrix4fv(PVM_Uniform, 1, GL_FALSE, value_ptr(ProjectionMatrix * vm));
+		glUniformMatrix4fv(VM_Uniform, 1, GL_FALSE, value_ptr(vm));
 		glUniformMatrix4fv(NormalUniform, 1, GL_FALSE, value_ptr(transpose(inverse(ModelMatrix[i]*ViewMatrix))));
 
 		/* set material index */
@@ -447,33 +464,29 @@ void Display()
 		GLfloat ambient[3];
 		GLfloat diffuse[3];
 		GLfloat specular[3];
-		char buffer[22];
 
 		for(int z = 0; z < data[i].material_count; z++) {
-			strcpy(buffer, "materials[");
-			buffer[10] = '0' + z;
-			buffer[11] = '\0';
-			strcat(buffer, "].ambient");
+			char c = 48+z;
 
-			ambLoc = glGetUniformLocation(ShaderProgram, buffer);
+			materialAttributes[0][10] = c;
+
+			ambLoc = glGetUniformLocation(ShaderProgram, materialAttributes[0]);
 			ambient[0] = (GLfloat)(*(data[i]).material_list[z]).amb[0];
 			ambient[1] = (GLfloat)(*(data[i]).material_list[z]).amb[1];
 			ambient[2] = (GLfloat)(*(data[i]).material_list[z]).amb[2];
 			glUniform3f(ambLoc, ambient[0], ambient[1], ambient[2]);
 
-			buffer[13] = '\0';
-			strcat(buffer, "diffuse");
+			materialAttributes[1][10] = c;
 
-			diffLoc = glGetUniformLocation(ShaderProgram, buffer);
+			diffLoc = glGetUniformLocation(ShaderProgram, materialAttributes[1]);
 			diffuse[0] = (GLfloat)(*(data[i]).material_list[z]).diff[0];
 			diffuse[1] = (GLfloat)(*(data[i]).material_list[z]).diff[1];
 			diffuse[2] = (GLfloat)(*(data[i]).material_list[z]).diff[2];
 			glUniform3f(diffLoc, diffuse[0], diffuse[1], diffuse[2]);
 
-			buffer[13] = '\0';
-			strcat(buffer, "specular");
+			materialAttributes[2][10] = c;
 
-			specLoc = glGetUniformLocation(ShaderProgram, buffer);
+			specLoc = glGetUniformLocation(ShaderProgram, materialAttributes[2]);
 			specular[0] = (GLfloat)(*(data[i]).material_list[z]).spec[0];
 			specular[1] = (GLfloat)(*(data[i]).material_list[z]).spec[1];
 			specular[2] = (GLfloat)(*(data[i]).material_list[z]).spec[2];
@@ -486,6 +499,7 @@ void Display()
         glDisableVertexAttribArray(vPosition);
         glDisableVertexAttribArray(vNormal);
         glDisableVertexAttribArray(MaterialIndex);
+		glDisableVertexAttribArray(texCoord);
 	}
 
     glUniformMatrix4fv(PVM_Uniform, 1, GL_FALSE, value_ptr(ProjectionMatrix * ViewMatrix));
@@ -762,6 +776,33 @@ void Keyboard(unsigned char key, int x, int y)
     glutPostRedisplay();*/
 }
 
+//-------------------------------------------------------------------------
+// Calculates the frames per second
+//-------------------------------------------------------------------------
+void calculateFPS()
+{
+    //  Increase frame count
+    frameCount++;
+ 
+    //  Get the number of milliseconds since glutInit called
+    //  (or first call to glutGet(GLUT ELAPSED TIME)).
+    currentTime = glutGet(GLUT_ELAPSED_TIME);
+ 
+    //  Calculate time passed
+    int timeInterval = currentTime - previousTime;
+ 
+    if(timeInterval > 1000)
+    {
+        //  calculate the number of frames per second
+        fps = frameCount / (timeInterval / 1000.0f);
+ 
+        //  Set time
+        previousTime = currentTime;
+ 
+        //  Reset frame count
+        frameCount = 0;
+    }
+}
 
 /******************************************************************
 *
@@ -785,6 +826,9 @@ float moves(double angle, double offset) {
 
 void OnIdle()
 {
+	calculateFPS();
+	printf("%i FPS\n",fps );
+
 	/* Determine delta time between two frames to ensure constant animation */
 	int newTime = glutGet(GLUT_ELAPSED_TIME);
     //The time between two frames. Usually between 17 and 22ms, depending on hardware.	
@@ -849,7 +893,7 @@ void OnIdle()
 	if(anim) {
 		/* Increment rotation angles and update matrix */
 		angleY = fmod(angleY + delta/20.0, 360.0); 
-		R = rotate(mat4(1.0f), radians(-angleY), vec3(0.0f, 1.0f, 0.0f));
+		R = rotate(mat4(1.0f), radians(angleY), vec3(0.0f, 1.0f, 0.0f));
 
 		/* rotate all non-static objects */
 		int num_non_static = NUM_BASIC_ANIM + NUM_ADV_ANIM;
@@ -969,15 +1013,19 @@ void SetupDataBuffers()
 
 		glGenBuffers(1, &(IBO[i]));
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO[i]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*3*sizeof(GLushort), index_buffer_data[i], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*3*sizeof(GLushort), index_buffer_data[i], GL_STATIC_READ);
 
         glGenBuffers(1, &(NBO[i]));
 		glBindBuffer(GL_ARRAY_BUFFER, NBO[i]);
-		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_normal_count*3*sizeof(GLfloat), normal_buffer_data[i], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_normal_count*3*sizeof(GLfloat), normal_buffer_data[i], GL_STATIC_READ);
 
         glGenBuffers(1, &(MBO[i]));
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, MBO[i]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (data[i]).face_count*sizeof(GLushort), material_index_buffer_data[i], GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, MBO[i]);
+		glBufferData(GL_ARRAY_BUFFER, (data[i]).face_count*sizeof(GLushort), material_index_buffer_data[i], GL_STATIC_READ);
+
+        glGenBuffers(1, &(TBO[i]));
+		glBindBuffer(GL_ARRAY_BUFFER, TBO[i]);
+		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_texture_count*2*sizeof(GLfloat), texture_buffer_data[i], GL_STATIC_DRAW);
 
 		glBindVertexArray(VAO[i]);
 	}
@@ -1178,12 +1226,13 @@ void LoadObjFiles()
 	}
 
 	/* Load all Advanced animation models */
-	//add 6 horsies at different positions, note that horsies are special to transform because they bugged out in maya :D
 	for (int i = 0; i < 6; i++) {
 
-		filename = "models/horse_on_pole.obj"; 
+		filename = "models/myLittleDragon.obj"; 
 		success = parse_obj_scene(&(data[objIndex]), filename);
 		InitialTransform[objIndex] = rotate(mat4(1.0f), radians(float(60*i)), vec3(0.0f,1.0f,0.0f));
+		InitialTransform[objIndex] = translate(InitialTransform[objIndex], vec3(-4.0f, 0.6f, 0.0f));
+		InitialTransform[objIndex] = scale(InitialTransform[objIndex], vec3(0.4f, 0.4f, 0.4f));
 
 		objIndex += 1;
 		if(!success) {
@@ -1196,17 +1245,20 @@ void LoadObjFiles()
     int vert = 0;
     int indx = 0;
 	int nrml = 0;
+	int texv = 0;
 
 	for (int z = 0; z < NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM; z++) {
 		vert = data[z].vertex_count;
 		indx = data[z].face_count;
 		nrml = data[z].vertex_normal_count;
+		texv = data[z].vertex_texture_count;
 
     	vertex_buffer_data[z] = (GLfloat*) calloc (vert*3, sizeof(GLfloat));
     	index_buffer_data[z] = (GLushort*) calloc (indx*3, sizeof(GLushort));
         normal_buffer_data[z] = (GLfloat*) calloc (nrml*3, sizeof(GLfloat));
         material_index_buffer_data[z] = (GLushort*) calloc (indx, sizeof(GLushort));
-  
+    	texture_buffer_data[z] = (GLfloat*) calloc (texv*2, sizeof(GLfloat));
+
 		/* Vertices */
 		for(int i=0; i<vert; i++) {
 		    vertex_buffer_data[z][i*3] = (GLfloat)(*(data[z]).vertex_list[i]).e[0];
@@ -1232,6 +1284,12 @@ void LoadObjFiles()
 		for(int i=0; i<indx; i++) {
 			material_index_buffer_data[z][i] = (GLushort)(*(data[z]).face_list[i]).material_index;
 		}
+
+		/* texture coordinates */
+		for (int i = 0; i < texv; i++) {
+			texture_buffer_data[z][i*2] = (GLfloat)(*(data[z]).vertex_texture_list[i]).t[0];
+			texture_buffer_data[z][i*2+1] = (GLfloat)(*(data[z]).vertex_texture_list[i]).t[1];
+		}
 	}
 }
 
@@ -1254,6 +1312,10 @@ void Initialize()
 
 	/* Set background (clear) color to soft bluegreen */ 
     glClearColor(0.0, 0.2, 0.4, 0.0);
+	
+	/* Enable culling */
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
     /* Enable depth testing */
     glEnable(GL_DEPTH_TEST);
@@ -1325,6 +1387,34 @@ void Initialize()
 	GLuint light_count = glGetUniformLocation(ShaderProgram, "light_count");
 	glUniform1i(light_count, NUM_LIGHT);
 
+	//initialize light attribute strings for shader access
+	lightAttributes[0][0] = '\0';
+	lightAttributes[1][0] = '\0';
+	lightAttributes[2][0] = '\0';
+	lightAttributes[3][0] = '\0';
+	lightAttributes[4][0] = '\0';
+	lightAttributes[5][0] = '\0';
+	lightAttributes[6][0] = '\0';
+	lightAttributes[7][0] = '\0';
+	lightAttributes[8][0] = '\0';
+	strcat(lightAttributes[0], "lights[0].isEnabled\0");
+	strcat(lightAttributes[1], "lights[0].type\0");
+	strcat(lightAttributes[2], "lights[0].ambient\0");
+	strcat(lightAttributes[3], "lights[0].color\0");
+	strcat(lightAttributes[4], "lights[0].position\0");
+	strcat(lightAttributes[5], "lights[0].coneDirection\0");
+	strcat(lightAttributes[6], "lights[0].coneCutOffAngleCos\0");
+	strcat(lightAttributes[7], "lights[0].attenuation\0");
+	strcat(lightAttributes[8], "lights[0].intensity\0");
+
+	//initialize the material attribute strings for shader access
+	materialAttributes[0][0] = '\0';
+	materialAttributes[1][0] = '\0';
+	materialAttributes[2][0] = '\0';
+	strcat(materialAttributes[0], "materials[0].ambient\0");
+	strcat(materialAttributes[1], "materials[0].diffuse\0");
+	strcat(materialAttributes[2], "materials[0].specular\0");
+    
     //Set initial attractor positions and masses
     for (int i = 0; i < MAX_ATTRACTORS; i++)
     {
@@ -1336,6 +1426,33 @@ void Initialize()
     }
 }
 
+/******
+*
+* load textures
+*
+*******/
+void loadTextures() {
+
+	glEnable(GL_TEXTURE_2D);
+ 	GLuint tex;
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
+	int width, height, n;
+	image = stbi_load("512X512.png", &width, &height, &n, 0);
+
+	if (image == NULL) {
+	    fprintf(stderr, "Could not load texture image\n");
+	    exit(-1);
+	}
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	stbi_image_free(image);
+}
 
 /******************************************************************
 *
@@ -1376,6 +1493,10 @@ int main(int argc, char** argv)
     glutMouseFunc(Mouse);
     glutMotionFunc(RotateCamera);  
 
+	/* load all relevant textures */
+	loadTextures();
+
+	/* start loop */
     glutMainLoop();
 
     /* ISO C requires main to return int */

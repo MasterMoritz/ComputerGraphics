@@ -1,8 +1,0 @@
-remove the "vt" lines from the .obj files, otherwise it will crash
-
-reg expressions to find all those lines (work both):
-
-vt\s+\-?\d+\.\d+\s+\-?\d+\.\d+
-
-vt.+
-

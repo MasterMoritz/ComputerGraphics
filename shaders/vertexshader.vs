@@ -24,9 +24,12 @@ uniform mat4 NormalMatrix;
 layout (location = 0) in vec4 vPosition;
 layout (location = 1) in vec3 vNormal;
 layout (location = 2) in int MaterialIndex;
+layout (location = 3) in vec2 texCoord;
 
 out vec4 Position;  //the non-projected position
 out vec3 Normal;
+out vec2 texcoord;
+
 flat out int materialIndex;
 
 void main()
@@ -36,4 +39,5 @@ void main()
 	vec4 n = normalize(NormalMatrix * vec4(vNormal, 1.0));
     Normal = vec3(n.x, n.y, n.z);        
     materialIndex = MaterialIndex;
+	texcoord = texCoord;
 }
