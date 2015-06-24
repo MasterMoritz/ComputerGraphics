@@ -1073,14 +1073,13 @@ void LoadObjFiles()
 	}
 
 	/* Load all Advanced animation models */
-	//add 6 horsies at different positions, note that horsies are special to transform because they bugged out in maya :D
 	for (int i = 0; i < 6; i++) {
 
 		filename = "models/myLittleDragon.obj"; 
 		success = parse_obj_scene(&(data[objIndex]), filename);
 		InitialTransform[objIndex] = rotate(mat4(1.0f), radians(float(60*i)), vec3(0.0f,1.0f,0.0f));
 		InitialTransform[objIndex] = translate(InitialTransform[objIndex], vec3(-4.0f, 0.6f, 0.0f));
-		InitialTransform[objIndex] = scale(InitialTransform[objIndex], vec3(-0.4f, 0.4f, 0.4f));
+		InitialTransform[objIndex] = scale(InitialTransform[objIndex], vec3(0.4f, 0.4f, 0.4f));
 
 		objIndex += 1;
 		if(!success) {
