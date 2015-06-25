@@ -1,12 +1,4 @@
-# File exported by ZBrush version 4.7
-# www.zbrush.com
-#Vertex Count 480
-#UV Vertex Count 492
-#Face Count 880
-#Auto scale x=0.200001 y=0.200001 z=0.200001
-#Auto offset x=-0.000000 y=-0.069992 z=-0.000000
-mtllib floor_static_oPP.mtl
-usemtl defaultMat
+mtllib floor_static.mtl
 v 4.26681617 -0.25 -0.67579599
 v 4.10856721 -0.25 -1.33495295
 v 3.84915101 -0.25 -1.96123895
@@ -1870,5 +1862,3 @@ f 439/450 440/451 479/491
 f 479/491 440/451 480/492
 f 440/451 401/411 480/492
 f 480/492 401/411 441/452
-
- 

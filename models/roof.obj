@@ -1,12 +1,4 @@
-# File exported by ZBrush version 4.7
-# www.zbrush.com
-#Vertex Count 1950
-#UV Vertex Count 2041
-#Face Count 3896
-#Auto scale x=0.200001 y=0.200001 z=0.200001
-#Auto offset x=-0.000000 y=-0.069992 z=-0.000000
-mtllib roof_oPP.mtl
-usemtl defaultMat
+mtllib roof.mtl
 v -6.02899678 7.72938217 5.36870092
 v -6.35816123 7.93332599 5.28496619
 v -6.44230783 7.80151609 5.33908704
@@ -7928,5 +7920,3 @@ f 654/654 689/689 653/653
 f 655/655 691/691 654/654
 f 625/625 658/658 623/623
 f 656/656 658/658 655/655
-
- 

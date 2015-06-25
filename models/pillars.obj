@@ -1,12 +1,4 @@
-# File exported by ZBrush version 4.7
-# www.zbrush.com
-#Vertex Count 168
-#UV Vertex Count 328
-#Face Count 320
-#Auto scale x=0.200001 y=0.200001 z=0.200001
-#Auto offset x=-0.000000 y=-0.069992 z=-0.000000
-mtllib pillars_oPP.mtl
-usemtl defaultMat
+mtllib pillars.mtl
 v 5.29363089 0.25450001 4.43620013
 v 5.29363089 7.41949976 4.43620311
 v 5.30357411 7.41949976 4.45571821
@@ -829,5 +821,3 @@ f 158/276 160/278 159/277
 f 160/278 162/280 161/279
 f 162/280 164/282 163/281
 f 164/282 166/284 165/283
-
- 

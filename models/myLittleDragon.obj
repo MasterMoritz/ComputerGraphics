@@ -1,12 +1,4 @@
-# File exported by ZBrush version 4.7
-# www.zbrush.com
-#Vertex Count 1045
-#UV Vertex Count 1194
-#Face Count 2086
-#Auto scale x=0.264168 y=0.264168 z=0.264168
-#Auto offset x=-0.028915 y=-0.938568 z=0.031250
-mtllib myLittleDragon_oPP.mtl
-usemtl defaultMat
+mtllib myLittleDragon.mtl
 v 0.91349605 3.64130641 -1.94850216
 v 0.66908251 3.97771356 -1.94850216
 v 0.30896925 4.18562442 -1.94850216
@@ -4352,5 +4344,3 @@ f 1040/1191 1041/1192 1045/1177
 f 1041/1192 1042/1193 1045/1177
 f 1042/1193 1043/1194 1045/1177
 f 1043/1194 1024/1175 1045/1177
-
- 

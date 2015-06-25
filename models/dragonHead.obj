@@ -1,12 +1,4 @@
-# File exported by ZBrush version 4.7
-# www.zbrush.com
-#Vertex Count 5401
-#UV Vertex Count 31818
-#Face Count 10606
-#Auto scale x=0.616218 y=0.616218 z=0.616218
-#Auto offset x=0.000061 y=-5.046860 z=0.369751
-mtllib dragonHead_oPP.mtl
-usemtl defaultMat
+mtllib dragonHead.mtl
 v -0.04374795 8.82574874 -0.48874649
 v -0.05111594 8.77242222 -0.56942241
 v -0.0828839 8.7658154 -0.51653246
@@ -47920,5 +47912,3 @@ f 5289/31807 5280/31808 5278/31809
 f 5263/31810 5275/31811 5261/31812
 f 5275/31813 5273/31814 5266/31815
 f 5384/31816 1473/31817 1474/31818
-
- 

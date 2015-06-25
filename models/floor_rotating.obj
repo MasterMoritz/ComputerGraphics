@@ -1,12 +1,4 @@
-# File exported by ZBrush version 4.7
-# www.zbrush.com
-#Vertex Count 442
-#UV Vertex Count 453
-#Face Count 880
-#Auto scale x=0.200001 y=0.200001 z=0.200001
-#Auto offset x=-0.000000 y=-0.069992 z=-0.000000
-mtllib floor_rotating_oPP.mtl
-usemtl defaultMat
+mtllib floor_rotating.mtl
 v 0.98768655 0.24995958 -0.15643241
 v 0.95105469 0.24995958 -0.3090149
 v 0.89100483 0.24995958 -0.45398841
@@ -1792,5 +1784,3 @@ f 437/447 438/448 442/453
 f 438/448 439/449 442/453
 f 439/449 440/450 442/453
 f 440/450 401/411 442/453
-
- 
