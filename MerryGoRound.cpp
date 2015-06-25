@@ -360,7 +360,40 @@ void CreateBillboardSquare() {
   glTexCoord2i(1, 0); glVertex3f (-u[0] + v[0], -u[1] + v[1], -u[2] + v[2]);
   glTexCoord2i(1, 1); glVertex3f (-u[0] - v[0], -u[1] - v[1], -u[2] - v[2]);
   glTexCoord2i(0, 1); glVertex3f ( u[0] - v[0],  u[1] - v[1],  u[2] - v[2]);
-  glEnd ();
+  glEnd();
+}
+
+
+/******************************************************************
+*
+* BillboardAxis
+*
+* This function is called to axis align the billboard.
+*
+*******************************************************************/
+
+void BillboardAxis() {
+  glPushMatrix();
+  glRotatef(BILLBOARD_ROTATION_X, 0, -1, 0);
+  CreateBillboardSquare();
+  glPopMatrix();
+}
+
+
+/******************************************************************
+*
+* BillboardWorld
+*
+* This function is called to world align the billboard.
+*
+*******************************************************************/
+
+void BillboardWorld() {
+  glPushMatrix();
+  glRotatef(BILLBOARD_ROTATION_X, 0, -1, 0);
+  glRotatef(BILLBOARD_ROTATION_Y, -1, 0, 0);
+  CreateBillboardSquare();
+  glPopMatrix();
 }
 
 
@@ -563,8 +596,8 @@ void Display() {
   glDisableVertexAttribArray(vPosition);
   //glDisable(GL_BLEND);
 
-  /* Add billboard to scenery 
-  glClear(GL_COLOR_BUFFER_BIT);
+  /* Add billboard to scenery */
+  //glClear(GL_COLOR_BUFFER_BIT);
   glLoadIdentity();
   glTranslatef(0, 0, -10.);
 
@@ -573,16 +606,43 @@ void Display() {
   glRotatef(BILLBOARD_ROTATION_Z, 0, 1, 0);
 
   // display billboard
-  glPushMatrix();
+  /*glPushMatrix();
   glTranslatef(0, 0, 0);
-  glColor3f(0.2, 0.2, 0.2);
+  glColor3f(0.2, 0.2, 0.2);*/
 
   // screen aligned billboards
-  BillboardScreen();*/
+  //BillboardAxis();
+  //BillboardWorld();
+  //BillboardScreen();
 
-  glPopMatrix();
+  //glPopMatrix();
+  
+  /* A cube made of 9 billboards */
+  for (int i = 0; i < 3; ++i)
+    for (int j = 0; j < 3; ++j)
+      for (int k = 0; k < 3; ++k)
+	{
+	  glPushMatrix ();
+	  glTranslatef (i - 1, j - 1, k - 1);
+	  glColor3f (0.2 + i * 0.4, 0.2 + j * 0.4, 0.2 + k * 0.4);
+
+	  /* The bottom rows are axis aligned billboards */
+	  if (0 == j)
+	    BillboardAxis();
+
+	  /* The middle rows are world aligned billboards */
+	  if (1 == j)
+	    BillboardWorld();
+
+	  /* The top rows are screen aligned billboards */
+	  if (2 == j)
+	    BillboardScreen();
+
+	  glPopMatrix ();
+	}
 
   /* Swap between front and back buffer */ 
+  glFlush();
   glutSwapBuffers();
 }
 
@@ -921,8 +981,8 @@ float moves(double angle, double offset) {
 *******************************************************************/
 
 void OnIdle() {
-  calculateFPS();
-  printf("%i FPS\n",fps);
+  //calculateFPS();
+  //printf("%i FPS\n",fps);
 
   /* Determine delta time between two frames to ensure constant animation */
   int newTime = glutGet(GLUT_ELAPSED_TIME);
@@ -1384,7 +1444,7 @@ void LoadObjFiles() {
 
 int LoadJpegFiles (const char* filename, unsigned char* dest, const int format, const unsigned int size) {
   /* define file pointer and necessary structs */
-  FILE *fp;
+  FILE* fp;
   struct jpeg_decompress_struct jinfo; // decompressed jpeg info struct
   struct jpeg_error_mgr jerr; // jpeg error struct
   unsigned char* line;
@@ -1432,39 +1492,6 @@ int LoadJpegFiles (const char* filename, unsigned char* dest, const int format, 
 
   return 0; // success
 }
-
-
-/******************************************************************
-*
-* BillboardAxis
-*
-* This function is called to axis align the billboard.
-*
-*******************************************************************/
-
-/*void BillboardAxis() {
-  glPushMatrix();
-  glRotatef(BILLBOARD_ROTATION_X, 0, -1, 0);
-  CreateBillboardSquare();
-  glPopMatrix();
-}*/
-
-
-/******************************************************************
-*
-* BillboardWorld
-*
-* This function is called to world align the billboard.
-*
-*******************************************************************/
-
-/*void BillboardWorld() {
-  glPushMatrix();
-  glRotatef(BILLBOARD_ROTATION_X, 0, -1, 0);
-  glRotatef(BILLBOARD_ROTATION_Y, -1, 0, 0);
-  CreateBillboardSquare();
-  glPopMatrix();
-}*/
 
 
 /******************************************************************
@@ -1657,19 +1684,20 @@ int main(int argc, char** argv) {
   /* Setup scene and rendering parameters */
   Initialize();
 
-  /* Load billboard 
+  /* Load billboard */
   unsigned char billboardTextureData[4096]; // equals 64*64
-  if (LoadJpegFiles("test.jpg", billboardTextureData, GL_ALPHA, 64) != 0) {
-    return 1;
+  if (LoadJpegFiles("billboard/test.jpg", billboardTextureData, GL_ALPHA, 64) != 0) {
+    fprintf(stderr, "Error: could not load jpeg for billboard.\n");
+    exit(-1);
   }
 
   glGenTextures(1, &billboardTexture);
   glBindTexture(GL_TEXTURE_2D, billboardTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 64, 64, 0, GL_ALPHA, GL_UNSIGNED_BYTE, billboardTextureData);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 64, 64, 0, GL_RGB, GL_UNSIGNED_BYTE, billboardTextureData);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);*/
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
   /* Specify callback functions;enter GLUT event processing loop, 
   * handing control over to GLUT */
