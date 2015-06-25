@@ -795,10 +795,11 @@ void calculateFPS()
     {
         //  calculate the number of frames per second
         fps = frameCount / (timeInterval / 1000.0f);
- 
+ 		printf("%i FPS\n",fps );
+
         //  Set time
         previousTime = currentTime;
- 
+ 		
         //  Reset frame count
         frameCount = 0;
     }
@@ -827,7 +828,6 @@ float moves(double angle, double offset) {
 void OnIdle()
 {
 	calculateFPS();
-	printf("%i FPS\n",fps );
 
 	/* Determine delta time between two frames to ensure constant animation */
 	int newTime = glutGet(GLUT_ELAPSED_TIME);
