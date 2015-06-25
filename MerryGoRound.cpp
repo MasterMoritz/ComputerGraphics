@@ -135,7 +135,7 @@ using namespace glm;
 
 enum
 {
-    PARTICLE_COUNT          = 200000,
+    PARTICLE_COUNT          = 20000,
     MAX_ATTRACTORS          = 1
 };
 
