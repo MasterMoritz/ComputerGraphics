@@ -189,7 +189,8 @@ GLuint ShaderProgram;
 mat4 ProjectionMatrix; /* Perspective projection matrix */
 mat4 ViewMatrix;       /* Camera view matrix */ 
 mat4 ModelMatrix[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];      /* Model matrices */ 
-  
+int textureUnits[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM]; /* texture unit in which the texture for this model is saved */
+
 /* Transformation matrices for model rotation */
 mat4 RotationMatrixAnimX;
 mat4 RotationMatrixAnimY;
@@ -1378,29 +1379,90 @@ void Initialize()
 /******
 *
 * load textures
+* at least 48 texture units are available on every graphics card.
+* since we don't need more (including maps) at any time, we can pre-load them all in this function.
 *
+* convention: diffuse textures are saved in material file while emissive, glossines and specular maps 
+*             append '_Emmissive' '_Glossiness' and '_Specular' respectively to the diffuse tex name
 *******/
 void loadTextures() {
 
-	glEnable(GL_TEXTURE_2D);
- 	GLuint tex;
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//filter out duplicate textures
+	const int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
+	int numTextures = 0;
+	// also store emissive, glossines, specular maps && maximum length of texture names is 256
+	char textureNames[numObjects*4][256]; 
 	
-	int width, height, n;
-	image = stbi_load("512X512.png", &width, &height, &n, 0);
+	//skip duplicate texture names
+	for (int i = 0; i < numObjects; i++) {
+		bool load = true;
+		char* textureName = (*(data[i]).material_list[0]).texture_filename;
+		
+		for (int z = 0; z < numTextures; z += 4) {
 
-	if (image == NULL) {
-	    fprintf(stderr, "Could not load texture image\n");
-	    exit(-1);
+			//texture is already loaded
+			if (strcmp(textureNames[z], textureName) == 0) {
+				load = false;
+				textureUnits[i] = z;
+				break;
+			}
+		}
+		//texture not loaded yet
+		if (load) {
+			//add diffuse texture name
+			textureNames[numTextures][0] = '\0';
+			strncpy(textureNames[numTextures], textureName, 243);
+			textureNames[numTextures][244] = '\0';
+			//printf("%s\n", textureNames[numTextures]);
+			
+			//add emmissive texture name
+			textureNames[numTextures+1][0] = '\0';
+			strncpy(textureNames[numTextures+1], textureName, 255);
+			textureNames[numTextures+1][strlen(textureName)-5] = '\0';
+			strcat(textureNames[numTextures+1], "_Emmissive.png\0");
+
+			//add glossiness texture name
+			textureNames[numTextures+2][0] = '\0';
+			strncpy(textureNames[numTextures+2], textureName, 255);
+			textureNames[numTextures+2][strlen(textureName)-5] = '\0';
+			strcat(textureNames[numTextures+2], "_Glossiness.png\0");
+
+			//add specular texture name
+			textureNames[numTextures+2][0] = '\0';
+			strncpy(textureNames[numTextures+2], textureName, 255);
+			textureNames[numTextures+2][strlen(textureName)-5] = '\0';
+			strcat(textureNames[numTextures+2], "_Specular.png\0");
+
+			//save texture unit value for diffuse texture for this object
+			textureUnits[i] = numTextures;
+			numTextures += 4; // also store emissive, glossines, specular maps
+		}
 	}
-printf("test %s\n", (*(data[NUM_STATIC+NUM_BASIC_ANIM]).material_list[0]).texture_filename);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-	stbi_image_free(image);
+
+	//generate texture handlers
+ 	GLuint textures[numTextures];
+	glGenTextures(numTextures, textures);
+
+	//bind textures
+	for (int i = 0; i < numTextures; i++) {
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, textures[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
+		int width, height, n;
+		image = stbi_load("512X512.png", &width, &height, &n, 0);
+
+		if (image == NULL) {
+			fprintf(stderr, "Could not load texture image\n");
+			exit(-1);
+		}
+		//printf("test %s\n", (*(data[i]).material_list[0]).texture_filename);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		stbi_image_free(image);
+	}
 }
 
 /******************************************************************
