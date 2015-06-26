@@ -92,11 +92,11 @@ void main()
         //orientation of local surface
         vec3 n = normalize(Normal);
         //shininess (i.e. how "sharp"/narrow the reflection should be)
-        float m = texture(tex_glossiness, texcoord); 
+        float m = texture(tex_glossiness, texcoord).x; 
         //parameters determining reflection behaviour
         vec3 ka = materials[materialIndex].ambient;
-        vec3 kd = texture(tex_diffuse, texcoord);
-        vec3 ks = texture(tex_specular, texcoord);
+        vec3 kd = texture(tex_diffuse, texcoord).xyz;
+        vec3 ks = texture(tex_specular, texcoord).xyz;
 
         //ambient light
         vec3 Ila = vec3(.2, .2, .2);
@@ -110,8 +110,8 @@ void main()
         //specular reflection
         vec3 Is = vec3(0.0);
 
-        //emissive color
-        vec3 Ie = vec3(0.0);
+        //the emissive term simply adds additional lighting when not already fully lit
+        vec3 Ie = texture(tex_emissive, texcoord).xyz;
 
         for(int i = 0; i < light_count; i++) {
             if (!lights[i].isEnabled) {
@@ -156,14 +156,8 @@ void main()
             Is += vec3(ks[0] * Il[0] * x, ks[1] * Il[1] * x, ks[2] * Il[2] * x);
         }
 
-        //the emissive term simply adds additional lighting when not already fully lit
-        if(tex_emissive != null) {
-            Ie = texture(tex_emissive, texcoord);
-        }
-
         vec3 I = Ia*ambientRendering + Is*specularRendering + Id*diffuseRendering + Ie;
      
-        //FragColor = vec4(I, 1.0);
-        FragColor = texture(tex, texcoord);zz
+        FragColor = vec4(I, 1.0);
     }
 }
