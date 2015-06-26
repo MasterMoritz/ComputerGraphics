@@ -124,6 +124,12 @@ using namespace glm;
 #ifndef NUM_ADV_ANIM
 	#define NUM_ADV_ANIM 6
 #endif
+#ifndef NUM_BILLBOARDS
+	#define NUM_BILLBOARDS 0
+#endif
+#ifndef NUM_OBJECTS
+	#define NUM_OBJECTS NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM+NUM_BILLBOARDS
+#endif
 #ifndef NUM_LIGHT
 	#define NUM_LIGHT 3
 #endif
@@ -142,22 +148,22 @@ GLboolean anim = GL_TRUE;
 int camMode = 0;
 
 /* Define handles to vertex buffer objects */
-GLuint VBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint VBO[NUM_OBJECTS];
 
 /* Define handles to index buffer objects */
-GLuint IBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint IBO[NUM_OBJECTS];
 
 /* Define handles to normal buffer objects */
-GLuint NBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint NBO[NUM_OBJECTS];
 
 /* Define handles to material index buffer objects */
-GLuint MBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint MBO[NUM_OBJECTS];
 
 /* Define handles to texture coord buffer */
-GLuint TBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint TBO[NUM_OBJECTS];
 
 /* Model VAOs */
-GLuint VAO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint VAO[NUM_OBJECTS];
 
 /* Particle VAO */
 GLuint PVAO;
@@ -191,8 +197,8 @@ GLuint ShaderProgram;
 /* Matrices for uniform variables in vertex shader */
 mat4 ProjectionMatrix; /* Perspective projection matrix */
 mat4 ViewMatrix;       /* Camera view matrix */ 
-mat4 ModelMatrix[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];      /* Model matrices */ 
-int textureUnits[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM]; /* texture unit in which the texture for this model is saved */
+mat4 ModelMatrix[NUM_OBJECTS];      /* Model matrices */ 
+int textureUnits[NUM_OBJECTS]; /* texture unit in which the texture for this model is saved */
 
 /* Transformation matrices for model rotation */
 mat4 RotationMatrixAnimX;
@@ -203,7 +209,7 @@ mat4 RotationMatrixAnim;
 /* Additional transformation matrices */
 mat4 T;
 mat4 R;
-mat4 InitialTransform[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+mat4 InitialTransform[NUM_OBJECTS];
 mat4 ViewTransform;
 
 /* Variables for storing current rotation angles */
@@ -217,22 +223,22 @@ float manualSpeed = 0.2f;
 int xold, yold = 0;
 
 /* Arrays for holding vertex data of models */
-GLfloat *vertex_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLfloat *vertex_buffer_data[NUM_OBJECTS];
 
 /* Arrays for holding indices of models */
-GLushort *index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLushort *index_buffer_data[NUM_OBJECTS];
 
 /* Arrays for holding normals of models */
-GLfloat *normal_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLfloat *normal_buffer_data[NUM_OBJECTS];
 
 /* Arrays for holding indices of materials */
-GLushort *material_index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLushort *material_index_buffer_data[NUM_OBJECTS];
 
 /* Arrays for holding texture coordinates of vertices */
-GLfloat *texture_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLfloat *texture_buffer_data[NUM_OBJECTS];
 
 /* Structures for loading of OBJ data */
-obj_scene_data data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+obj_scene_data data[NUM_OBJECTS];
 
 /* Reference time for animation */
 int oldTime = 0;    //in ms
@@ -1315,10 +1321,10 @@ void Initialize()
 	lights[0].ambient[2] = 0.0f;
 	lights[0].color = vec3 (360.0f, 1.0f, 1.0f); //red
 	lights[0].position[0] = 0.0f;
-	lights[0].position[1] = 2.0f;
+	lights[0].position[1] = 12.0f;
 	lights[0].position[2] = 0.0f;
 	lights[0].attenuation = 0.05f;
-	lights[0].intensity = 0.2f;
+	lights[0].intensity = 0.1f;
 
 	lights[1].isEnabled = GL_TRUE;
 	lights[1].type = 1; // light is spot light
@@ -1327,14 +1333,14 @@ void Initialize()
 	lights[1].ambient[2] = 0.0f;
 	lights[1].color = vec3 (240.0f, 1.0f, 1.0f); //blue
 	lights[1].position[0] = 0.0f;
-	lights[1].position[1] = 0.0f;
+	lights[1].position[1] = 1.0f;
 	lights[1].position[2] = 0.0f;
 	lights[1].coneDirection[0] = 0.0f;
 	lights[1].coneDirection[1] = 1.0f;
 	lights[1].coneDirection[2] = 0.0f;
-	lights[1].coneCutOffAngleCos = cos(radians(20.0f)); //cutoff cone at 20 degrees to either side
+	lights[1].coneCutOffAngleCos = cos(45.0f);
 	lights[1].attenuation = 0.5f;
-	lights[1].intensity = .2f;
+	lights[1].intensity = 0.1f;
 
     lights[2].isEnabled = GL_TRUE;
 	lights[2].type = 1; // light is point light
@@ -1348,9 +1354,9 @@ void Initialize()
     lights[2].coneDirection[0] = 3.0f;
 	lights[2].coneDirection[1] = -1.0f;
 	lights[2].coneDirection[2] = 0.0f;
-	lights[2].coneCutOffAngleCos = cos(radians(20.0f)); //cutoff cone at 20 degrees to either side
+	lights[2].coneCutOffAngleCos = cos(20.0f); //cutoff cone at 20 degrees to either side
 	lights[2].attenuation = .2f;
-	lights[2].intensity = .1f;
+	lights[2].intensity = 0.05f;
 
 	//set the number of lights in shader
 	GLuint light_count = glGetUniformLocation(ShaderProgram, "light_count");
