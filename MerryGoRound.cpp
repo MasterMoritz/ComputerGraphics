@@ -1412,7 +1412,7 @@ void loadTextures() {
 			//add diffuse texture name
 			textureNames[numTextures][0] = '\0';
 			strncpy(textureNames[numTextures], textureName, 243);
-			textureNames[numTextures][244] = '\0';
+			textureNames[numTextures][strlen(textureName)-1] = '\0';
 			//printf("%s\n", textureNames[numTextures]);
 			
 			//add emmissive texture name
@@ -1428,10 +1428,10 @@ void loadTextures() {
 			strcat(textureNames[numTextures+2], "_Glossiness.png\0");
 
 			//add specular texture name
-			textureNames[numTextures+2][0] = '\0';
-			strncpy(textureNames[numTextures+2], textureName, 255);
-			textureNames[numTextures+2][strlen(textureName)-5] = '\0';
-			strcat(textureNames[numTextures+2], "_Specular.png\0");
+			textureNames[numTextures+3][0] = '\0';
+			strncpy(textureNames[numTextures+3], textureName, 255);
+			textureNames[numTextures+3][strlen(textureName)-5] = '\0';
+			strcat(textureNames[numTextures+3], "_Specular.png\0");
 
 			//save texture unit value for diffuse texture for this object
 			textureUnits[i] = numTextures;
@@ -1459,7 +1459,7 @@ void loadTextures() {
 			fprintf(stderr, "Could not load texture image\n");
 			exit(-1);
 		}
-		//printf("test %s\n", (*(data[i]).material_list[0]).texture_filename);
+		//printf("test %s\n", textureNames[i]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 		stbi_image_free(image);
 	}
