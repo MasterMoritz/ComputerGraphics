@@ -166,6 +166,9 @@ GLuint PVAO;
 GLuint particle_position_buffer;
 vec3 particle_velocities[NUM_PARTICLES];
 
+/* Initial position of the particles */
+vec3 particles_initial_position;
+
 /* Special points to manipulate the flow of the particle stream (mass is stored in w coordinate) */
 vec4 grav_points[NUM_GRAV_POINTS];
 
@@ -822,7 +825,7 @@ void OnIdle()
         pos.y += vel.y * deltaForParticles;
         pos.z += vel.z * deltaForParticles;
         /* let particles age a bit in order to maintain a fresh stream of particles on the long run */
-        pos.w -= 0.0001 * deltaForParticles;
+        pos.w -= 0.001 * length(vec3(pos.x - particles_initial_position.x, pos.y - particles_initial_position.y, pos.z - particles_initial_position.z));
         
         /* update the particles' velocities (depends on mass and position of gravitation points) */
         for (int j = 0; j < NUM_GRAV_POINTS; j++) {
@@ -835,14 +838,10 @@ void OnIdle()
         /* particles are reset to an initial position and velocity when they die (this equals a new instance of a particle) */
         if (pos.w <= 0.0)
         {
-            //fprintf(stderr, "particle died\n");
-            pos.x = -pos.x * 0.01;
-            pos.y = -pos.y * 0.01;
-            pos.z = -pos.z * 0.01;
-            vel.x *= 0.01;
-            vel.y *= 0.01;
-            vel.z *= 0.01;
-            pos.w += 1.0f;
+            fprintf(stderr, "particle died\n");
+            vec3 randomVec = randvec(-1.0f, 1.0f) + particles_initial_position;
+            pos = vec4(randomVec.x, randomVec.y, randomVec.z, randf());
+            vel = randvec(0.1f, 0.2f);
         }
         particlePositions[i] = pos;
         particle_velocities[i] = vel;
@@ -1003,13 +1002,13 @@ void SetupDataBuffers()
     /* GL_MAP_INVALIDATE_BUFFER_BIT dumps all previous content of the buffer */   
     vec4* particlePositions = (vec4 *)glMapBufferRange(GL_ARRAY_BUFFER, 0, NUM_PARTICLES * sizeof(vec4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
     for (int i = 0; i < NUM_PARTICLES; i++) {
-        vec3 randomVec = randvec(-10.0f, 10.0f);
+        vec3 randomVec = randvec(-1.0f, 1.0f) + particles_initial_position;
         particlePositions[i] = vec4(randomVec.x, randomVec.y, randomVec.z, randf());
     }
     glUnmapBuffer(GL_ARRAY_BUFFER);
     /* Set the initial velocities of the particles to some small, random value. */
     for (int i = 0; i < NUM_PARTICLES; i++) {
-        particle_velocities[i] = randvec(-0.1f, 0.1f);
+        particle_velocities[i] = randvec(0.1f, 0.2f);
     }
 }
 
