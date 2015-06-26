@@ -1,8 +1,8 @@
 /******************************************************************
 *
-* MerryGoRound.c
+* MerryGoRound.cpp
 *
-* Assignment 3
+* Assignment 4
 *
 * Computer Graphics Proseminar SS 2015
 * 
