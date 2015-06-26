@@ -319,6 +319,7 @@ void Display()
 	/* Associate program with shader matrices */
     GLint PVM_Uniform = glGetUniformLocation(ShaderProgram, "PVM_Matrix");    
 	GLint VM_Uniform = glGetUniformLocation(ShaderProgram, "VM_Matrix");
+	GLint NormalUniform = glGetUniformLocation(ShaderProgram, "NormalMatrix");
 
 	GLuint light_attribute;
 
@@ -409,6 +410,7 @@ void Display()
 		mat4 vm = ViewMatrix * ModelMatrix[i];
 		glUniformMatrix4fv(PVM_Uniform, 1, GL_FALSE, value_ptr(ProjectionMatrix * vm));
 		glUniformMatrix4fv(VM_Uniform, 1, GL_FALSE, value_ptr(vm));
+		glUniformMatrix4fv(NormalUniform, 1, GL_FALSE, value_ptr(transpose(inverse(ModelMatrix[i]*ViewMatrix))));
 
 		/* set material index */
 		GLuint material_count = glGetUniformLocation(ShaderProgram, "material_count");
