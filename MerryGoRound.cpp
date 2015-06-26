@@ -546,7 +546,7 @@ void Mouse(int button, int state, int x, int y) {
             }
             else if(camMode == 2) {
                 //zoom in
-				ViewTransform = scale(ViewTransform, vec3(1.0, 1.0, 0.95));
+				ViewTransform = translate(ViewTransform, vec3(0.0, 0.0, 0.05));
             }
 	    }
 	    else if(button == scroll_up) {
@@ -555,7 +555,8 @@ void Mouse(int button, int state, int x, int y) {
 	            manualSpeed /= 1.12f;
             }
             else if(camMode == 2) {
-                ViewTransform = scale(ViewTransform, vec3(1.0, 1.0, 1.05));
+				//zoom out
+                ViewTransform = translate(ViewTransform, vec3(0.0, 0.0, -0.05));
             }
 	    }
     }
