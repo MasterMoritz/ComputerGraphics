@@ -1,8 +1,8 @@
 /******************************************************************
 *
-* Bezier.h
+* ColorConversion.cpp
 *
-* Description: Helper routine for bezier curve computations.
+* Description: Helper routine for color space transformations.
 * 	
 *
 * Computer Graphics Proseminar SS 2015

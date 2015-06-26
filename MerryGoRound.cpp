@@ -74,11 +74,6 @@
 * m -> enable/disable specular rendering
 *
 */
-/******************** ADDITIONAL NOTES **************************
-*
-* The (seemingly) random lines in the background are actually from the walls and the floor and 100% intended
-*
-*****************************************************************/
 
 /************************ PROGRAM *******************************/
 /* Standard includes */
@@ -114,7 +109,8 @@ using namespace glm;
 #include "Matrix.hpp"         /* Functions for matrix handling */
 #include "OBJParser.hpp"      /* Loading function for triangle meshes in OBJ format */
 #include "Bezier.hpp"         /* Functions for bezier curve computations */
-#include "ColorConversion.hpp"/* Function for color space transformations */
+#include "ColorConversion.hpp"/* Functions for color space transformations */
+#include "Random.hpp"         /* Functions returning random floats and vectors */
 
 #ifndef M_PI
 	#define M_PI 3.14159265358979323846
@@ -131,13 +127,13 @@ using namespace glm;
 #ifndef NUM_LIGHT
 	#define NUM_LIGHT 3
 #endif
+#ifndef NUM_PARTICLES
+    #define NUM_PARTICLES 20000
+#endif
+#ifndef NUM_GRAV_POINTS
+    #define NUM_GRAV_POINTS 1
+#endif
 /*----------------------------------------------------------------*/
-
-enum
-{
-    PARTICLE_COUNT          = 20000,
-    MAX_ATTRACTORS          = 1
-};
 
 /* Flag for starting/stopping animation */
 GLboolean anim = GL_TRUE;
@@ -160,11 +156,21 @@ GLuint MBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 /* Define handles to texture coord buffer */
 GLuint TBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
+/* Model VAOs */
 GLuint VAO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
-// Posisition and velocity buffers for particles
+/* Particle VAO */
+GLuint PVAO;
+
+/* Position buffer and velocity array for particles */
 GLuint particle_position_buffer;
-GLuint particle_velocity_buffer;
+vec3 particle_velocities[NUM_PARTICLES];
+
+/* Special points to manipulate the flow of the particle stream (mass is stored in w coordinate) */
+vec4 grav_points[NUM_GRAV_POINTS];
+
+/* Mass of the gravitation points */
+float grav_point_masses[NUM_GRAV_POINTS];
 
 /* texture image, for now just 1 hardcoded for testing puposes */
 unsigned char* image;
@@ -223,15 +229,6 @@ GLfloat *texture_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
 
 /* Structures for loading of OBJ data */
 obj_scene_data data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
-
-// Attractors
-vec4 attractors[MAX_ATTRACTORS];
-
-// Mass of the attractors
-float attractor_masses[MAX_ATTRACTORS];
-
-//Particle VAO
-GLuint particle_vao;
 
 /* Reference time for animation */
 int oldTime = 0;    //in ms
@@ -297,39 +294,6 @@ struct Material {
     GLfloat specular[3];
 };
 char materialAttributes[3][32]; //the attribute names in the shader, for easier access
-
-
-/******************************************************************
-*
-* Particle simulation helper functions
-*
-* These functions are called to calculate
-* random floats and vectors.
-*
-*******************************************************************/
-inline float random_float()
-{
-    float res;
-    unsigned int tmp;
-    static unsigned int seed = 0xFFFF0C59;
-
-    seed *= 16807;
-
-    tmp = seed ^ (seed >> 4) ^ (seed << 15);
-
-    *((unsigned int *) &res) = (tmp >> 9) | 0x3F800000;
-
-    return (res - 1.0f);
-}
-
-vec3 random_vector(float minmag = 0.0f, float maxmag = 1.0f)
-{
-    vec3 randomvec(random_float() * 2.0f - 1.0f, random_float() * 2.0f - 1.0f, random_float() * 2.0f - 1.0f);
-    randomvec = normalize(randomvec);
-    randomvec *= (random_float() * (maxmag - minmag) + minmag);
-
-    return randomvec;
-}
 
 
 /******************************************************************
@@ -502,17 +466,24 @@ void Display()
 		glDisableVertexAttribArray(texCoord);
 	}
 
+    /* draw particles */
     glUniformMatrix4fv(PVM_Uniform, 1, GL_FALSE, value_ptr(ProjectionMatrix * ViewMatrix));
+    /* tell the shader to ignore lighting calculations */
     GLuint particleRenderingLoc = glGetUniformLocation(ShaderProgram, "particleRendering");
     glUniform1i(particleRenderingLoc, 1);
+    /* bind vertex buffer */
     glEnableVertexAttribArray(vPosition);
 	glBindBuffer(GL_ARRAY_BUFFER, particle_position_buffer);
     glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    /* customize the particle size */
+    //glPointSize(1.4f);
+    /* enable blending (looks bright when multiple particles overlap) */
     //glEnable(GL_BLEND);
     //glBlendFunc(GL_ONE, GL_ONE);
-    //glPointSize(1.4f);
-    glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
+    /* issue draw command */
+    glDrawArrays(GL_POINTS, 0, NUM_PARTICLES);
     glDisableVertexAttribArray(vPosition);
+    /* disable blending (we don't want to have it for the normal models) */
     //glDisable(GL_BLEND);
 
     /* Swap between front and back buffer */ 
@@ -839,37 +810,28 @@ void OnIdle()
     //upate the time the program is running since the very start (in sec, determines TTL)
     elapsedTime += delta/1000.0f;
 
-
-    //update the attractor positions
-    /*for (int i = 0; i < MAX_ATTRACTORS; i++)
-    {
-        attractors[i] = vec4(sinf(elapsedTime * (float)(i + 4) * 7.5f * 20.0f) * 50.0f,
-                                    cosf(elapsedTime * (float)(i + 7) * 3.9f * 20.0f) * 50.0f,
-                                    sinf(elapsedTime * (float)(i + 3) * 5.3f * 20.0f) * cosf(elapsedTime * (float)(i + 5) * 9.1f) * 100.0f,
-                                    attractor_masses[i]);
-    }*/
-
+    /* map the buffer containing the particle positions so that we can modify it */
 	glBindBuffer(GL_ARRAY_BUFFER, particle_position_buffer);
-    vec4* particlePositions = (vec4 *)glMapBufferRange(GL_ARRAY_BUFFER, 0, PARTICLE_COUNT * sizeof(vec4), GL_MAP_WRITE_BIT);
-    glBindBuffer(GL_ARRAY_BUFFER, particle_velocity_buffer);
-    vec4 * velocities = (vec4 *)glMapBufferRange(GL_ARRAY_BUFFER, 0, PARTICLE_COUNT * sizeof(vec4), GL_MAP_WRITE_BIT);
-    for (int i = 0; i < PARTICLE_COUNT; i++)
-    {
+    vec4* particlePositions = (vec4 *)glMapBufferRange(GL_ARRAY_BUFFER, 0, NUM_PARTICLES * sizeof(vec4), GL_MAP_WRITE_BIT);
+    for (int i = 0; i < NUM_PARTICLES; i++) {
         vec4 pos = particlePositions[i];
-        vec4 vel = velocities[i];
+        vec3 vel = particle_velocities[i];
+        /* move particles depending on delta time and their current velocity */
         pos.x += vel.x * deltaForParticles;
         pos.y += vel.y * deltaForParticles;
         pos.z += vel.z * deltaForParticles;
+        /* let particles age a bit in order to maintain a fresh stream of particles on the long run */
         pos.w -= 0.0001 * deltaForParticles;
-
-        for (int j = 0; j < MAX_ATTRACTORS; j++)
-        {
-            vec3 dist = vec3(attractors[j].x - pos.x, attractors[j].y - pos.y, attractors[j].z - pos.z);
-            vel.x += deltaForParticles * deltaForParticles * attractors[j].w * normalize(dist).x / (dot(dist, dist) + 10.0);
-            vel.y += deltaForParticles * deltaForParticles * attractors[j].w * normalize(dist).y / (dot(dist, dist) + 10.0);
-            vel.z += deltaForParticles * deltaForParticles * attractors[j].w * normalize(dist).z / (dot(dist, dist) + 10.0);
+        
+        /* update the particles' velocities (depends on mass and position of gravitation points) */
+        for (int j = 0; j < NUM_GRAV_POINTS; j++) {
+            vec3 dist = vec3(grav_points[j].x - pos.x, grav_points[j].y - pos.y, grav_points[j].z - pos.z);
+            vel.x += grav_points[j].w * deltaForParticles * deltaForParticles * normalize(dist).x / (dot(dist, dist) + 10.0);
+            vel.y += grav_points[j].w * deltaForParticles * deltaForParticles * normalize(dist).y / (dot(dist, dist) + 10.0);
+            vel.z += grav_points[j].w * deltaForParticles * deltaForParticles * normalize(dist).z / (dot(dist, dist) + 10.0);
         }
 
+        /* particles are reset to an initial position and velocity when they die (this equals a new instance of a particle) */
         if (pos.w <= 0.0)
         {
             //fprintf(stderr, "particle died\n");
@@ -882,10 +844,8 @@ void OnIdle()
             pos.w += 1.0f;
         }
         particlePositions[i] = pos;
-        velocities[i] = vel;
-    }
-    glUnmapBuffer(GL_ARRAY_BUFFER);
-    glBindBuffer(GL_ARRAY_BUFFER, particle_position_buffer);    
+        particle_velocities[i] = vel;
+    }  
     glUnmapBuffer(GL_ARRAY_BUFFER);
 
 
@@ -1031,30 +991,25 @@ void SetupDataBuffers()
 	}
 
 
-    glGenVertexArrays(1, &particle_vao);
-    glBindVertexArray(particle_vao);
+    glGenVertexArrays(1, &PVAO);
+    glBindVertexArray(PVAO);
 
     glGenBuffers(1, &particle_position_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, particle_position_buffer);
-    glBufferData(GL_ARRAY_BUFFER, PARTICLE_COUNT * sizeof(vec4), NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, NUM_PARTICLES * sizeof(vec4), NULL, GL_DYNAMIC_DRAW);
 
-    vec4* particlePositions = (vec4 *)glMapBufferRange(GL_ARRAY_BUFFER, 0, PARTICLE_COUNT * sizeof(vec4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-    for (int i = 0; i < PARTICLE_COUNT; i++)
-    {
-        vec3 randomVec = random_vector(-10.0f, 10.0f);
-        particlePositions[i] = vec4(randomVec.x, randomVec.y, randomVec.z, random_float());
+    /* Set the initial particle positions and their respective TTL (time to life) */ 
+    /* GL_MAP_INVALIDATE_BUFFER_BIT dumps all previous content of the buffer */   
+    vec4* particlePositions = (vec4 *)glMapBufferRange(GL_ARRAY_BUFFER, 0, NUM_PARTICLES * sizeof(vec4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    for (int i = 0; i < NUM_PARTICLES; i++) {
+        vec3 randomVec = randvec(-10.0f, 10.0f);
+        particlePositions[i] = vec4(randomVec.x, randomVec.y, randomVec.z, randf());
     }
     glUnmapBuffer(GL_ARRAY_BUFFER);
-
-    glGenBuffers(1, &particle_velocity_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, particle_velocity_buffer);
-    glBufferData(GL_ARRAY_BUFFER, PARTICLE_COUNT * sizeof(vec4), NULL, GL_DYNAMIC_DRAW);
-    vec4 * velocities = (vec4 *)glMapBufferRange(GL_ARRAY_BUFFER, 0, PARTICLE_COUNT * sizeof(vec4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-    for (int i = 0; i < PARTICLE_COUNT; i++)
-    {
-        velocities[i] = vec4(random_vector(-0.1f, 0.1f), 0.0f);
+    /* Set the initial velocities of the particles to some small, random value. */
+    for (int i = 0; i < NUM_PARTICLES; i++) {
+        particle_velocities[i] = randvec(-0.1f, 0.1f);
     }
-    glUnmapBuffer(GL_ARRAY_BUFFER);
 }
 
 
@@ -1416,14 +1371,8 @@ void Initialize()
 	strcat(materialAttributes[2], "materials[0].specular\0");
     
     //Set initial attractor positions and masses
-    for (int i = 0; i < MAX_ATTRACTORS; i++)
-    {
-        attractor_masses[i] = 0.5f + random_float() * 0.5f;
-    }
-    for (int i = 0; i < MAX_ATTRACTORS; i++)
-    {
-        attractors[i] = vec4(0, 2, 0, attractor_masses[i]);
-    }
+    grav_point_masses[0] = 1.0f;
+    grav_points[0] = vec4(0, 2, 0, grav_point_masses[0]);
 }
 
 /******

@@ -1,8 +1,8 @@
 /******************************************************************
 *
-* ColorConversion.hpp
+* Random.hpp
 *
-* Description: Helper routine for color space transformations.
+* Description: Helper routines returning random floats and random vectors.
 * 	
 *
 * Computer Graphics Proseminar SS 2015
@@ -11,7 +11,9 @@
 * Institute of Computer Science
 * University of Innsbruck
 *
-* Andreas Moritz, Philipp Wirtenberger, Martin Agreiter
+* Taken from OpenGL Programming Guide 8th Edition (Shreiner et al.)
 *******************************************************************/
 
-vec3 hsvToRgb(vec3);
+float randf();
+vec3 randvec(float, float);
+
