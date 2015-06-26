@@ -153,6 +153,6 @@ void main()
         vec3 I = Ia*ambientRendering + Is*specularRendering + Id*diffuseRendering;
      
         //FragColor = vec4(I, 1.0);
-        FragColor = texture(tex, texcoord);
+        FragColor = texture(tex, texcoord);zz
     }
 }
