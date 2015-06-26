@@ -125,7 +125,7 @@ using namespace glm;
 	#define NUM_ADV_ANIM 6
 #endif
 #ifndef NUM_BILLBOARDS
-	#define NUM_BILLBOARDS 0
+	#define NUM_BILLBOARDS 1
 #endif
 #ifndef NUM_OBJECTS
 	#define NUM_OBJECTS NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM+NUM_BILLBOARDS
@@ -387,7 +387,7 @@ void Display()
 	}
 
 	/* draw Meshes */
-	int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
+	int numObjects = NUM_OBJECTS;
 
 	for (int i = 0; i < numObjects; i++) {
 		/* bind vertex buffer */
@@ -474,9 +474,11 @@ void Display()
 		/* assign corresponding texture units to samplers */
 		int diffuseTexUnit = textureUnits[i];
 		glUniform1i(glGetUniformLocation(ShaderProgram, "tex_diffuse"), diffuseTexUnit);
-		glUniform1i(glGetUniformLocation(ShaderProgram, "tex_emissive"), diffuseTexUnit+1);
-		glUniform1i(glGetUniformLocation(ShaderProgram, "tex_glossiness"), diffuseTexUnit+2);
-		glUniform1i(glGetUniformLocation(ShaderProgram, "tex_specular"), diffuseTexUnit+3);
+		if (i < NUM_OBJECTS - NUM_BILLBOARDS) {
+			glUniform1i(glGetUniformLocation(ShaderProgram, "tex_emissive"), diffuseTexUnit+1);
+			glUniform1i(glGetUniformLocation(ShaderProgram, "tex_glossiness"), diffuseTexUnit+2);
+			glUniform1i(glGetUniformLocation(ShaderProgram, "tex_specular"), diffuseTexUnit+3);
+		}
 
 		/* Issue draw command, using indexed triangle list */
 		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
@@ -798,6 +800,24 @@ void calculateFPS()
     }
 }
 
+mat4 billboard(vec3 position, vec3 cameraPos, vec3 cameraUp) {
+	vec3 look = normalize(cameraPos - position);
+	vec3 right = cross(cameraUp, look);
+	vec3 up2 = cross(look, right);
+	mat4 transform;
+	transform[0] = vec4(right, 0);
+	transform[1] = vec4(up2, 0);
+	transform[2] = vec4(look, 0);
+	// Uncomment this line to translate the position as well
+	// (without it, it's just a rotation)
+	transform[3] = vec4(position, 1);
+	return transform;
+}
+
+vec3 getCameraPos() {
+	return vec3(ViewMatrix[3].x, ViewMatrix[3].y, ViewMatrix[3].z);
+}
+
 /******************************************************************
 *
 * OnIdle
@@ -967,6 +987,12 @@ void OnIdle()
         }
     }	
     
+	/* rotate billboards */
+	for (int i = NUM_OBJECTS-NUM_BILLBOARDS; i < NUM_OBJECTS; i++) {
+		vec3 up = vec3(normalize(ViewMatrix * vec4(0.0f, 1.0f, 0.0f, 1.0f)));
+		ModelMatrix[i] = billboard(vec3(InitialTransform[i][3]), vec3(ViewMatrix[3]), up);
+	}
+
     /* Issue display refresh */
     glutPostRedisplay();
 }
@@ -982,9 +1008,9 @@ void OnIdle()
 
 void SetupDataBuffers()
 {
-	glGenVertexArrays(NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM, VAO);
+	glGenVertexArrays(NUM_OBJECTS, VAO);
 
-	for (int i = 0; i < NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM; i++) {
+	for (int i = 0; i < NUM_OBJECTS; i++) {
 		glGenBuffers(1, &(VBO[i]));
 		glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
 		glBufferData(GL_ARRAY_BUFFER, (data[i]).vertex_count*3*sizeof(GLfloat), vertex_buffer_data[i], GL_STATIC_DRAW);
@@ -1213,6 +1239,20 @@ void LoadObjFiles()
 		}
 	}
 
+	/* Load all billboard models */
+    filename = "models/testbill.obj"; 
+    success = parse_obj_scene(&(data[objIndex]), filename);
+	InitialTransform[objIndex] = rotate(mat4(1.0f), radians(180.0f), vec3(1.0f, 0.0f, 0.0f));
+	InitialTransform[objIndex] = translate(InitialTransform[objIndex], vec3(10.0f, -20.0f, 0.f));
+	ModelMatrix[objIndex] = scale(InitialTransform[objIndex], vec3(1.0f, 1.0f, 1.0f));
+	vec3 up = vec3(normalize(vec4(0.0f, 1.0f, 0.0f, 1.0f)*ViewMatrix));
+	ModelMatrix[objIndex] = lookAt(vec3(InitialTransform[objIndex][3]), vec3(ViewMatrix[3]), up);
+
+	objIndex += 1;
+    if(!success) {
+        fprintf(stderr, "Could not load file. Exiting.\n");
+	}
+
     /*  Copy mesh data from structs into appropriate arrays */ 
 	objIndex = 0;
     int vert = 0;
@@ -1220,7 +1260,7 @@ void LoadObjFiles()
 	int nrml = 0;
 	int texv = 0;
 
-	for (int z = 0; z < NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM; z++) {
+	for (int z = 0; z < NUM_OBJECTS; z++) {
 		vert = data[z].vertex_count;
 		indx = data[z].face_count;
 		nrml = data[z].vertex_normal_count;
@@ -1280,26 +1320,14 @@ void LoadObjFiles()
 
 void Initialize()
 {   
-    /* Load the object files */
-    LoadObjFiles();
-
-	/* Set background (clear) color to soft bluegreen */ 
-    glClearColor(0.0, 0.2, 0.4, 0.0);
-	
 	/* Enable culling */
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
     /* Enable depth testing */
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);    
+    glDepthFunc(GL_LESS);  
 
-    /* Setup vertex and (material) index buffer objects */
-    SetupDataBuffers();
-
-    /* Setup shaders and shader program */
-    CreateShaderProgram();  
-    
     /* Set projection transform */
     float fovy = 45.0;
     float aspect = 1.0; 
@@ -1310,6 +1338,19 @@ void Initialize()
     /* Set camera transform */
 	ViewTransform = translate(mat4(1.0f), vec3(0.0f, -4.0f, -20.0f));
 	ViewMatrix = ViewTransform * ViewMatrix;
+
+    /* Load the object files */
+    LoadObjFiles();
+
+	/* Set background (clear) color to soft bluegreen */ 
+    glClearColor(0.0, 0.2, 0.4, 0.0);
+	
+  
+    /* Setup vertex and (material) index buffer objects */
+    SetupDataBuffers();
+
+    /* Setup shaders and shader program */
+    CreateShaderProgram();  
 
 	/* setup lights */
 	lights[0].isEnabled = GL_TRUE;
@@ -1373,7 +1414,7 @@ void Initialize()
 void loadTextures() {
 
 	//filter out duplicate textures
-	const int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
+	const int numObjects = NUM_OBJECTS;
 	int numTextures = 0;
 	// also store emissive, glossines, specular maps && maximum length of texture names is 256
 	char textureNames[numObjects*4][256]; 
@@ -1402,27 +1443,34 @@ void loadTextures() {
 			strncpy(textureNames[numTextures], textureName, 243);
 			textureNames[numTextures][strlen(textureName)] = '\0';
 
-			//add emissive texture name
-			textureNames[numTextures+1][0] = '\0';
-			strncpy(textureNames[numTextures+1], textureName, 255);
-			textureNames[numTextures+1][strlen(textureName)-4] = '\0';
-			strcat(textureNames[numTextures+1], "_Emissive.png\0");
+			//dont need maps for billboards
+			if (i < NUM_OBJECTS - NUM_BILLBOARDS) {
+				//add emissive texture name
+				textureNames[numTextures+1][0] = '\0';
+				strncpy(textureNames[numTextures+1], textureName, 255);
+				textureNames[numTextures+1][strlen(textureName)-4] = '\0';
+				strcat(textureNames[numTextures+1], "_Emissive.png\0");
 
-			//add glossiness texture name
-			textureNames[numTextures+2][0] = '\0';
-			strncpy(textureNames[numTextures+2], textureName, 255);
-			textureNames[numTextures+2][strlen(textureName)-4] = '\0';
-			strcat(textureNames[numTextures+2], "_Glossiness.png\0");
+				//add glossiness texture name
+				textureNames[numTextures+2][0] = '\0';
+				strncpy(textureNames[numTextures+2], textureName, 255);
+				textureNames[numTextures+2][strlen(textureName)-4] = '\0';
+				strcat(textureNames[numTextures+2], "_Glossiness.png\0");
 
-			//add specular texture name
-			textureNames[numTextures+3][0] = '\0';
-			strncpy(textureNames[numTextures+3], textureName, 255);
-			textureNames[numTextures+3][strlen(textureName)-4] = '\0';
-			strcat(textureNames[numTextures+3], "_Specular.png\0");
+				//add specular texture name
+				textureNames[numTextures+3][0] = '\0';
+				strncpy(textureNames[numTextures+3], textureName, 255);
+				textureNames[numTextures+3][strlen(textureName)-4] = '\0';
+				strcat(textureNames[numTextures+3], "_Specular.png\0");
 
-			//save texture unit value for diffuse texture for this object
-			textureUnits[i] = numTextures;
-			numTextures += 4; // also store emissive, glossines, specular maps
+				//save texture unit value for diffuse texture for this object
+				textureUnits[i] = numTextures;
+				numTextures += 4; // also store emissive, glossines, specular maps
+			}
+			else {
+				textureUnits[i] = numTextures;
+				numTextures += 1;
+			}
 		}
 	}
 
