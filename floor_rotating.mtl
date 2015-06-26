@@ -4,3 +4,4 @@ Kd 0.57 0.57 0.57
 Ka 0.16 0.16 0.16
 Ks 1.00 1.00 1.00
 Ni 1.00
+map_Ka floor_rotating_DefaultMaterial.png

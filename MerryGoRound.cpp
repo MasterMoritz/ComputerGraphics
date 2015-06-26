@@ -1398,7 +1398,7 @@ void loadTextures() {
 	    fprintf(stderr, "Could not load texture image\n");
 	    exit(-1);
 	}
-
+printf("test %s\n", (*(data[NUM_STATIC+NUM_BASIC_ANIM]).material_list[0]).texture_filename);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 	stbi_image_free(image);
 }
