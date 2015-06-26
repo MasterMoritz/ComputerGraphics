@@ -1141,7 +1141,7 @@ void LoadObjFiles()
 
 	objIndex += 1;
     if(!success) {
-        printf("Could not load file. Exiting.\n");
+        fprintf(stderr, "Could not load file. Exiting.\n");
 	}
 
     filename = "models/floor_static.obj"; 
@@ -1150,7 +1150,7 @@ void LoadObjFiles()
 
 	objIndex += 1;
     if(!success) {
-        printf("Could not load file. Exiting.\n");
+        fprintf(stderr, "Could not load file. Exiting.\n");
 	}
 
     filename = "models/roof.obj"; 
@@ -1159,7 +1159,7 @@ void LoadObjFiles()
 
 	objIndex += 1;
     if(!success) {
-        printf("Could not load file. Exiting.\n");
+        fprintf(stderr, "Could not load file. Exiting.\n");
 	}
 
     filename = "models/dragonHead.obj"; 
@@ -1168,7 +1168,7 @@ void LoadObjFiles()
 
 	objIndex += 1;
     if(!success) {
-        printf("Could not load file. Exiting.\n");
+        fprintf(stderr, "Could not load file. Exiting.\n");
 	}
 
 	/* Load all Basic animation models */
@@ -1178,7 +1178,7 @@ void LoadObjFiles()
 
 	objIndex += 1;
     if(!success) {
-        printf("Could not load file. Exiting.\n");
+        fprintf(stderr, "Could not load file. Exiting.\n");
 	}
 
 	/* Load all Advanced animation models */
@@ -1192,7 +1192,7 @@ void LoadObjFiles()
 
 		objIndex += 1;
 		if(!success) {
-		    printf("Could not load file. Exiting.\n");
+		    fprintf(stderr, "Could not load file. Exiting.\n");
 		}
 	}
 
