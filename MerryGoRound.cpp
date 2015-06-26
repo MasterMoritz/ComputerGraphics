@@ -426,6 +426,7 @@ void Display()
         GLuint particleRenderingLoc = glGetUniformLocation(ShaderProgram, "particleRendering");
         glUniform1i(particleRenderingLoc, 0);
 		
+		/* set material values */
 		GLuint ambLoc;
 		GLuint diffLoc;
 		GLuint specLoc;
@@ -460,6 +461,13 @@ void Display()
 			specular[2] = (GLfloat)(*(data[i]).material_list[z]).spec[2];
 			glUniform3f(specLoc, specular[0], specular[1], specular[2]);
 		}
+
+		/* assign corresponding texture units to samplers */
+		int diffuseTexUnit = textureUnits[i];
+		glUniform1i(glGetUniformLocation(ShaderProgram, "tex_diffuse"), diffuseTexUnit);
+		glUniform1i(glGetUniformLocation(ShaderProgram, "tex_emissive"), diffuseTexUnit+1);
+		glUniform1i(glGetUniformLocation(ShaderProgram, "tex_glossiness"), diffuseTexUnit+2);
+		glUniform1i(glGetUniformLocation(ShaderProgram, "tex_specular"), diffuseTexUnit+3);
 
 		/* Issue draw command, using indexed triangle list */
 		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
@@ -1395,14 +1403,17 @@ void loadTextures() {
 	//skip duplicate texture names
 	for (int i = 0; i < numObjects; i++) {
 		bool load = true;
-		char* textureName = (*(data[i]).material_list[0]).texture_filename;
-		
-		for (int z = 0; z < numTextures; z += 4) {
+		char* texName = (*(data[i]).material_list[0]).texture_filename;
+		char textureName[256] = {'t','e','x','t','u','r','e','s','/','\0', '\0'};
+		strncat(textureName, texName, 245);
+		textureName[strlen(textureName)-1] = '\0';
 
+		for (int z = 0; z < numTextures; z += 4) {
 			//texture is already loaded
 			if (strcmp(textureNames[z], textureName) == 0) {
 				load = false;
 				textureUnits[i] = z;
+				//printf("texture already loaded: %s\n",textureName);
 				break;
 			}
 		}
@@ -1411,25 +1422,24 @@ void loadTextures() {
 			//add diffuse texture name
 			textureNames[numTextures][0] = '\0';
 			strncpy(textureNames[numTextures], textureName, 243);
-			textureNames[numTextures][strlen(textureName)-1] = '\0';
-			//printf("%s\n", textureNames[numTextures]);
-			
-			//add emmissive texture name
+			textureNames[numTextures][strlen(textureName)] = '\0';
+
+			//add emissive texture name
 			textureNames[numTextures+1][0] = '\0';
 			strncpy(textureNames[numTextures+1], textureName, 255);
-			textureNames[numTextures+1][strlen(textureName)-5] = '\0';
-			strcat(textureNames[numTextures+1], "_Emmissive.png\0");
+			textureNames[numTextures+1][strlen(textureName)-4] = '\0';
+			strcat(textureNames[numTextures+1], "_Emissive.png\0");
 
 			//add glossiness texture name
 			textureNames[numTextures+2][0] = '\0';
 			strncpy(textureNames[numTextures+2], textureName, 255);
-			textureNames[numTextures+2][strlen(textureName)-5] = '\0';
+			textureNames[numTextures+2][strlen(textureName)-4] = '\0';
 			strcat(textureNames[numTextures+2], "_Glossiness.png\0");
 
 			//add specular texture name
 			textureNames[numTextures+3][0] = '\0';
 			strncpy(textureNames[numTextures+3], textureName, 255);
-			textureNames[numTextures+3][strlen(textureName)-5] = '\0';
+			textureNames[numTextures+3][strlen(textureName)-4] = '\0';
 			strcat(textureNames[numTextures+3], "_Specular.png\0");
 
 			//save texture unit value for diffuse texture for this object
@@ -1452,10 +1462,10 @@ void loadTextures() {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	
 		int width, height, n;
-		image = stbi_load("512X512.png", &width, &height, &n, 0);
+		image = stbi_load(textureNames[i], &width, &height, &n, 0);
 
 		if (image == NULL) {
-			fprintf(stderr, "Could not load texture image\n");
+			fprintf(stderr, "Could not load texture image:\n%s\n", textureNames[i]);
 			exit(-1);
 		}
 		//printf("test %s\n", textureNames[i]);
