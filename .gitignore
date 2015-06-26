@@ -28,3 +28,6 @@ MerryGoRound
 *.out
 *.app
 MerryGoRound
+
+# Misc
+.directory
