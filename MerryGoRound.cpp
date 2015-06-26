@@ -1396,8 +1396,10 @@ void loadTextures() {
 	//skip duplicate texture names
 	for (int i = 0; i < numObjects; i++) {
 		bool load = true;
-		char* textureName = (*(data[i]).material_list[0]).texture_filename;
-		
+		char* texName = (*(data[i]).material_list[0]).texture_filename;
+		char textureName[256] = {'t','e','x','t','u','r','e','s','/','\0'};
+		strcat(textureName, texName);
+
 		for (int z = 0; z < numTextures; z += 4) {
 
 			//texture is already loaded
@@ -1415,11 +1417,11 @@ void loadTextures() {
 			textureNames[numTextures][strlen(textureName)-1] = '\0';
 			//printf("%s\n", textureNames[numTextures]);
 			
-			//add emmissive texture name
+			//add emissive texture name
 			textureNames[numTextures+1][0] = '\0';
 			strncpy(textureNames[numTextures+1], textureName, 255);
 			textureNames[numTextures+1][strlen(textureName)-5] = '\0';
-			strcat(textureNames[numTextures+1], "_Emmissive.png\0");
+			strcat(textureNames[numTextures+1], "_Emissive.png\0");
 
 			//add glossiness texture name
 			textureNames[numTextures+2][0] = '\0';
@@ -1453,10 +1455,10 @@ void loadTextures() {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	
 		int width, height, n;
-		image = stbi_load("512X512.png", &width, &height, &n, 0);
+		image = stbi_load(textureNames[i], &width, &height, &n, 0);
 
 		if (image == NULL) {
-			fprintf(stderr, "Could not load texture image\n");
+			fprintf(stderr, "Could not load texture image:\n%s\n", textureNames[i]);
 			exit(-1);
 		}
 		//printf("test %s\n", textureNames[i]);
