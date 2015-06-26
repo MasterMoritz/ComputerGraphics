@@ -124,6 +124,12 @@ using namespace glm;
 #ifndef NUM_ADV_ANIM
 	#define NUM_ADV_ANIM 6
 #endif
+#ifndef NUM_BILLBOARDS
+	#define NUM_BILLBOARDS 0
+#endif
+#ifndef NUM_OBJECTS
+	#define NUM_OBJECTS NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM+NUM_BILLBOARDS
+#endif
 #ifndef NUM_LIGHT
 	#define NUM_LIGHT 1
 #endif
@@ -142,22 +148,22 @@ GLboolean anim = GL_TRUE;
 int camMode = 0;
 
 /* Define handles to vertex buffer objects */
-GLuint VBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint VBO[NUM_OBJECTS];
 
 /* Define handles to index buffer objects */
-GLuint IBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint IBO[NUM_OBJECTS];
 
 /* Define handles to normal buffer objects */
-GLuint NBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint NBO[NUM_OBJECTS];
 
 /* Define handles to material index buffer objects */
-GLuint MBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint MBO[NUM_OBJECTS];
 
 /* Define handles to texture coord buffer */
-GLuint TBO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint TBO[NUM_OBJECTS];
 
 /* Model VAOs */
-GLuint VAO[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLuint VAO[NUM_OBJECTS];
 
 /* Particle VAO */
 GLuint PVAO;
@@ -191,8 +197,8 @@ GLuint ShaderProgram;
 /* Matrices for uniform variables in vertex shader */
 mat4 ProjectionMatrix; /* Perspective projection matrix */
 mat4 ViewMatrix;       /* Camera view matrix */ 
-mat4 ModelMatrix[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];      /* Model matrices */ 
-int textureUnits[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM]; /* texture unit in which the texture for this model is saved */
+mat4 ModelMatrix[NUM_OBJECTS];      /* Model matrices */ 
+int textureUnits[NUM_OBJECTS]; /* texture unit in which the texture for this model is saved */
 
 /* Transformation matrices for model rotation */
 mat4 RotationMatrixAnimX;
@@ -203,7 +209,7 @@ mat4 RotationMatrixAnim;
 /* Additional transformation matrices */
 mat4 T;
 mat4 R;
-mat4 InitialTransform[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+mat4 InitialTransform[NUM_OBJECTS];
 mat4 ViewTransform;
 
 /* Variables for storing current rotation angles */
@@ -217,22 +223,22 @@ float manualSpeed = 0.2f;
 int xold, yold = 0;
 
 /* Arrays for holding vertex data of models */
-GLfloat *vertex_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLfloat *vertex_buffer_data[NUM_OBJECTS];
 
 /* Arrays for holding indices of models */
-GLushort *index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLushort *index_buffer_data[NUM_OBJECTS];
 
 /* Arrays for holding normals of models */
-GLfloat *normal_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLfloat *normal_buffer_data[NUM_OBJECTS];
 
 /* Arrays for holding indices of materials */
-GLushort *material_index_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLushort *material_index_buffer_data[NUM_OBJECTS];
 
 /* Arrays for holding texture coordinates of vertices */
-GLfloat *texture_buffer_data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+GLfloat *texture_buffer_data[NUM_OBJECTS];
 
 /* Structures for loading of OBJ data */
-obj_scene_data data[NUM_STATIC+NUM_BASIC_ANIM+NUM_ADV_ANIM];
+obj_scene_data data[NUM_OBJECTS];
 
 /* Reference time for animation */
 int oldTime = 0;    //in ms
@@ -320,6 +326,7 @@ void Display()
 	/* Associate program with shader matrices */
     GLint PVM_Uniform = glGetUniformLocation(ShaderProgram, "PVM_Matrix");    
 	GLint VM_Uniform = glGetUniformLocation(ShaderProgram, "VM_Matrix");
+	GLint NormalUniform = glGetUniformLocation(ShaderProgram, "NormalMatrix");
 
 	GLuint light_attribute;
 
@@ -354,14 +361,17 @@ void Display()
 
         vec4 positions = ViewMatrix * vec4(lights[i].position[0], lights[i].position[1], lights[i].position[2], 1.0);
 		glUniform3f(light_attribute, positions[0], positions[1], positions[2]);
-
-		lightAttributes[5][7] = c;
-		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[5]);
-		glUniform3f(light_attribute, lights[i].coneDirection[0], lights[i].coneDirection[1], lights[i].coneDirection[2]);
-
-		lightAttributes[6][7] = c;
-		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[6]);
-		glUniform1f(light_attribute, lights[i].coneCutOffAngleCos);
+		
+		if (lights[i].type == 1) {
+			lightAttributes[5][7] = c;
+			light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[5]);
+			glUniform3f(light_attribute, lights[i].coneDirection[0], lights[i].coneDirection[1], lights[i].coneDirection[2]);
+			positions = transpose(inverse(ViewMatrix)) * vec4(lights[2].coneDirection[0], lights[2].coneDirection[1], lights[2].coneDirection[2], 1.0);
+			glUniform3f(light_attribute, positions[0], positions[1], positions[2]);
+			lightAttributes[6][7] = c;
+			light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[6]);
+			glUniform1f(light_attribute, lights[i].coneCutOffAngleCos);
+		}
 
         lightAttributes[7][7] = c;
 		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[7]);
@@ -409,6 +419,7 @@ void Display()
 		mat4 vm = ViewMatrix * ModelMatrix[i];
 		glUniformMatrix4fv(PVM_Uniform, 1, GL_FALSE, value_ptr(ProjectionMatrix * vm));
 		glUniformMatrix4fv(VM_Uniform, 1, GL_FALSE, value_ptr(vm));
+		glUniformMatrix4fv(NormalUniform, 1, GL_FALSE, value_ptr(transpose(inverse(ModelMatrix[i]*ViewMatrix))));
 
 		/* set material index */
 		GLuint material_count = glGetUniformLocation(ShaderProgram, "material_count");
@@ -532,7 +543,7 @@ void Mouse(int button, int state, int x, int y) {
             }
             else if(camMode == 2) {
                 //zoom in
-				ViewTransform = scale(ViewTransform, vec3(1.0, 1.0, 0.95));
+				ViewTransform = translate(ViewTransform, vec3(0.0, 0.0, 0.05));
             }
 	    }
 	    else if(button == scroll_up) {
@@ -541,7 +552,8 @@ void Mouse(int button, int state, int x, int y) {
 	            manualSpeed /= 1.12f;
             }
             else if(camMode == 2) {
-                ViewTransform = scale(ViewTransform, vec3(1.0, 1.0, 1.05));
+				//zoom out
+                ViewTransform = translate(ViewTransform, vec3(0.0, 0.0, -0.05));
             }
 	    }
     }
@@ -831,7 +843,7 @@ void OnIdle()
         pos.y += vel.y * deltaForParticles;
         pos.z += vel.z * deltaForParticles;
         /* let particles age a bit in order to maintain a fresh stream of particles on the long run */
-        pos.w -= 0.001 * length(vec3(pos.x - particles_initial_position.x, pos.y - particles_initial_position.y, pos.z - particles_initial_position.z));
+        pos.w -= 0.001 * length(vec3(abs(pos.x - particles_initial_position.x), abs(pos.y - particles_initial_position.y), abs(pos.z - particles_initial_position.z)));
         
         /* update the particles' velocities (depends on mass and position of gravitation points) */
         for (int j = 0; j < NUM_GRAV_POINTS; j++) {
@@ -844,7 +856,7 @@ void OnIdle()
         /* particles are reset to an initial position and velocity when they die (this equals a new instance of a particle) */
         if (pos.w <= 0.0)
         {
-            fprintf(stderr, "particle died\n");
+            //fprintf(stderr, "particle died\n");
             vec3 randomVec = randvec(-1.0f, 1.0f) + particles_initial_position;
             pos = vec4(randomVec.x, randomVec.y, randomVec.z, randf());
             vel = randvec(0.1f, 0.2f);
@@ -1306,8 +1318,9 @@ void Initialize()
 	lights[0].ambient[1] = 0.0f;
 	lights[0].ambient[2] = 0.0f;
 	lights[0].color = vec3(60.0f, 0.0f, 100.0f); //white-yellow
-	lights[0].direction = vec3(1, -1, -1);
+	lights[0].direction = vec3(1, -.5, -1);
 	lights[0].intensity = 2.5f;
+
 
 	//set the number of lights in shader
 	GLuint light_count = glGetUniformLocation(ShaderProgram, "light_count");
