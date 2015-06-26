@@ -148,11 +148,11 @@ void main()
             vec3 r = normalize((2*n*(n*l))-l);
 
             //diffuse reflection
-            float x = dot(n, l);
+            float x = max(0, dot(n, l));
             Id += vec3(kd[0] * Il[0] * x, kd[1] * Il[1] * x, kd[2] * Il[2] * x);
 
             //specular reflection
-            x = pow(dot(r, v), m);
+            x = max(0, pow(dot(r, v), m));
             Is += vec3(ks[0] * Il[0] * x, ks[1] * Il[1] * x, ks[2] * Il[2] * x);
         }
 

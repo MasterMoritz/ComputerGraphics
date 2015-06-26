@@ -19,7 +19,6 @@
 
 uniform mat4 PVM_Matrix;
 uniform mat4 VM_Matrix;
-uniform mat4 NormalMatrix;
 
 layout (location = 0) in vec4 vPosition;
 layout (location = 1) in vec3 vNormal;
@@ -36,7 +35,7 @@ void main()
 {
     gl_Position = PVM_Matrix*vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
     Position = VM_Matrix*vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
-	vec4 n = normalize(NormalMatrix * vec4(vNormal, 1.0));
+	vec4 n = normalize(VM_Matrix * vec4(vNormal, 1.0));
     Normal = vec3(n.x, n.y, n.z);        
     materialIndex = MaterialIndex;
 	texcoord = texCoord;
