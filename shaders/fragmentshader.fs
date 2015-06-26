@@ -21,12 +21,13 @@
 //structure for our lights
 struct Light {
 	bool isEnabled;
-	int type; //0 = point-light, 1 = spot-light
+	int type; //0 = point-light, 1 = spot-light, 2 = directional light
 	vec3 ambient; //ambient light contribution of this light
 	vec3 color;
 	vec3 position;
 	vec3 coneDirection;
 	float coneCutOffAngleCos;
+    vec3 direction; //only for directional light
 	float attenuation;
 	float intensity; //light intensity between 0 and 1
 };
@@ -95,7 +96,7 @@ void main()
         float m = texture(tex_glossiness, texcoord).x; 
         //parameters determining reflection behaviour
         vec3 ka = materials[materialIndex].ambient;
-        vec3 kd = texture(tex_diffuse, texcoord).xyz;
+        vec3 kd = materials[materialIndex].diffuse;
         vec3 ks = texture(tex_specular, texcoord).xyz;
 
         //ambient light
@@ -118,13 +119,19 @@ void main()
 			    continue;
 		    }
             //incoming light direction (pointing away from surface)
-            vec3 l = normalize(lights[i].position - vec3(Position));
-            //incoming light intensity per channel
-            vec3 Il;
-            if(lights[i].type == 0) {
-                Il = vec3(lights[i].intensity * lights[i].color[0], lights[i].intensity * lights[i].color[1], lights[i].intensity * lights[i].color[2]);
+            vec3 l;
+            if(lights[i].type == 2) {
+                l = normalize(lights[i].direction);
             }
             else {
+                l = normalize(lights[i].position - vec3(Position));
+            }
+            //incoming light intensity per channel
+            vec3 Il;
+            if(lights[i].type == 0 || lights[i].type == 2) {
+                Il = vec3(lights[i].intensity * lights[i].color[0], lights[i].intensity * lights[i].color[1], lights[i].intensity * lights[i].color[2]);
+            }
+            else if(lights[i].type == 1) {
                 float cl = dot(lights[i].coneDirection, l);
                 if(cl > lights[i].coneCutOffAngleCos) {
                     Il = vec3(0.0);
@@ -136,13 +143,16 @@ void main()
                     Il = vec3(lights[i].intensity * lights[i].color[0] * cln, lights[i].intensity * lights[i].color[1] * cln, lights[i].intensity * lights[i].color[2] * cln);
                 }
             }
-            //distance from positional light to surface
-            vec3 d = abs(l);
-            //attenuation
-            float k1 = 0.2;
-            float k2 = 0.3;
-            float k3 = 0.6;
-            Il /= (k1 + k2*d + k3*d*d);
+            //attenuate positional lights
+            if(lights[i].type != 2) {
+                //distance from positional light to surface
+                vec3 d = abs(l);
+                //attenuation
+                float k1 = 0.2;
+                float k2 = 0.3;
+                float k3 = 0.6;
+                Il /= (k1 + k2*d + k3*d*d);
+            }
 
             //reflection vector
             vec3 r = normalize((2*n*(n*l))-l);
@@ -156,7 +166,7 @@ void main()
             Is += vec3(ks[0] * Il[0] * x, ks[1] * Il[1] * x, ks[2] * Il[2] * x);
         }
 
-        vec3 I = Ia*ambientRendering + Is*specularRendering + Id*diffuseRendering + Ie;
+        vec3 I = Ia*ambientRendering + Is*specularRendering + Id*diffuseRendering*texture(tex_diffuse, texcoord).xyz + Ie;
      
         FragColor = vec4(I, 1.0);
     }

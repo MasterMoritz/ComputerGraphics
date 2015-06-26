@@ -125,7 +125,7 @@ using namespace glm;
 	#define NUM_ADV_ANIM 6
 #endif
 #ifndef NUM_LIGHT
-	#define NUM_LIGHT 3
+	#define NUM_LIGHT 1
 #endif
 #ifndef NUM_PARTICLES
     #define NUM_PARTICLES 20000
@@ -284,12 +284,13 @@ struct Light {
 	GLfloat position[3];
 	GLfloat coneDirection[3];
 	GLfloat coneCutOffAngleCos;
+    vec3 direction; //only for directional lights
 	GLfloat attenuation;
 	GLfloat intensity; //light intensity between 0 and 1
 };
 typedef struct Light Light;
 Light lights[NUM_LIGHT];
-char lightAttributes[9][32]; //the attribute names in the shader, for easier access
+char lightAttributes[10][32]; //the attribute names in the shader, for easier access
 
 //structure for material properties
 struct Material {
@@ -346,7 +347,7 @@ void Display()
 
 		lightAttributes[3][7] = c;
 		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[3]);
-		glUniform3fv(light_attribute, 1, value_ptr(hsvToRgb(lights[i].color)));
+		glUniform3fv(light_attribute, 1, value_ptr(vec3(1.0f, 1.0f, 244.8f/255.0f)/*hsvToRgb(lights[i].color)*/));
 
 		lightAttributes[4][7] = c;
 		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[4]);
@@ -362,19 +363,18 @@ void Display()
 		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[6]);
 		glUniform1f(light_attribute, lights[i].coneCutOffAngleCos);
 
-		lightAttributes[7][7] = c;
+        lightAttributes[7][7] = c;
 		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[7]);
+		glUniform3fv(light_attribute, 1, value_ptr(lights[i].direction));
+		
+        lightAttributes[8][7] = c;
+		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[8]);
 		glUniform1f(light_attribute, lights[i].attenuation);
 
-		lightAttributes[8][7] = c;
-		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[8]);
+		lightAttributes[9][7] = c;
+		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[9]);
 		glUniform1f(light_attribute, lights[i].intensity);
 	}
-
-    /* animate the animated spotlight */
-    light_attribute = glGetUniformLocation(ShaderProgram, "lights[2].position");
-    vec4 positions = ViewMatrix * ModelMatrix[NUM_STATIC+NUM_BASIC_ANIM] * vec4(lights[2].position[0], lights[2].position[1], lights[2].position[2], 1.0);
-	glUniform3f(light_attribute, positions[0], positions[1], positions[2]);
 
 	/* draw Meshes */
 	int numObjects = NUM_STATIC + NUM_BASIC_ANIM + NUM_ADV_ANIM;
@@ -1301,48 +1301,13 @@ void Initialize()
 
 	/* setup lights */
 	lights[0].isEnabled = GL_TRUE;
-	lights[0].type = 0; // light is point light
+	lights[0].type = 2; // light is directional light
 	lights[0].ambient[0] = 0.0f;
 	lights[0].ambient[1] = 0.0f;
 	lights[0].ambient[2] = 0.0f;
-	lights[0].color = vec3 (360.0f, 1.0f, 1.0f); //red
-	lights[0].position[0] = 0.0f;
-	lights[0].position[1] = 2.0f;
-	lights[0].position[2] = 0.0f;
-	lights[0].attenuation = 0.05f;
-	lights[0].intensity = 0.2f;
-
-	lights[1].isEnabled = GL_TRUE;
-	lights[1].type = 1; // light is spot light
-	lights[1].ambient[0] = 0.0f;
-	lights[1].ambient[1] = 0.0f;
-	lights[1].ambient[2] = 0.0f;
-	lights[1].color = vec3 (240.0f, 1.0f, 1.0f); //blue
-	lights[1].position[0] = 0.0f;
-	lights[1].position[1] = 0.0f;
-	lights[1].position[2] = 0.0f;
-	lights[1].coneDirection[0] = 0.0f;
-	lights[1].coneDirection[1] = 1.0f;
-	lights[1].coneDirection[2] = 0.0f;
-	lights[1].coneCutOffAngleCos = cos(radians(20.0f)); //cutoff cone at 20 degrees to either side
-	lights[1].attenuation = 0.5f;
-	lights[1].intensity = .2f;
-
-    lights[2].isEnabled = GL_TRUE;
-	lights[2].type = 1; // light is point light
-	lights[2].ambient[0] = 0.0f;
-	lights[2].ambient[1] = 0.0f;
-	lights[2].ambient[2] = 0.0f;
-	lights[2].color = vec3 (0.0f, 0.0f, 1.0f); //white
-	lights[2].position[0] = -3.0f;
-	lights[2].position[1] = 1.0f;
-	lights[2].position[2] = 0.0f;
-    lights[2].coneDirection[0] = 3.0f;
-	lights[2].coneDirection[1] = -1.0f;
-	lights[2].coneDirection[2] = 0.0f;
-	lights[2].coneCutOffAngleCos = cos(radians(20.0f)); //cutoff cone at 20 degrees to either side
-	lights[2].attenuation = .2f;
-	lights[2].intensity = .1f;
+	lights[0].color = vec3(60.0f, 0.0f, 100.0f); //white-yellow
+	lights[0].direction = vec3(1, -1, -1);
+	lights[0].intensity = 2.5f;
 
 	//set the number of lights in shader
 	GLuint light_count = glGetUniformLocation(ShaderProgram, "light_count");
@@ -1358,6 +1323,7 @@ void Initialize()
 	lightAttributes[6][0] = '\0';
 	lightAttributes[7][0] = '\0';
 	lightAttributes[8][0] = '\0';
+    lightAttributes[9][0] = '\0';
 	strcat(lightAttributes[0], "lights[0].isEnabled\0");
 	strcat(lightAttributes[1], "lights[0].type\0");
 	strcat(lightAttributes[2], "lights[0].ambient\0");
@@ -1365,8 +1331,9 @@ void Initialize()
 	strcat(lightAttributes[4], "lights[0].position\0");
 	strcat(lightAttributes[5], "lights[0].coneDirection\0");
 	strcat(lightAttributes[6], "lights[0].coneCutOffAngleCos\0");
-	strcat(lightAttributes[7], "lights[0].attenuation\0");
-	strcat(lightAttributes[8], "lights[0].intensity\0");
+    strcat(lightAttributes[7], "lights[0].direction\0");
+	strcat(lightAttributes[8], "lights[0].attenuation\0");
+	strcat(lightAttributes[9], "lights[0].intensity\0");
 
 	//initialize the material attribute strings for shader access
 	materialAttributes[0][0] = '\0';
@@ -1467,7 +1434,7 @@ void loadTextures() {
 			exit(-1);
 		}
 		//printf("test %s\n", textureNames[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 		stbi_image_free(image);
 	}
 }
