@@ -134,7 +134,7 @@ using namespace glm;
 	#define NUM_LIGHT 1
 #endif
 #ifndef NUM_PARTICLES
-    #define NUM_PARTICLES 20000
+    #define NUM_PARTICLES 10000
 #endif
 #ifndef NUM_GRAV_POINTS
     #define NUM_GRAV_POINTS 1
@@ -354,7 +354,7 @@ void Display()
 
 		lightAttributes[3][7] = c;
 		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[3]);
-		glUniform3fv(light_attribute, 1, value_ptr(vec3(1.0f, 1.0f, 244.8f/255.0f)/*hsvToRgb(lights[i].color)*/));
+		glUniform3fv(light_attribute, 1, value_ptr(hsvToRgb(lights[i].color)));
 
 		lightAttributes[4][7] = c;
 		light_attribute = glGetUniformLocation(ShaderProgram, lightAttributes[4]);
@@ -1317,7 +1317,7 @@ void Initialize()
 	lights[0].ambient[0] = 0.0f;
 	lights[0].ambient[1] = 0.0f;
 	lights[0].ambient[2] = 0.0f;
-	lights[0].color = vec3(60.0f, 0.0f, 100.0f); //white-yellow
+	lights[0].color = vec3(70.0f, 0.2f, 1.0f); //white-yellow
 	lights[0].direction = vec3(1, -.5, -1);
 	lights[0].intensity = 2.5f;
 
